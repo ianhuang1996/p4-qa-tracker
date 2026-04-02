@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useRef } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import {
   Plus, Trash2, ChevronLeft, ChevronRight, Circle, CheckCircle2,
   Link2, Flag, Calendar, Users, List, Columns, Edit2, Save
@@ -6,7 +6,7 @@ import {
 import { User as FirebaseUser } from 'firebase/auth';
 import { useTodos, DateMode } from '../hooks/useTodos';
 import { TodoItem, AugmentedQAItem } from '../types';
-import { RDS, PMS, ADMIN_EMAILS } from '../constants';
+import { RDS, PMS, ADMIN_EMAILS, STATUS_COLORS } from '../constants';
 import { getAvatarColor, getTodayStr, toDateStr } from '../utils/qaUtils';
 import { EmptyState } from './EmptyState';
 
@@ -81,6 +81,7 @@ const TodoCard: React.FC<{
   onUpdate: (updates: Partial<TodoItem>) => void;
   onNavigateToQA?: (itemId: string) => void;
 }> = ({ todo, canEdit, qaItems, onToggle, onDelete, onUpdate, onNavigateToQA }) => {
+  const linkedQA = todo.linkedQAItemId && qaItems ? qaItems.find(q => q.id === todo.linkedQAItemId) : null;
   const [isEditing, setIsEditing] = useState(false);
   const [editState, setEditState] = useState<EditingState>({
     text: todo.text,
@@ -190,10 +191,15 @@ const TodoCard: React.FC<{
           {todo.linkedQAItemId && (
             <button
               onClick={() => onNavigateToQA?.(todo.linkedQAItemId!)}
-              className="text-[10px] font-bold text-blue-600 hover:text-blue-700 flex items-center gap-0.5"
+              className="text-[10px] font-bold text-blue-600 hover:text-blue-700 flex items-center gap-1"
             >
               <Link2 size={10} />
               {todo.linkedQAItemId}
+              {linkedQA && (
+                <span className={`px-1.5 py-0.5 text-[9px] font-bold rounded-full border ${STATUS_COLORS[linkedQA.currentFlow || '待處理']}`}>
+                  {linkedQA.currentFlow}
+                </span>
+              )}
             </button>
           )}
           <span className="text-[10px] text-gray-400">
@@ -242,6 +248,18 @@ export const DailyTodo: React.FC<DailyTodoProps> = ({ user, qaItems, onNavigateT
   const [filterAssignee, setFilterAssignee] = useState<string>('all');
 
   const { todos, isLoading, addTodo, toggleTodo, deleteTodo, updateTodo } = useTodos(user, selectedDate, dateMode);
+
+  // Auto-complete: when linked QA item is fixed/closed, auto-complete the todo
+  useEffect(() => {
+    if (!qaItems || qaItems.length === 0 || todos.length === 0) return;
+    todos.forEach(todo => {
+      if (todo.completed || !todo.linkedQAItemId) return;
+      const qa = qaItems.find(q => q.id === todo.linkedQAItemId);
+      if (qa && (qa.currentFlow === '已修復' || qa.currentFlow === '已關閉')) {
+        toggleTodo(todo.id, true);
+      }
+    });
+  }, [qaItems, todos]);
 
   // New todo form
   const [newText, setNewText] = useState('');

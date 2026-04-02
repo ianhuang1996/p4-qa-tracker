@@ -39,7 +39,7 @@ export interface AugmentedQAItem extends QAItem {
 
 export type ViewMode = 'table' | 'kanban';
 export type QuickFilter = 'all' | 'my_tasks' | 'ready_for_test';
-export type AppPage = 'todo' | 'qa';
+export type AppPage = 'overview' | 'todo' | 'qa';
 
 export interface HistoryEntry {
   id: string;

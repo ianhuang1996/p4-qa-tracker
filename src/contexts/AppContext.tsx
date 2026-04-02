@@ -37,9 +37,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [currentPage, setCurrentPage] = useState<AppPage>(() => {
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('currentPage');
-      if (saved === 'todo' || saved === 'qa') return saved;
+      if (saved === 'overview' || saved === 'todo' || saved === 'qa') return saved;
     }
-    return 'todo';
+    return 'overview';
   });
 
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);

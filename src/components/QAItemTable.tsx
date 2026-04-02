@@ -1,5 +1,5 @@
 import React from 'react';
-import { Video, CheckCircle, ArrowUp, ArrowDown, ArrowUpDown, MessageSquare, FileText, Rocket } from 'lucide-react';
+import { Video, CheckCircle, XCircle, ArrowUp, ArrowDown, ArrowUpDown, MessageSquare, FileText, Rocket } from 'lucide-react';
 import { EmptyState } from './EmptyState';
 import { AugmentedQAItem } from '../types';
 import { PRIORITY_COLORS, STATUS_COLORS, RDS } from '../constants';
@@ -196,7 +196,7 @@ export const QAItemTable: React.FC<QAItemTableProps> = ({
                   </div>
                 </td>
                 <td className="px-4 py-4 whitespace-nowrap text-right text-sm font-medium">
-                  <div className="flex items-center justify-end gap-2">
+                  <div className="flex items-center justify-end gap-1">
                     {(item.currentFlow === '開發中' || item.currentFlow === '退回重修') && (
                       <button
                         onClick={(e) => { e.stopPropagation(); onStatusChange(item, '已修正待測試'); }}
@@ -206,6 +206,26 @@ export const QAItemTable: React.FC<QAItemTableProps> = ({
                       >
                         <CheckCircle size={14} />
                       </button>
+                    )}
+                    {item.currentFlow === '已修正待測試' && (
+                      <>
+                        <button
+                          onClick={(e) => { e.stopPropagation(); onStatusChange(item, '已修復'); }}
+                          className="p-1.5 bg-green-100 text-green-600 rounded-lg hover:bg-green-200"
+                          title="測試通過"
+                          aria-label="標記為已修復"
+                        >
+                          <CheckCircle size={14} />
+                        </button>
+                        <button
+                          onClick={(e) => { e.stopPropagation(); onStatusChange(item, '退回重修'); }}
+                          className="p-1.5 bg-red-100 text-red-600 rounded-lg hover:bg-red-200"
+                          title="退回重修"
+                          aria-label="退回重修"
+                        >
+                          <XCircle size={14} />
+                        </button>
+                      </>
                     )}
                   </div>
                 </td>

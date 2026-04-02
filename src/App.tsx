@@ -5,6 +5,7 @@ import { AppProvider, useAppContext } from './contexts/AppContext';
 import { useNotifications } from './hooks/useNotifications';
 import { Sidebar } from './components/Sidebar';
 import { NotificationCenter } from './components/NotificationCenter';
+import { OverviewPage } from './components/OverviewPage';
 import { QAPage } from './components/QAPage';
 import { DailyTodo } from './components/DailyTodo';
 import { ErrorBoundary } from './components/ErrorBoundary';
@@ -73,10 +74,6 @@ function AppLayout() {
   if (!isAuthReady) return <LoadingSkeleton />;
   if (!user) return <LoginScreen />;
 
-  const handleNavigateToQAItem = (itemId: string) => {
-    setCurrentPage('qa');
-  };
-
   return (
     <div className="min-h-screen flex bg-gray-50 text-gray-900 font-sans">
       <Toaster position="top-center" richColors />
@@ -96,21 +93,28 @@ function AppLayout() {
       <main className="flex-1 min-h-screen overflow-y-auto p-4 md:p-8">
         <div className="max-w-7xl mx-auto">
           {/* Header */}
-          <header className="flex items-center justify-between gap-6 pl-12 lg:pl-0 mb-8">
-            <div>
-              <h1 className="text-2xl md:text-3xl font-black text-gray-900 tracking-tight">
-                {currentPage === 'todo' ? '每日待辦' : 'QA 追蹤'}
-              </h1>
-              <p className="text-gray-500 mt-1 font-medium text-sm">
-                {currentPage === 'todo' ? '管理團隊每日工作項目' : '數據分析與任務管理儀表板'}
-              </p>
-            </div>
-          </header>
+          {currentPage !== 'overview' && (
+            <header className="flex items-center justify-between gap-6 pl-12 lg:pl-0 mb-8">
+              <div>
+                <h1 className="text-2xl md:text-3xl font-black text-gray-900 tracking-tight">
+                  {currentPage === 'todo' ? '每日待辦' : 'QA 追蹤'}
+                </h1>
+                <p className="text-gray-500 mt-1 font-medium text-sm">
+                  {currentPage === 'todo' ? '管理團隊每日工作項目' : '數據分析與任務管理儀表板'}
+                </p>
+              </div>
+            </header>
+          )}
 
           {/* Page content */}
           <ErrorBoundary>
-            {currentPage === 'todo' ? (
-              <DailyTodo user={user} onNavigateToQA={handleNavigateToQAItem} />
+            {currentPage === 'overview' ? (
+              <OverviewPage
+                onNavigateToQA={() => setCurrentPage('qa')}
+                onNavigateToTodo={() => setCurrentPage('todo')}
+              />
+            ) : currentPage === 'todo' ? (
+              <DailyTodo user={user} qaItems={undefined} onNavigateToQA={() => setCurrentPage('qa')} />
             ) : (
               <QAPage />
             )}
