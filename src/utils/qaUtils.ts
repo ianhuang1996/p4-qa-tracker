@@ -1,3 +1,17 @@
+const AVATAR_COLORS = [
+  'bg-red-500', 'bg-orange-500', 'bg-amber-500', 'bg-emerald-500',
+  'bg-teal-500', 'bg-cyan-500', 'bg-blue-500', 'bg-indigo-500',
+  'bg-violet-500', 'bg-purple-500', 'bg-fuchsia-500', 'bg-pink-500',
+];
+
+export const getAvatarColor = (name: string): string => {
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) {
+    hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length];
+};
+
 export const getDirectImageUrl = (url: string) => {
   if (!url) return '';
   
@@ -42,20 +56,28 @@ export const isDirectVideo = (url: string) => {
 
 export const normalizeDate = (dateStr: string): string => {
   if (!dateStr) return '';
-  
+
   // If already in YYYY-MM-DD format, return as is
   if (dateStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
     return dateStr;
   }
-  
-  // Handle M/D or MM/DD format
+
+  // Handle YYYY/M/D or YYYY/MM/DD format
+  const fullMatch = dateStr.match(/^(\d{4})\/(\d{1,2})\/(\d{1,2})$/);
+  if (fullMatch) {
+    const month = fullMatch[2].padStart(2, '0');
+    const day = fullMatch[3].padStart(2, '0');
+    return `${fullMatch[1]}-${month}-${day}`;
+  }
+
+  // Handle M/D or MM/DD format — use current year as default
   const match = dateStr.match(/^(\d{1,2})\/(\d{1,2})$/);
   if (match) {
     const month = match[1].padStart(2, '0');
     const day = match[2].padStart(2, '0');
-    const year = parseInt(month, 10) > 6 ? '2025' : '2026'; // Heuristic for 2026 context
+    const year = new Date().getFullYear();
     return `${year}-${month}-${day}`;
   }
-  
+
   return dateStr;
 };

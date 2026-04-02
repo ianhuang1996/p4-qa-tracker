@@ -107,8 +107,9 @@ export const NextReleaseBlock: React.FC<Props> = ({ items, onItemClick, onRemove
                       e.stopPropagation(); 
                       onRemoveFromRelease(item); 
                     }}
-                    className="text-gray-400 hover:text-red-500 p-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
+                    className="text-gray-400 hover:text-red-500 p-1 shrink-0"
                     title="移出發布清單"
+                    aria-label="移出發布清單"
                   >
                     <X size={16} />
                   </button>

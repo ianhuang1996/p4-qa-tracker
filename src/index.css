@@ -1,2 +1,75 @@
 @import "tailwindcss";
 @plugin "@tailwindcss/typography";
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* Dark mode overrides - applied globally when .dark is on <html> */
+.dark {
+  color-scheme: dark;
+}
+
+.dark body,
+.dark .min-h-screen {
+  background-color: #0f172a;
+  color: #e2e8f0;
+}
+
+/* Cards, modals, dropdowns */
+.dark .bg-white {
+  background-color: #1e293b !important;
+  color: #e2e8f0;
+}
+
+.dark .bg-gray-50 {
+  background-color: #1e293b !important;
+}
+
+.dark .bg-gray-50\/50 {
+  background-color: rgba(30, 41, 59, 0.5) !important;
+}
+
+/* Borders */
+.dark .border-gray-100,
+.dark .border-gray-200 {
+  border-color: #334155 !important;
+}
+
+/* Text */
+.dark .text-gray-900 {
+  color: #f1f5f9 !important;
+}
+
+.dark .text-gray-700 {
+  color: #cbd5e1 !important;
+}
+
+.dark .text-gray-500 {
+  color: #94a3b8 !important;
+}
+
+.dark .text-gray-400 {
+  color: #64748b !important;
+}
+
+/* Inputs */
+.dark input,
+.dark textarea,
+.dark select {
+  background-color: #0f172a !important;
+  color: #e2e8f0 !important;
+  border-color: #334155 !important;
+}
+
+/* Hover states */
+.dark .hover\:bg-gray-50:hover {
+  background-color: #334155 !important;
+}
+
+.dark .hover\:bg-gray-100:hover {
+  background-color: #334155 !important;
+}
+
+/* Shadows */
+.dark .shadow-sm,
+.dark .shadow-md {
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.3) !important;
+}

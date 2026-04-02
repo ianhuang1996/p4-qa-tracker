@@ -1,8 +1,9 @@
 import React from 'react';
-import { Edit2, ExternalLink, Image as ImageIcon, Video, CheckCircle, XCircle, ArrowUp, ArrowDown, ArrowUpDown, MessageSquare, FileText, Rocket } from 'lucide-react';
+import { Video, CheckCircle, ArrowUp, ArrowDown, ArrowUpDown, MessageSquare, FileText, Rocket } from 'lucide-react';
+import { EmptyState } from './EmptyState';
 import { AugmentedQAItem } from '../types';
 import { PRIORITY_COLORS, STATUS_COLORS, RDS } from '../constants';
-import { getDirectImageUrl } from '../utils/qaUtils';
+import { getDirectImageUrl, getAvatarColor } from '../utils/qaUtils';
 
 interface QAItemTableProps {
   items: AugmentedQAItem[];
@@ -142,11 +143,7 @@ export const QAItemTable: React.FC<QAItemTableProps> = ({
                         setOpenAssigneeId(openAssigneeId === item.id ? null : item.id);
                       }}
                     >
-                      <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] text-white font-bold ${
-                        item.assignee === 'Neo' ? 'bg-purple-500' : 
-                        item.assignee === 'Summer' ? 'bg-orange-500' : 
-                        item.assignee === 'Ian' ? 'bg-green-500' : 'bg-gray-400'
-                      }`}>
+                      <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] text-white font-bold ${getAvatarColor(item.assignee)}`}>
                         {item.assignee.charAt(0)}
                       </div>
                       <span className="text-xs text-gray-600 font-medium">{item.assignee}</span>
@@ -171,11 +168,7 @@ export const QAItemTable: React.FC<QAItemTableProps> = ({
                                 setOpenAssigneeId(null);
                               }}
                             >
-                              <div className={`w-4 h-4 rounded-full flex items-center justify-center text-[8px] text-white font-bold ${
-                                rd === 'Neo' ? 'bg-purple-500' : 
-                                rd === 'Summer' ? 'bg-orange-500' : 
-                                rd === 'Ian' ? 'bg-green-500' : 'bg-gray-400'
-                              }`}>
+                              <div className={`w-4 h-4 rounded-full flex items-center justify-center text-[8px] text-white font-bold ${getAvatarColor(rd)}`}>
                                 {rd.charAt(0)}
                               </div>
                               {rd}
@@ -203,12 +196,13 @@ export const QAItemTable: React.FC<QAItemTableProps> = ({
                   </div>
                 </td>
                 <td className="px-4 py-4 whitespace-nowrap text-right text-sm font-medium">
-                  <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className="flex items-center justify-end gap-2">
                     {(item.currentFlow === '開發中' || item.currentFlow === '退回重修') && (
-                      <button 
+                      <button
                         onClick={(e) => { e.stopPropagation(); onStatusChange(item, '已修正待測試'); }}
                         className="p-1.5 bg-green-100 text-green-600 rounded-lg hover:bg-green-200"
-                        title="已修正"
+                        title="標記為已修正待測試"
+                        aria-label="標記為已修正待測試"
                       >
                         <CheckCircle size={14} />
                       </button>
@@ -219,14 +213,8 @@ export const QAItemTable: React.FC<QAItemTableProps> = ({
             ))}
             {items.length === 0 && (
               <tr>
-                <td colSpan={9} className="px-4 py-12 text-center">
-                  <div className="flex flex-col items-center justify-center text-gray-400 gap-3">
-                    <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center">
-                      <CheckCircle size={32} className="text-gray-300" />
-                    </div>
-                    <p className="text-sm font-bold text-gray-500">找不到符合條件的項目</p>
-                    <p className="text-xs text-gray-400">請嘗試調整篩選條件，或點擊右上角「新增問題」</p>
-                  </div>
+                <td colSpan={9}>
+                  <EmptyState title="找不到符合條件的項目" description="請嘗試調整篩選條件，或點擊右上角「新增問題」" />
                 </td>
               </tr>
             )}

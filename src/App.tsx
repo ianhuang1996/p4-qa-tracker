@@ -1,14 +1,14 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { FileText, Plus, Download, LogOut } from 'lucide-react';
+import { FileText, Plus, Download, LogOut, Moon, Sun, MoreVertical } from 'lucide-react';
 import { Toaster, toast } from 'sonner';
-import { auth, db } from './firebase';
+import { auth } from './firebase';
 import { signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut, User as FirebaseUser } from 'firebase/auth';
-import { writeBatch, doc } from 'firebase/firestore';
-import { qaData as initialData } from './data';
+import { QAItem } from './data';
 import { AnimatePresence } from 'motion/react';
 
 // Types & Constants
 import { AugmentedQAItem, ViewMode } from './types';
+import { ADMIN_EMAILS } from './constants';
 
 // Hooks
 import { useQAItems } from './hooks/useQAItems';
@@ -42,7 +42,7 @@ export default function App() {
   const [isAuthReady, setIsAuthReady] = useState(false);
   
   const isAdmin = useMemo(() => {
-    return user?.email === 'ian@osensetech.com';
+    return !!user?.email && ADMIN_EMAILS.includes(user.email);
   }, [user]);
   
   // Filter States
@@ -55,17 +55,39 @@ export default function App() {
   const [dateRange, setDateRange] = useState({ start: '', end: '' });
   
   // UI States
-  const [viewMode, setViewMode] = useState<ViewMode>('table');
+  const [viewMode, setViewMode] = useState<ViewMode>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('viewMode');
+      if (saved === 'table' || saved === 'kanban') return saved;
+    }
+    return 'table';
+  });
+
+  useEffect(() => {
+    localStorage.setItem('viewMode', viewMode);
+  }, [viewMode]);
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [isAdding, setIsAdding] = useState(false);
-  const [editForm, setEditForm] = useState<any>(null);
+  const [editForm, setEditForm] = useState<QAItem | null>(null);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   
   // Filter Dropdown States
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [showMoreMenu, setShowMoreMenu] = useState(false);
   const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>(null);
+  const [isDarkMode, setIsDarkMode] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('theme') === 'dark';
+    }
+    return false;
+  });
+
+  useEffect(() => {
+    document.documentElement.classList.toggle('dark', isDarkMode);
+    localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
+  }, [isDarkMode]);
 
   const { 
     data, 
@@ -76,7 +98,8 @@ export default function App() {
     addComment, 
     deleteComment, 
     editComment,
-    bulkUpdate 
+    bulkUpdate,
+    bulkDelete
   } = useQAItems(user, isAuthReady);
 
   // Auth Effect
@@ -200,23 +223,6 @@ export default function App() {
     try { await signOut(auth); } catch (error) { console.error("Logout failed", error); }
   };
 
-  const handleSeedData = async () => {
-    if (!user) return;
-    const loadingToast = toast.loading('正在匯入資料...');
-    try {
-      const batch = writeBatch(db);
-      initialData.forEach(item => {
-        const docRef = doc(db, 'qa_items', item.id);
-        const normalizedItem = { ...item, date: normalizeDate(item.date) };
-        batch.set(docRef, { ...normalizedItem, authorUID: user.uid, createdAt: Date.now() });
-      });
-      await batch.commit();
-      toast.success('初始資料匯入成功！', { id: loadingToast });
-    } catch (error) {
-      toast.error('匯入失敗！', { id: loadingToast });
-    }
-  };
-
   const handleExport = () => {
     const headers = ['編號', '優先級', '測試日期', '模組', '標題', '負責人', '狀態'];
     const csvContent = [
@@ -305,7 +311,7 @@ export default function App() {
         
         await addItem({ ...editForm, id: finalId });
       } else {
-        await updateItem(editForm.id, editForm, selectedItem as any);
+        await updateItem(editForm.id, editForm, selectedItem as QAItem);
       }
       
       setSelectedItemId(null);
@@ -346,7 +352,7 @@ export default function App() {
       const resData = await response.json();
       
       if (resData.success) {
-        setEditForm((prev: any) => {
+        setEditForm(prev => {
           if (!prev) return null;
           const newImageLinks = [...(prev.imageLinks || [])];
           newImageLinks.push(resData.data.url);
@@ -385,7 +391,7 @@ export default function App() {
       const resData = await response.json();
       
       if (resData.success) {
-        setEditForm((prev: any) => {
+        setEditForm(prev => {
           if (!prev) return null;
           const newAttachments = [...(prev.attachments || [])];
           newAttachments.push({ name: resData.name, url: resData.url });
@@ -422,7 +428,43 @@ export default function App() {
     updateItem(item.id, { currentFlow: status }, item);
   }, [updateItem]);
 
-  if (!isAuthReady || isLoading) return <div className="min-h-screen bg-gray-50 flex items-center justify-center text-gray-500">載入中...</div>;
+  if (!isAuthReady || isLoading) return (
+    <div className="min-h-screen bg-gray-50 p-4 md:p-8">
+      <div className="max-w-7xl mx-auto space-y-8 animate-pulse">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 bg-gray-200 rounded-lg" />
+            <div className="h-8 w-48 bg-gray-200 rounded-lg" />
+          </div>
+          <div className="flex gap-3">
+            <div className="h-10 w-28 bg-gray-200 rounded-xl" />
+            <div className="h-10 w-28 bg-gray-200 rounded-xl" />
+          </div>
+        </div>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          {[1,2,3,4].map(i => (
+            <div key={i} className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
+              <div className="h-3 w-16 bg-gray-200 rounded mb-2" />
+              <div className="h-7 w-10 bg-gray-200 rounded" />
+            </div>
+          ))}
+        </div>
+        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
+          <div className="h-10 w-full bg-gray-100 rounded-lg mb-4" />
+          {[1,2,3,4,5].map(i => (
+            <div key={i} className="flex items-center gap-4 py-4 border-t border-gray-100">
+              <div className="w-4 h-4 bg-gray-200 rounded" />
+              <div className="w-12 h-4 bg-gray-200 rounded" />
+              <div className="w-8 h-5 bg-gray-200 rounded" />
+              <div className="w-16 h-4 bg-gray-200 rounded" />
+              <div className="flex-1 h-4 bg-gray-200 rounded" />
+              <div className="w-20 h-6 bg-gray-200 rounded-full" />
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
   if (!user) return (
     <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-6">
       <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 max-w-md w-full text-center">
@@ -450,22 +492,47 @@ export default function App() {
             </h1>
             <p className="text-gray-500 mt-1 font-medium">數據分析與任務管理儀表板</p>
           </div>
-          <div className="flex flex-wrap items-center gap-3">
-            {isAdmin && (
-              <button onClick={handleSeedData} className="flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white px-4 py-2.5 rounded-xl transition-all shadow-md text-sm font-bold">
-                匯入/重置初始資料
-              </button>
-            )}
+          <div className="flex items-center gap-3">
             <button onClick={handleAddNew} className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2.5 rounded-xl transition-all shadow-md text-sm font-bold">
               <Plus size={18} /> 新增問題
             </button>
             <NotificationCenter user={user} onItemClick={(itemId) => setSelectedItemId(itemId)} />
-            <button onClick={handleExport} className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-xl transition-all shadow-md text-sm font-bold">
-              <Download size={18} /> 匯出 CSV
-            </button>
-            <button onClick={handleLogout} className="flex items-center gap-2 bg-white hover:bg-gray-50 text-gray-700 px-4 py-2.5 rounded-xl transition-all border border-gray-200 shadow-sm text-sm font-bold">
-              <LogOut size={18} /> 登出
-            </button>
+            <div className="relative">
+              <button
+                onClick={() => setShowMoreMenu(prev => !prev)}
+                className="flex items-center gap-2 bg-white hover:bg-gray-50 text-gray-700 px-3 py-2.5 rounded-xl transition-all border border-gray-200 shadow-sm"
+                aria-label="更多選項"
+              >
+                <MoreVertical size={18} />
+              </button>
+              {showMoreMenu && (
+                <>
+                  <div className="fixed inset-0 z-10" onClick={() => setShowMoreMenu(false)} />
+                  <div className="absolute right-0 mt-2 w-44 bg-white border border-gray-200 rounded-xl shadow-xl z-20 overflow-hidden">
+                    <button
+                      onClick={() => { handleExport(); setShowMoreMenu(false); }}
+                      className="w-full flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                    >
+                      <Download size={16} /> 匯出 CSV
+                    </button>
+                    <button
+                      onClick={() => { setIsDarkMode(prev => !prev); setShowMoreMenu(false); }}
+                      className="w-full flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                    >
+                      {isDarkMode ? <Sun size={16} /> : <Moon size={16} />}
+                      {isDarkMode ? '淺色模式' : '深色模式'}
+                    </button>
+                    <div className="border-t border-gray-100" />
+                    <button
+                      onClick={() => { handleLogout(); setShowMoreMenu(false); }}
+                      className="w-full flex items-center gap-3 px-4 py-3 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                    >
+                      <LogOut size={16} /> 登出
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
           </div>
         </header>
 
@@ -525,10 +592,14 @@ export default function App() {
           />
         )}
 
-        <BulkActions 
-          selectedIds={selectedIds} 
+        <BulkActions
+          selectedIds={selectedIds}
           onBulkUpdate={(updates) => {
             bulkUpdate(selectedIds, updates);
+            setSelectedIds([]);
+          }}
+          onBulkDelete={() => {
+            bulkDelete(selectedIds);
             setSelectedIds([]);
           }}
           onClearSelection={() => setSelectedIds([])}

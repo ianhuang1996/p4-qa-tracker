@@ -4,12 +4,13 @@ import { RDS, MODULES, QA_FLOWS } from '../constants';
 
 interface BulkActionsProps {
   selectedIds: string[];
-  onBulkUpdate: (data: any) => void;
+  onBulkUpdate: (data: Record<string, unknown>) => void;
+  onBulkDelete: () => void;
   onClearSelection: () => void;
 }
 
-export const BulkActions: React.FC<BulkActionsProps> = ({ 
-  selectedIds, onBulkUpdate, onClearSelection 
+export const BulkActions: React.FC<BulkActionsProps> = ({
+  selectedIds, onBulkUpdate, onBulkDelete, onClearSelection
 }) => {
   if (selectedIds.length === 0) return null;
 
@@ -79,11 +80,10 @@ export const BulkActions: React.FC<BulkActionsProps> = ({
           </select>
         </div>
 
-        <button 
+        <button
           onClick={() => {
             if (confirm(`確定要刪除這 ${selectedIds.length} 個項目嗎？`)) {
-              // Note: bulkUpdate doesn't support delete yet, but we can implement it if needed
-              // For now, let's just clear selection or add a specific delete handler
+              onBulkDelete();
             }
           }}
           className="p-2 text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Search, Filter, ChevronDown, List, Columns } from 'lucide-react';
+import { Search, Filter, ChevronDown, List, Columns, X } from 'lucide-react';
 import { QA_FLOWS, RDS, MODULES } from '../constants';
 import { ViewMode } from '../types';
 
@@ -196,6 +196,54 @@ export const FilterBar: React.FC<FilterBarProps> = ({
           </div>
         </div>
       </div>
+      {/* Active filter tags */}
+      {(totalActiveFilters > 0 || priorityFilter !== '全部' || dateRange.start || dateRange.end) && (
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-xs text-gray-400 font-medium">已篩選：</span>
+          {priorityFilter !== '全部' && (
+            <span className="inline-flex items-center gap-1 px-2 py-1 bg-blue-50 text-blue-700 text-xs font-bold rounded-lg border border-blue-200">
+              {priorityFilter}
+              <button onClick={() => setPriorityFilter('全部')} className="hover:text-blue-900"><X size={12} /></button>
+            </span>
+          )}
+          {statusFilters.map(s => (
+            <span key={s} className="inline-flex items-center gap-1 px-2 py-1 bg-blue-50 text-blue-700 text-xs font-bold rounded-lg border border-blue-200">
+              {s}
+              <button onClick={() => setStatusFilters(statusFilters.filter(f => f !== s))} className="hover:text-blue-900"><X size={12} /></button>
+            </span>
+          ))}
+          {assigneeFilters.map(a => (
+            <span key={a} className="inline-flex items-center gap-1 px-2 py-1 bg-purple-50 text-purple-700 text-xs font-bold rounded-lg border border-purple-200">
+              {a}
+              <button onClick={() => setAssigneeFilters(assigneeFilters.filter(f => f !== a))} className="hover:text-purple-900"><X size={12} /></button>
+            </span>
+          ))}
+          {moduleFilters.map(m => (
+            <span key={m} className="inline-flex items-center gap-1 px-2 py-1 bg-green-50 text-green-700 text-xs font-bold rounded-lg border border-green-200">
+              {m}
+              <button onClick={() => setModuleFilters(moduleFilters.filter(f => f !== m))} className="hover:text-green-900"><X size={12} /></button>
+            </span>
+          ))}
+          {(dateRange.start || dateRange.end) && (
+            <span className="inline-flex items-center gap-1 px-2 py-1 bg-orange-50 text-orange-700 text-xs font-bold rounded-lg border border-orange-200">
+              {dateRange.start || '...'} ~ {dateRange.end || '...'}
+              <button onClick={() => setDateRange({ start: '', end: '' })} className="hover:text-orange-900"><X size={12} /></button>
+            </span>
+          )}
+          <button
+            onClick={() => {
+              setStatusFilters([]);
+              setAssigneeFilters([]);
+              setModuleFilters([]);
+              setPriorityFilter('全部');
+              setDateRange({ start: '', end: '' });
+            }}
+            className="text-xs text-red-500 hover:text-red-600 font-bold ml-2"
+          >
+            清除全部
+          </button>
+        </div>
+      )}
     </div>
   );
 };

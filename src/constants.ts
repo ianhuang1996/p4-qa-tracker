@@ -17,6 +17,11 @@ export const PMS = ['Ian', 'Sienna'];
 export const RDS = ['Neo', 'Summer', '后玲', 'Popo', 'Unassigned'];
 export const MODULES = ['Presenter', 'Promoter', '企業組織', '雙模式', '全域設定', '其他'];
 
+export const ADMIN_EMAILS: string[] = [
+  'ian@osensetech.com',
+  'sienna@osensetech.com',
+];
+
 export const STATUS_COLORS: Record<string, string> = {
   '已關閉': 'bg-gray-100 text-gray-600 border-gray-200',
   '已修復': 'bg-green-100 text-green-700 border-green-200',

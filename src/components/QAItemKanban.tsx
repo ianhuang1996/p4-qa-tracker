@@ -18,10 +18,11 @@ import {
   useSortable
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { Image as ImageIcon, Video, CheckCircle, XCircle, MessageSquare, FileText, Rocket } from 'lucide-react';
+import { Image as ImageIcon, Video, MessageSquare, FileText, Rocket } from 'lucide-react';
 import { AugmentedQAItem } from '../types';
 import { QA_FLOWS, PRIORITY_COLORS, STATUS_COLORS } from '../constants';
-import { getDirectImageUrl } from '../utils/qaUtils';
+import { getDirectImageUrl, getAvatarColor } from '../utils/qaUtils';
+import { EmptyState } from './EmptyState';
 
 interface KanbanCardProps {
   item: AugmentedQAItem;
@@ -96,9 +97,7 @@ const KanbanCard = React.memo(({ item, onClick, onStatusChange }: KanbanCardProp
       <div className="flex items-center justify-between mt-4">
         <div className="flex items-center gap-1.5">
           <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] text-white font-bold ${
-            item.assignee === 'Neo' ? 'bg-purple-500' : 
-            item.assignee === 'Summer' ? 'bg-orange-500' : 
-            item.assignee === 'Ian' ? 'bg-green-500' : 'bg-gray-400'
+            getAvatarColor(item.assignee)
           }`}>
             {item.assignee.charAt(0)}
           </div>
@@ -154,10 +153,7 @@ const KanbanColumn = React.memo(({ status, items, onItemClick, onStatusChange }:
           ))}
         </SortableContext>
         {items.length === 0 && (
-          <div className="h-32 border-2 border-dashed border-gray-200 rounded-xl flex flex-col items-center justify-center text-gray-400 gap-2 bg-gray-50/50">
-            <CheckCircle size={24} className="opacity-20" />
-            <span className="text-xs font-bold text-gray-400">目前沒有項目</span>
-          </div>
+          <EmptyState compact title="目前沒有項目" />
         )}
       </div>
     </div>

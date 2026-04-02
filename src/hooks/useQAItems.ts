@@ -248,6 +248,21 @@ export function useQAItems(user: FirebaseUser | null, isAuthReady: boolean) {
     }
   };
 
+  const bulkDelete = async (itemIds: string[]) => {
+    if (!user || itemIds.length === 0) return;
+    const batch = writeBatch(db);
+    itemIds.forEach(id => {
+      batch.delete(doc(db, 'qa_items', id));
+    });
+    try {
+      await batch.commit();
+      toast.success(`已刪除 ${itemIds.length} 個項目`);
+    } catch (error) {
+      toast.error('批次刪除失敗');
+      handleFirestoreError(error, OperationType.DELETE, 'qa_items (bulk delete)');
+    }
+  };
+
   const bulkUpdate = async (itemIds: string[], updates: Partial<QAItem>) => {
     if (!user || itemIds.length === 0) return;
     const batch = writeBatch(db);
@@ -273,6 +288,7 @@ export function useQAItems(user: FirebaseUser | null, isAuthReady: boolean) {
     addComment,
     deleteComment,
     editComment,
-    bulkUpdate
+    bulkUpdate,
+    bulkDelete
   };
 }
