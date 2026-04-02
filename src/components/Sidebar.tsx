@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { CheckSquare, Bug, ChevronLeft, ChevronRight, Menu, X, LogOut, Moon, Sun } from 'lucide-react';
+import { CheckSquare, Bug, ChevronLeft, ChevronRight, Menu, X, LogOut, Moon, Sun, Bell } from 'lucide-react';
 import { User as FirebaseUser } from 'firebase/auth';
 import { AppPage } from '../types';
 import { getAvatarColor } from '../utils/qaUtils';
@@ -13,6 +13,8 @@ interface SidebarProps {
   onLogout: () => void;
   isDarkMode: boolean;
   onToggleDarkMode: () => void;
+  unreadCount?: number;
+  onNotificationClick?: () => void;
 }
 
 const NAV_ITEMS: { page: AppPage; label: string; icon: React.ReactNode }[] = [
@@ -22,7 +24,8 @@ const NAV_ITEMS: { page: AppPage; label: string; icon: React.ReactNode }[] = [
 
 export const Sidebar: React.FC<SidebarProps> = ({
   currentPage, onNavigate, collapsed, onToggleCollapse,
-  user, onLogout, isDarkMode, onToggleDarkMode
+  user, onLogout, isDarkMode, onToggleDarkMode,
+  unreadCount = 0, onNotificationClick
 }) => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const displayName = user.displayName || '使用者';
@@ -69,6 +72,33 @@ export const Sidebar: React.FC<SidebarProps> = ({
             {!collapsed && <span>{item.label}</span>}
           </button>
         ))}
+
+        {/* Notification bell */}
+        {onNotificationClick && (
+          <button
+            onClick={onNotificationClick}
+            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-400 hover:text-white hover:bg-gray-800 transition-colors relative"
+            title={collapsed ? '通知' : undefined}
+            aria-label="通知"
+          >
+            <span className="shrink-0 relative">
+              <Bell size={20} />
+              {unreadCount > 0 && (
+                <span className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center">
+                  {unreadCount > 9 ? '9+' : unreadCount}
+                </span>
+              )}
+            </span>
+            {!collapsed && (
+              <span className="flex items-center gap-2">
+                通知
+                {unreadCount > 0 && (
+                  <span className="bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">{unreadCount}</span>
+                )}
+              </span>
+            )}
+          </button>
+        )}
       </nav>
 
       {/* Spacer */}

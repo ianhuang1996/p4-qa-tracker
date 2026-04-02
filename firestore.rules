@@ -64,7 +64,19 @@ service cloud.firestore {
              (!('authorUID' in data) || (data.authorUID is string && data.authorUID.size() < 100)) &&
              (!('fixedAt' in data) || (data.fixedAt is number || data.fixedAt == null)) &&
              (!('version' in data) || (data.version is string && data.version.size() < 100)) &&
-             (!('comments' in data) || (data.comments is list && data.comments.size() < 100));
+             (!('comments' in data) || (data.comments is list && data.comments.size() < 100)) &&
+             (!('imageLinks' in data) || data.imageLinks is list) &&
+             (!('videoLink' in data) || (data.videoLink is string || data.videoLink == null)) &&
+             (!('videoLinks' in data) || data.videoLinks is list) &&
+             (!('attachmentUrl' in data) || (data.attachmentUrl is string || data.attachmentUrl == null)) &&
+             (!('attachmentName' in data) || (data.attachmentName is string || data.attachmentName == null)) &&
+             (!('attachments' in data) || data.attachments is list) &&
+             (!('isNextRelease' in data) || data.isNextRelease is bool) &&
+             (!('releaseNote' in data) || (data.releaseNote is string || data.releaseNote == null)) &&
+             (!('sortOrder' in data) || (data.sortOrder is number || data.sortOrder == null)) &&
+             (!('rdFix' in data) || (data.rdFix is string || data.rdFix == null)) &&
+             (!('testMethod' in data) || (data.testMethod is string || data.testMethod == null)) &&
+             (!('commentCount' in data) || (data.commentCount is number || data.commentCount == null));
     }
 
     function isValidNotification(data) {
