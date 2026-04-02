@@ -1,0 +1,89 @@
+{
+  "entities": {
+    "QAItem": {
+      "title": "QA Item",
+      "description": "A quality assurance issue or task.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "priority": { "type": "string" },
+        "date": { "type": "string" },
+        "module": { "type": "string" },
+        "tester": { "type": "string" },
+        "description": { "type": "string" },
+        "imageLink": { "type": "string" },
+        "currentFlow": { "type": "string" },
+        "assignee": { "type": "string" },
+        "fixVersion": { "type": "string" },
+        "answer": { "type": "string" },
+        "createdAt": { "type": "number" },
+        "authorUID": { "type": "string" },
+        "fixedAt": { "type": "number" },
+        "version": { "type": "string" },
+        "comments": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": { "type": "string" },
+              "userId": { "type": "string" },
+              "userName": { "type": "string" },
+              "text": { "type": "string" },
+              "createdAt": { "type": "number" },
+              "updatedAt": { "type": "number" }
+            },
+            "required": ["id", "userId", "userName", "text", "createdAt"]
+          }
+        }
+      },
+      "required": ["id", "date", "module", "tester", "description", "imageLink", "currentFlow", "assignee", "answer"]
+    },
+    "Notification": {
+      "title": "Notification",
+      "description": "A notification for a user.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "fromUserId": { "type": "string" },
+        "fromUserName": { "type": "string" },
+        "itemId": { "type": "string" },
+        "itemTitle": { "type": "string" },
+        "type": { "type": "string", "enum": ["status_change", "assignment", "comment"] },
+        "oldValue": { "type": "string" },
+        "newValue": { "type": "string" },
+        "isRead": { "type": "boolean" },
+        "createdAt": { "type": "number" }
+      },
+      "required": ["id", "userId", "fromUserId", "fromUserName", "itemId", "itemTitle", "type", "isRead", "createdAt"]
+    },
+    "User": {
+      "title": "User",
+      "description": "A user of the application.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "displayName": { "type": "string" },
+        "email": { "type": "string" },
+        "photoURL": { "type": "string" },
+        "lastLogin": { "type": "number" }
+      },
+      "required": ["uid", "displayName"]
+    }
+  },
+  "firestore": {
+    "/qa_items/{itemId}": {
+      "schema": { "$ref": "#/entities/QAItem" },
+      "description": "Stores all QA items."
+    },
+    "/notifications/{notificationId}": {
+      "schema": { "$ref": "#/entities/Notification" },
+      "description": "Stores notifications for users."
+    },
+    "/users/{uid}": {
+      "schema": { "$ref": "#/entities/User" },
+      "description": "Stores user profiles."
+    }
+  }
+}

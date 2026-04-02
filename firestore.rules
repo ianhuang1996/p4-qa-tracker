@@ -1,0 +1,126 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: qa_items
+    // Document ID: [auto-generated]
+    // Fields:
+    //   - id: string (required)
+    //   - title: string (optional)
+    //   - priority: string (optional)
+    //   - date: string (required)
+    //   - module: string (required)
+    //   - tester: string (required)
+    //   - description: string (required)
+    //   - imageLink: string (required)
+    //   - currentFlow: string (required)
+    //   - assignee: string (required)
+    //   - fixVersion: string (optional)
+    //   - answer: string (required)
+    //   - retestDescription: string (optional)
+    //   - retestDate: string (optional)
+    //   - createdAt: number (optional)
+    //   - authorUID: string (optional)
+    //   - fixedAt: number (optional)
+    //   - version: string (optional)
+    //   - comments: list (optional)
+    //
+    // ===============================================================
+    
+    // Helper Functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() &&
+        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
+          (request.auth.token.email == "ian@osensetech.com" && request.auth.token.email_verified == true));
+    }
+
+    function isValidQAItem(data) {
+      return data.keys().hasAll(['id', 'date', 'module', 'tester', 'description', 'imageLink', 'currentFlow', 'assignee', 'answer']) &&
+             data.id is string && data.id.size() < 100 &&
+             data.date is string && data.date.size() < 100 &&
+             data.module is string && data.module.size() < 100 &&
+             data.tester is string && data.tester.size() < 100 &&
+             data.description is string && data.description.size() < 10000 &&
+             data.imageLink is string && data.imageLink.size() < 1000 &&
+             data.currentFlow is string && data.currentFlow.size() < 100 &&
+             data.assignee is string && data.assignee.size() < 100 &&
+             data.answer is string && data.answer.size() < 10000 &&
+             (!('title' in data) || (data.title is string && data.title.size() < 500)) &&
+             (!('priority' in data) || (data.priority is string && data.priority.size() < 50)) &&
+             (!('fixVersion' in data) || (data.fixVersion is string && data.fixVersion.size() < 100)) &&
+             (!('createdAt' in data) || data.createdAt is number) &&
+             (!('authorUID' in data) || (data.authorUID is string && data.authorUID.size() < 100)) &&
+             (!('fixedAt' in data) || (data.fixedAt is number || data.fixedAt == null)) &&
+             (!('version' in data) || (data.version is string && data.version.size() < 100)) &&
+             (!('comments' in data) || (data.comments is list && data.comments.size() < 100));
+    }
+
+    function isValidNotification(data) {
+      return data.keys().hasAll(['id', 'userId', 'fromUserId', 'fromUserName', 'itemId', 'itemTitle', 'type', 'isRead', 'createdAt']) &&
+             data.id is string && data.id.size() < 100 &&
+             data.userId is string && data.userId.size() < 100 &&
+             data.fromUserId is string && data.fromUserId.size() < 100 &&
+             data.fromUserName is string && data.fromUserName.size() < 100 &&
+             data.itemId is string && data.itemId.size() < 100 &&
+             data.itemTitle is string && data.itemTitle.size() < 500 &&
+             data.type in ['status_change', 'assignment', 'comment'] &&
+             data.isRead is bool &&
+             data.createdAt is number;
+    }
+
+    function isValidUser(data) {
+      return data.keys().hasAll(['uid', 'displayName']) &&
+             data.uid is string && data.uid.size() < 100 &&
+             data.displayName is string && data.displayName.size() < 100 &&
+             (!('email' in data) || (data.email is string || data.email == null)) &&
+             (!('photoURL' in data) || (data.photoURL is string || data.photoURL == null)) &&
+             (!('lastLogin' in data) || data.lastLogin is number) &&
+             (!('role' in data) || data.role in ['admin', 'user']);
+    }
+
+    match /qa_items/{itemId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && isValidQAItem(request.resource.data);
+      allow update: if isAuthenticated() && isValidQAItem(request.resource.data);
+      allow delete: if isAuthenticated();
+
+      match /history/{historyId} {
+        allow read: if isAuthenticated();
+        allow create: if isAuthenticated();
+      }
+
+      match /comments/{commentId} {
+        allow read: if isAuthenticated();
+        allow create: if isAuthenticated() && 
+          request.resource.data.keys().hasAll(['userId', 'userName', 'text', 'createdAt']) &&
+          request.resource.data.userId is string && request.resource.data.userId.size() < 100 &&
+          request.resource.data.userName is string && request.resource.data.userName.size() < 100 &&
+          request.resource.data.text is string && request.resource.data.text.size() < 5000 &&
+          request.resource.data.createdAt is number;
+        allow update: if isAuthenticated() && 
+          request.resource.data.text is string && request.resource.data.text.size() < 5000;
+        allow delete: if isAuthenticated();
+      }
+    }
+
+    match /notifications/{notificationId} {
+      allow read, write: if isAuthenticated();
+    }
+
+    match /users/{userId} {
+      allow read, write: if isAuthenticated();
+    }
+  }
+}

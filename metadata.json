@@ -1,0 +1,5 @@
+{
+  "name": "P4 每週版更 QA 追蹤系統",
+  "description": "管理與追蹤 P4 專案 QA 測試清單的數據分析工具與儀表板",
+  "requestFramePermissions": []
+}
