@@ -250,16 +250,19 @@ export const DailyTodo: React.FC<DailyTodoProps> = ({ user, qaItems, onNavigateT
   const { todos, isLoading, addTodo, toggleTodo, deleteTodo, updateTodo } = useTodos(user, selectedDate, dateMode);
 
   // Auto-complete: when linked QA item is fixed/closed, auto-complete the todo
+  const autoCompletedRef = useRef<Set<string>>(new Set());
   useEffect(() => {
     if (!qaItems || qaItems.length === 0 || todos.length === 0) return;
     todos.forEach(todo => {
       if (todo.completed || !todo.linkedQAItemId) return;
+      if (autoCompletedRef.current.has(todo.id)) return;
       const qa = qaItems.find(q => q.id === todo.linkedQAItemId);
       if (qa && (qa.currentFlow === '已修復' || qa.currentFlow === '已關閉')) {
+        autoCompletedRef.current.add(todo.id);
         toggleTodo(todo.id, true);
       }
     });
-  }, [qaItems, todos]);
+  }, [qaItems]);
 
   // New todo form
   const [newText, setNewText] = useState('');

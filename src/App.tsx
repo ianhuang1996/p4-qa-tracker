@@ -114,7 +114,7 @@ function AppLayout() {
                 onNavigateToTodo={() => setCurrentPage('todo')}
               />
             ) : currentPage === 'todo' ? (
-              <DailyTodo user={user} qaItems={undefined} onNavigateToQA={() => setCurrentPage('qa')} />
+              <DailyTodo user={user} onNavigateToQA={() => setCurrentPage('qa')} />
             ) : (
               <QAPage />
             )}
@@ -126,7 +126,7 @@ function AppLayout() {
       {showNotifications && (
         <>
           <div className="fixed inset-0 z-40" onClick={() => setShowNotifications(false)} />
-          <div className="fixed top-0 left-56 lg:left-56 z-50 w-80 h-screen bg-white border-r border-gray-200 shadow-2xl overflow-hidden">
+          <div className={`fixed top-0 z-50 w-80 h-screen bg-white border-r border-gray-200 shadow-2xl overflow-hidden transition-all duration-200 ${sidebarCollapsed ? 'left-16' : 'left-56'} max-lg:left-0`}>
             <NotificationCenter
               user={user}
               onItemClick={() => {

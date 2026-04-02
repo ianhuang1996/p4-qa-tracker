@@ -37,9 +37,14 @@ export const ModalComments: React.FC<ModalCommentsProps> = ({
 
   const handleSummarize = async () => {
     setIsSummarizing(true);
-    const summary = await summarizeDiscussion(item, comments);
-    setAiSummary(summary);
-    setIsSummarizing(false);
+    try {
+      const summary = await summarizeDiscussion(item, comments);
+      setAiSummary(summary);
+    } catch (error) {
+      console.error('AI summarize failed:', error);
+    } finally {
+      setIsSummarizing(false);
+    }
   };
 
   return (

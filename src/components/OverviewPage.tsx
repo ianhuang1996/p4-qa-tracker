@@ -65,14 +65,10 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ onNavigateToQA, onNa
   }, [augmentedData]);
 
   // Recent activity: items updated recently (sorted by most recent)
+  // Data from useQAItems is already sorted newest-first
   const recentItems = useMemo(() => {
-    return [...augmentedData]
+    return augmentedData
       .filter(i => i.currentFlow !== '已關閉')
-      .sort((a, b) => {
-        const aTime = (a as any).createdAt || 0;
-        const bTime = (b as any).createdAt || 0;
-        return bTime - aTime;
-      })
       .slice(0, 5);
   }, [augmentedData]);
 

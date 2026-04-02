@@ -265,10 +265,14 @@ export function useQAItems(user: FirebaseUser | null, isAuthReady: boolean) {
 
   const bulkUpdate = async (itemIds: string[], updates: Partial<QAItem>) => {
     if (!user || itemIds.length === 0) return;
+    const sanitized: Record<string, unknown> = {};
+    Object.entries(updates).forEach(([key, val]) => {
+      sanitized[key] = val === undefined ? null : val;
+    });
     const batch = writeBatch(db);
     itemIds.forEach(id => {
       const docRef = doc(db, 'qa_items', id);
-      batch.update(docRef, updates);
+      batch.update(docRef, sanitized);
     });
     try {
       await batch.commit();
