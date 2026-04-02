@@ -26,6 +26,7 @@ export interface QAItem {
   attachments?: { name: string, url: string }[];
   isNextRelease?: boolean;
   releaseNote?: string;
+  sortOrder?: number;
 }
 
 export interface QAComment {

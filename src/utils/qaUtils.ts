@@ -1,3 +1,28 @@
+// ─── 時間工具（統一使用 Asia/Taipei 時區）───────────────────
+const TZ = 'Asia/Taipei';
+
+/** 取得台北時區的今天日期字串 YYYY-MM-DD */
+export const getTodayStr = (): string => {
+  return new Date().toLocaleDateString('sv-SE', { timeZone: TZ });
+};
+
+/** 將 Date 物件轉成台北時區的 YYYY-MM-DD */
+export const toDateStr = (d: Date): string => {
+  return d.toLocaleDateString('sv-SE', { timeZone: TZ });
+};
+
+/** 將 timestamp 轉成台北時區的可讀時間字串 */
+export const formatTimestamp = (ts: number): string => {
+  return new Date(ts).toLocaleString('zh-TW', {
+    timeZone: TZ,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+};
+
 const AVATAR_COLORS = [
   'bg-red-500', 'bg-orange-500', 'bg-amber-500', 'bg-emerald-500',
   'bg-teal-500', 'bg-cyan-500', 'bg-blue-500', 'bg-indigo-500',
@@ -5,6 +30,7 @@ const AVATAR_COLORS = [
 ];
 
 export const getAvatarColor = (name: string): string => {
+  if (!name || name === 'Unassigned') return 'bg-gray-400';
   let hash = 0;
   for (let i = 0; i < name.length; i++) {
     hash = name.charCodeAt(i) + ((hash << 5) - hash);

@@ -39,6 +39,7 @@ export interface AugmentedQAItem extends QAItem {
 
 export type ViewMode = 'table' | 'kanban';
 export type QuickFilter = 'all' | 'my_tasks' | 'ready_for_test';
+export type AppPage = 'todo' | 'qa';
 
 export interface HistoryEntry {
   id: string;
@@ -64,4 +65,18 @@ export interface Notification {
   newValue?: string;
   isRead: boolean;
   createdAt: number;
+}
+
+export interface TodoItem {
+  id: string;
+  creatorId: string;       // 建立者 UID
+  creatorName: string;     // 建立者名稱
+  assignee: string;        // 負責人名稱 (e.g. 'Neo', 'Ian')
+  text: string;
+  completed: boolean;
+  date: string;            // 'YYYY-MM-DD'
+  priority?: 'high' | 'medium' | 'low';
+  linkedQAItemId?: string;
+  createdAt: number;
+  completedAt?: number;
 }

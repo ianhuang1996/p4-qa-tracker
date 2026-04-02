@@ -22,6 +22,19 @@ export const ADMIN_EMAILS: string[] = [
   'sienna@osensetech.com',
 ];
 
+export const SORT_EDITOR_EMAILS: string[] = [
+  'ian@osensetech.com',
+  'sienna@osensetech.com',
+];
+
+export const PRIORITY_ORDER: Record<string, number> = {
+  'P0': 0,
+  'P1': 1,
+  'P2': 2,
+  'P3': 3,
+  '-': 4,
+};
+
 export const STATUS_COLORS: Record<string, string> = {
   '已關閉': 'bg-gray-100 text-gray-600 border-gray-200',
   '已修復': 'bg-green-100 text-green-700 border-green-200',

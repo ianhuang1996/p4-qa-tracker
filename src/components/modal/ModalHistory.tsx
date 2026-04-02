@@ -1,6 +1,7 @@
 import React from 'react';
 import { History } from 'lucide-react';
 import { HistoryEntry } from '../../types';
+import { formatTimestamp } from '../../utils/qaUtils';
 
 interface ModalHistoryProps {
   history: HistoryEntry[];
@@ -24,7 +25,7 @@ export const ModalHistory: React.FC<ModalHistoryProps> = ({ history }) => {
             <div className="flex-1 pt-2">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm font-bold text-gray-900">{entry.userName}</span>
-                <span className="text-[10px] text-gray-400">{new Date(entry.timestamp).toLocaleString()}</span>
+                <span className="text-[10px] text-gray-400">{formatTimestamp(entry.timestamp)}</span>
               </div>
               <div className="bg-white border border-gray-100 p-4 rounded-xl shadow-sm space-y-2">
                 {entry.changes.map((change, idx) => (

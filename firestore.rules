@@ -122,5 +122,12 @@ service cloud.firestore {
     match /users/{userId} {
       allow read, write: if isAuthenticated();
     }
+
+    match /todos/{todoId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated();
+      allow update, delete: if isAuthenticated() &&
+        (resource.data.creatorId == request.auth.uid || isAdmin());
+    }
   }
 }

@@ -6,6 +6,7 @@ import { AugmentedQAItem } from '../../types';
 import { RDS, PMS } from '../../constants';
 import { summarizeDiscussion } from '../../services/geminiService';
 import { User as FirebaseUser } from 'firebase/auth';
+import { formatTimestamp } from '../../utils/qaUtils';
 
 interface ModalCommentsProps {
   item: AugmentedQAItem;
@@ -133,7 +134,7 @@ export const ModalComments: React.FC<ModalCommentsProps> = ({
               <div className="flex-1 space-y-1">
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-bold text-gray-900">{comment.userName}</span>
-                  <span className="text-[10px] text-gray-400">{new Date(comment.createdAt).toLocaleString()}</span>
+                  <span className="text-[10px] text-gray-400">{formatTimestamp(comment.createdAt)}</span>
                 </div>
                 <div className="bg-gray-50 p-4 rounded-2xl rounded-tl-none border border-gray-100 text-sm text-gray-700 relative">
                   {comment.text}

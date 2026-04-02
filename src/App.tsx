@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { FileText, Plus, Download, LogOut, Moon, Sun, MoreVertical } from 'lucide-react';
+import { FileText, Plus, Download, ArrowUpDown } from 'lucide-react';
 import { Toaster, toast } from 'sonner';
 import { auth } from './firebase';
 import { signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut, User as FirebaseUser } from 'firebase/auth';
@@ -7,12 +7,12 @@ import { QAItem } from './data';
 import { AnimatePresence } from 'motion/react';
 
 // Types & Constants
-import { AugmentedQAItem, ViewMode } from './types';
-import { ADMIN_EMAILS } from './constants';
+import { AugmentedQAItem, ViewMode, AppPage } from './types';
+import { ADMIN_EMAILS, SORT_EDITOR_EMAILS, PRIORITY_ORDER } from './constants';
 
 // Hooks
 import { useQAItems } from './hooks/useQAItems';
-import { normalizeDate } from './utils/qaUtils';
+import { normalizeDate, getTodayStr } from './utils/qaUtils';
 
 // Components
 import { Dashboard } from './components/Dashboard';
@@ -36,6 +36,9 @@ const qaItemSchema = z.object({
 });
 
 import { NextReleaseBlock } from './components/NextReleaseBlock';
+import { PrioritySortView } from './components/PrioritySortView';
+import { Sidebar } from './components/Sidebar';
+import { DailyTodo } from './components/DailyTodo';
 
 export default function App() {
   const [user, setUser] = useState<FirebaseUser | null>(null);
@@ -44,7 +47,13 @@ export default function App() {
   const isAdmin = useMemo(() => {
     return !!user?.email && ADMIN_EMAILS.includes(user.email);
   }, [user]);
-  
+
+  const canSort = useMemo(() => {
+    return !!user?.email && SORT_EDITOR_EMAILS.includes(user.email);
+  }, [user]);
+
+  const [showSortMode, setShowSortMode] = useState(false);
+
   // Filter States
   const [searchQuery, setSearchQuery] = useState('');
   const [priorityFilter, setPriorityFilter] = useState('全部');
@@ -75,7 +84,18 @@ export default function App() {
   
   // Filter Dropdown States
   const [isFilterOpen, setIsFilterOpen] = useState(false);
-  const [showMoreMenu, setShowMoreMenu] = useState(false);
+  const [currentPage, setCurrentPage] = useState<AppPage>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('currentPage');
+      if (saved === 'todo' || saved === 'qa') return saved;
+    }
+    return 'todo';
+  });
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+
+  useEffect(() => {
+    localStorage.setItem('currentPage', currentPage);
+  }, [currentPage]);
   const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>(null);
   const [isDarkMode, setIsDarkMode] = useState(() => {
     if (typeof window !== 'undefined') {
@@ -191,6 +211,16 @@ export default function App() {
         if (aValue > bValue) return sortConfig.direction === 'asc' ? 1 : -1;
         return 0;
       });
+    } else {
+      // Default: sort by priority group, then sortOrder within group
+      result = [...result].sort((a, b) => {
+        const pa = PRIORITY_ORDER[a.priority] ?? 99;
+        const pb = PRIORITY_ORDER[b.priority] ?? 99;
+        if (pa !== pb) return pa - pb;
+        const sa = a.sortOrder ?? 99999;
+        const sb = b.sortOrder ?? 99999;
+        return sa - sb;
+      });
     }
 
     return result;
@@ -264,7 +294,7 @@ export default function App() {
       id: uniqueId,
       title: '',
       priority: '-',
-      date: new Date().toISOString().split('T')[0],
+      date: getTodayStr(),
       module: '其他',
       tester: user?.displayName || 'Ian',
       description: '',
@@ -419,6 +449,18 @@ export default function App() {
     });
   };
 
+  const handleSaveSortOrder = async (updates: { id: string; sortOrder: number }[]) => {
+    try {
+      for (const { id, sortOrder } of updates) {
+        await updateItem(id, { sortOrder });
+      }
+      toast.success('排序已儲存');
+      setShowSortMode(false);
+    } catch (error) {
+      toast.error('排序儲存失敗');
+    }
+  };
+
   // Callbacks for Kanban
   const handleKanbanItemClick = React.useCallback((item: AugmentedQAItem) => {
     setSelectedItemId(item.id);
@@ -469,8 +511,8 @@ export default function App() {
     <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-6">
       <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 max-w-md w-full text-center">
         <FileText className="text-blue-600 w-16 h-16 mx-auto mb-4" />
-        <h1 className="text-2xl font-bold text-gray-900 mb-2">P4 每週版更 QA 追蹤系統</h1>
-        <p className="text-gray-500 mb-8">請登入以存取團隊資料庫</p>
+        <h1 className="text-2xl font-bold text-gray-900 mb-2">OVideo Team</h1>
+        <p className="text-gray-500 mb-8">請登入以存取團隊工作區</p>
         <button onClick={handleLogin} className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-xl transition-all shadow-lg shadow-blue-200">
           使用 Google 帳號登入
         </button>
@@ -478,164 +520,188 @@ export default function App() {
     </div>
   );
 
+  const handleNavigateToQAItem = (itemId: string) => {
+    setCurrentPage('qa');
+    setSelectedItemId(itemId);
+  };
+
   return (
-    <div className="min-h-screen bg-gray-50 text-gray-900 font-sans p-4 md:p-8">
+    <div className="min-h-screen flex bg-gray-50 text-gray-900 font-sans">
       <Toaster position="top-center" richColors />
-      <div className="max-w-7xl mx-auto space-y-8">
-        
-        {/* Header */}
-        <header className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-          <div>
-            <h1 className="text-2xl md:text-3xl font-black text-gray-900 flex items-center gap-3 tracking-tight">
-              <FileText className="text-blue-600 shrink-0" size={32} />
-              QA TRACKER <span className="text-blue-600">PRO</span>
-            </h1>
-            <p className="text-gray-500 mt-1 font-medium">數據分析與任務管理儀表板</p>
-          </div>
-          <div className="flex items-center gap-3">
-            <button onClick={handleAddNew} className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2.5 rounded-xl transition-all shadow-md text-sm font-bold">
-              <Plus size={18} /> 新增問題
-            </button>
-            <NotificationCenter user={user} onItemClick={(itemId) => setSelectedItemId(itemId)} />
-            <div className="relative">
-              <button
-                onClick={() => setShowMoreMenu(prev => !prev)}
-                className="flex items-center gap-2 bg-white hover:bg-gray-50 text-gray-700 px-3 py-2.5 rounded-xl transition-all border border-gray-200 shadow-sm"
-                aria-label="更多選項"
-              >
-                <MoreVertical size={18} />
-              </button>
-              {showMoreMenu && (
+      <Sidebar
+        currentPage={currentPage}
+        onNavigate={setCurrentPage}
+        collapsed={sidebarCollapsed}
+        onToggleCollapse={() => setSidebarCollapsed(prev => !prev)}
+        user={user}
+        onLogout={handleLogout}
+        isDarkMode={isDarkMode}
+        onToggleDarkMode={() => setIsDarkMode(prev => !prev)}
+      />
+
+      <main className="flex-1 min-h-screen overflow-y-auto p-4 md:p-8">
+        <div className="max-w-7xl mx-auto space-y-8">
+
+          {/* Header — shared across pages */}
+          <header className="flex items-center justify-between gap-6 pl-12 lg:pl-0">
+            <div>
+              <h1 className="text-2xl md:text-3xl font-black text-gray-900 tracking-tight">
+                {currentPage === 'todo' ? '每日待辦' : 'QA 追蹤'}
+              </h1>
+              <p className="text-gray-500 mt-1 font-medium text-sm">
+                {currentPage === 'todo' ? '管理團隊每日工作項目' : '數據分析與任務管理儀表板'}
+              </p>
+            </div>
+            <div className="flex items-center gap-3">
+              {currentPage === 'qa' && (
                 <>
-                  <div className="fixed inset-0 z-10" onClick={() => setShowMoreMenu(false)} />
-                  <div className="absolute right-0 mt-2 w-44 bg-white border border-gray-200 rounded-xl shadow-xl z-20 overflow-hidden">
+                  <button onClick={handleAddNew} className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2.5 rounded-xl transition-all shadow-md text-sm font-bold">
+                    <Plus size={18} /> <span className="hidden sm:inline">新增問題</span>
+                  </button>
+                  <NotificationCenter user={user} onItemClick={(itemId) => setSelectedItemId(itemId)} />
+                  {canSort && (
                     <button
-                      onClick={() => { handleExport(); setShowMoreMenu(false); }}
-                      className="w-full flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                      onClick={() => setShowSortMode(true)}
+                      className="flex items-center gap-2 bg-white hover:bg-gray-50 text-gray-700 px-3 py-2.5 rounded-xl transition-all border border-gray-200 shadow-sm text-sm font-bold"
+                      title="排序管理"
+                      aria-label="排序管理"
                     >
-                      <Download size={16} /> 匯出 CSV
+                      <ArrowUpDown size={18} /> <span className="hidden sm:inline">排序</span>
                     </button>
-                    <button
-                      onClick={() => { setIsDarkMode(prev => !prev); setShowMoreMenu(false); }}
-                      className="w-full flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-                    >
-                      {isDarkMode ? <Sun size={16} /> : <Moon size={16} />}
-                      {isDarkMode ? '淺色模式' : '深色模式'}
-                    </button>
-                    <div className="border-t border-gray-100" />
-                    <button
-                      onClick={() => { handleLogout(); setShowMoreMenu(false); }}
-                      className="w-full flex items-center gap-3 px-4 py-3 text-sm text-red-600 hover:bg-red-50 transition-colors"
-                    >
-                      <LogOut size={16} /> 登出
-                    </button>
-                  </div>
+                  )}
+                  <button
+                    onClick={handleExport}
+                    className="flex items-center gap-2 bg-white hover:bg-gray-50 text-gray-700 px-3 py-2.5 rounded-xl transition-all border border-gray-200 shadow-sm text-sm font-bold"
+                    title="匯出 CSV"
+                    aria-label="匯出 CSV"
+                  >
+                    <Download size={18} /> <span className="hidden sm:inline">匯出</span>
+                  </button>
                 </>
               )}
             </div>
-          </div>
-        </header>
+          </header>
 
-        <NextReleaseBlock 
-          items={augmentedData} 
-          onItemClick={(item) => setSelectedItemId(item.id)}
-          onRemoveFromRelease={handleRemoveFromRelease}
-          onAutoAddReleaseItems={handleAutoAddReleaseItems}
-        />
-
-        {/* Quick Stats */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          {[
-            { label: '未結案問題', value: quickStats.totalActive, color: 'blue' },
-            { label: 'P0/P1 嚴重', value: quickStats.criticalBugs, color: 'red' },
-            { label: '待 PM 測試', value: quickStats.readyForTest, color: 'teal' },
-            { label: '我的待辦', value: quickStats.myPending, color: 'purple' }
-          ].map(stat => (
-            <div key={stat.label} className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
-              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">{stat.label}</p>
-              <p className="text-2xl font-black text-gray-900">{stat.value}</p>
-            </div>
-          ))}
-        </div>
-
-        <Dashboard items={augmentedData} />
-
-        <FilterBar 
-          searchQuery={searchQuery} setSearchQuery={setSearchQuery}
-          priorityFilter={priorityFilter} setPriorityFilter={setPriorityFilter}
-          statusFilters={statusFilters} setStatusFilters={setStatusFilters}
-          assigneeFilters={assigneeFilters} setAssigneeFilters={setAssigneeFilters}
-          moduleFilters={moduleFilters} setModuleFilters={setModuleFilters}
-          selectedVersion={selectedVersion} setSelectedVersion={setSelectedVersion}
-          versions={versions}
-          viewMode={viewMode} setViewMode={setViewMode}
-          isFilterOpen={isFilterOpen} setIsFilterOpen={setIsFilterOpen}
-          dateRange={dateRange} setDateRange={setDateRange}
-        />
-
-        {viewMode === 'table' ? (
-          <QAItemTable 
-            items={filteredData} 
-            onItemClick={(item) => setSelectedItemId(item.id)} 
-            onStatusChange={(item, status) => updateItem(item.id, { currentFlow: status }, item)}
-            onAssigneeChange={(item, assignee) => updateItem(item.id, { assignee }, item)}
-            selectedIds={selectedIds}
-            setSelectedIds={setSelectedIds}
-            sortConfig={sortConfig}
-            onSort={handleSort}
-          />
-        ) : (
-          <QAItemKanban 
-            items={filteredData} 
-            onItemClick={handleKanbanItemClick} 
-            onStatusChange={handleKanbanStatusChange}
-          />
-        )}
-
-        <BulkActions
-          selectedIds={selectedIds}
-          onBulkUpdate={(updates) => {
-            bulkUpdate(selectedIds, updates);
-            setSelectedIds([]);
-          }}
-          onBulkDelete={() => {
-            bulkDelete(selectedIds);
-            setSelectedIds([]);
-          }}
-          onClearSelection={() => setSelectedIds([])}
-        />
-
-        <AnimatePresence>
-          {selectedItem && (
-            <QAItemModal 
-              item={selectedItem}
-              isEditing={isEditing}
-              isAdding={isAdding}
-              editForm={editForm}
-              setEditForm={setEditForm}
-              onClose={() => { setSelectedItemId(null); setIsEditing(false); setIsAdding(false); }}
-              onEdit={() => { setEditForm(selectedItem); setIsEditing(true); }}
-              onSave={handleSave}
-              onDelete={() => deleteItem(selectedItem.id).then(() => setSelectedItemId(null))}
-              onCancel={() => { 
-                setIsEditing(false); 
-                if (isAdding) {
-                  setSelectedItemId(null);
-                  setIsAdding(false);
-                }
-              }}
-              onQuickStatusUpdate={(status) => updateItem(selectedItem.id, { currentFlow: status }, selectedItem)}
-              onCommentSubmit={(text) => addComment(selectedItem.id, text)}
-              onCommentDelete={(id) => deleteComment(selectedItem.id, id)}
-              onCommentEdit={(id, text) => editComment(selectedItem.id, id, text)}
+          {/* Page content */}
+          {currentPage === 'todo' ? (
+            <DailyTodo
               user={user}
-              isUploading={isUploading}
-              onImageUpload={handleImageUpload}
-              onFileUpload={handleFileUpload}
+              qaItems={augmentedData}
+              onNavigateToQA={handleNavigateToQAItem}
+            />
+          ) : (
+            <>
+              <NextReleaseBlock
+                items={augmentedData}
+                onItemClick={(item) => setSelectedItemId(item.id)}
+                onRemoveFromRelease={handleRemoveFromRelease}
+                onAutoAddReleaseItems={handleAutoAddReleaseItems}
+              />
+
+              {/* Quick Stats */}
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                {[
+                  { label: '未結案問題', value: quickStats.totalActive, color: 'blue' },
+                  { label: 'P0/P1 嚴重', value: quickStats.criticalBugs, color: 'red' },
+                  { label: '待 PM 測試', value: quickStats.readyForTest, color: 'teal' },
+                  { label: '我的待辦', value: quickStats.myPending, color: 'purple' }
+                ].map(stat => (
+                  <div key={stat.label} className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
+                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">{stat.label}</p>
+                    <p className="text-2xl font-black text-gray-900">{stat.value}</p>
+                  </div>
+                ))}
+              </div>
+
+              <Dashboard items={augmentedData} />
+
+              <FilterBar
+                searchQuery={searchQuery} setSearchQuery={setSearchQuery}
+                priorityFilter={priorityFilter} setPriorityFilter={setPriorityFilter}
+                statusFilters={statusFilters} setStatusFilters={setStatusFilters}
+                assigneeFilters={assigneeFilters} setAssigneeFilters={setAssigneeFilters}
+                moduleFilters={moduleFilters} setModuleFilters={setModuleFilters}
+                selectedVersion={selectedVersion} setSelectedVersion={setSelectedVersion}
+                versions={versions}
+                viewMode={viewMode} setViewMode={setViewMode}
+                isFilterOpen={isFilterOpen} setIsFilterOpen={setIsFilterOpen}
+                dateRange={dateRange} setDateRange={setDateRange}
+              />
+
+              {viewMode === 'table' ? (
+                <QAItemTable
+                  items={filteredData}
+                  onItemClick={(item) => setSelectedItemId(item.id)}
+                  onStatusChange={(item, status) => updateItem(item.id, { currentFlow: status }, item)}
+                  onAssigneeChange={(item, assignee) => updateItem(item.id, { assignee }, item)}
+                  selectedIds={selectedIds}
+                  setSelectedIds={setSelectedIds}
+                  sortConfig={sortConfig}
+                  onSort={handleSort}
+                />
+              ) : (
+                <QAItemKanban
+                  items={filteredData}
+                  onItemClick={handleKanbanItemClick}
+                  onStatusChange={handleKanbanStatusChange}
+                />
+              )}
+
+              <BulkActions
+                selectedIds={selectedIds}
+                onBulkUpdate={(updates) => {
+                  bulkUpdate(selectedIds, updates);
+                  setSelectedIds([]);
+                }}
+                onBulkDelete={() => {
+                  bulkDelete(selectedIds);
+                  setSelectedIds([]);
+                }}
+                onClearSelection={() => setSelectedIds([])}
+              />
+            </>
+          )}
+
+          <AnimatePresence>
+            {selectedItem && (
+              <QAItemModal
+                item={selectedItem}
+                isEditing={isEditing}
+                isAdding={isAdding}
+                editForm={editForm}
+                setEditForm={setEditForm}
+                onClose={() => { setSelectedItemId(null); setIsEditing(false); setIsAdding(false); }}
+                onEdit={() => { setEditForm(selectedItem); setIsEditing(true); }}
+                onSave={handleSave}
+                onDelete={() => deleteItem(selectedItem.id).then(() => setSelectedItemId(null))}
+                onCancel={() => {
+                  setIsEditing(false);
+                  if (isAdding) {
+                    setSelectedItemId(null);
+                    setIsAdding(false);
+                  }
+                }}
+                onQuickStatusUpdate={(status) => updateItem(selectedItem.id, { currentFlow: status }, selectedItem)}
+                onCommentSubmit={(text) => addComment(selectedItem.id, text)}
+                onCommentDelete={(id) => deleteComment(selectedItem.id, id)}
+                onCommentEdit={(id, text) => editComment(selectedItem.id, id, text)}
+                user={user}
+                isUploading={isUploading}
+                onImageUpload={handleImageUpload}
+                onFileUpload={handleFileUpload}
+              />
+            )}
+          </AnimatePresence>
+
+          {showSortMode && (
+            <PrioritySortView
+              items={augmentedData}
+              onSave={handleSaveSortOrder}
+              onClose={() => setShowSortMode(false)}
             />
           )}
-        </AnimatePresence>
-      </div>
+        </div>
+      </main>
     </div>
   );
 }
