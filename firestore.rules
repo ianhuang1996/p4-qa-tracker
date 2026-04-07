@@ -135,6 +135,16 @@ service cloud.firestore {
       allow read, write: if isAuthenticated();
     }
 
+    match /wiki_pages/{pageId} {
+      allow read: if isAuthenticated();
+      allow create, update, delete: if isAuthenticated();
+    }
+
+    match /releases/{releaseId} {
+      allow read: if isAuthenticated();
+      allow create, update, delete: if isAuthenticated();
+    }
+
     match /todos/{todoId} {
       allow read: if isAuthenticated();
       allow create: if isAuthenticated();

@@ -7,6 +7,8 @@ import { Sidebar } from './components/Sidebar';
 import { NotificationCenter } from './components/NotificationCenter';
 import { OverviewPage } from './components/OverviewPage';
 import { QAPage } from './components/QAPage';
+import { ReleasePage } from './components/ReleasePage';
+import { WikiPageView } from './components/WikiPageView';
 import { DailyTodo } from './components/DailyTodo';
 import { ErrorBoundary } from './components/ErrorBoundary';
 
@@ -97,10 +99,10 @@ function AppLayout() {
             <header className="flex items-center justify-between gap-6 pl-12 lg:pl-0 mb-8">
               <div>
                 <h1 className="text-2xl md:text-3xl font-black text-gray-900 tracking-tight">
-                  {currentPage === 'todo' ? '每日待辦' : 'QA 追蹤'}
+                  {{ todo: '每日待辦', qa: 'QA 追蹤', release: '版更管理', wiki: '知識庫' }[currentPage] || ''}
                 </h1>
                 <p className="text-gray-500 mt-1 font-medium text-sm">
-                  {currentPage === 'todo' ? '管理團隊每日工作項目' : '數據分析與任務管理儀表板'}
+                  {{ todo: '管理團隊每日工作項目', qa: '數據分析與任務管理儀表板', release: '版本排程、發布與歷史紀錄', wiki: '團隊產品知識與文件管理' }[currentPage] || ''}
                 </p>
               </div>
             </header>
@@ -115,6 +117,10 @@ function AppLayout() {
               />
             ) : currentPage === 'todo' ? (
               <DailyTodo user={user} onNavigateToQA={() => setCurrentPage('qa')} />
+            ) : currentPage === 'release' ? (
+              <ReleasePage />
+            ) : currentPage === 'wiki' ? (
+              <WikiPageView />
             ) : (
               <QAPage />
             )}

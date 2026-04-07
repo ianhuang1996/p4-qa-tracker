@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { AlertTriangle, CheckCircle2, Clock, Circle, Bug, ArrowRight, Flag } from 'lucide-react';
+import { CheckCircle2, Circle, Bug, ArrowRight, Flag, Copy, ClipboardList } from 'lucide-react';
 import { User as FirebaseUser } from 'firebase/auth';
 import { useTodos } from '../hooks/useTodos';
 import { useQAItems } from '../hooks/useQAItems';
@@ -8,6 +8,9 @@ import { getTodayStr, getAvatarColor, formatTimestamp } from '../utils/qaUtils';
 import { STATUS_COLORS, PRIORITY_COLORS } from '../constants';
 import { AugmentedQAItem } from '../types';
 import { normalizeDate } from '../utils/qaUtils';
+import { WeeklyReport } from './WeeklyReport';
+import { generateStandupSummary, formatStandupText } from '../utils/standupUtils';
+import { toast } from 'sonner';
 
 const PRIORITY_FLAG: Record<string, string> = {
   high: 'text-red-500',
@@ -168,6 +171,34 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ onNavigateToQA, onNa
           </div>
         </div>
       </div>
+
+      {/* Daily Standup */}
+      {user && (
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-sm font-bold text-gray-900 flex items-center gap-2">
+              <ClipboardList size={16} className="text-purple-600" />
+              今日站會摘要
+            </h3>
+            <button
+              onClick={() => {
+                const summary = generateStandupSummary(myTodos, augmentedData, user.displayName || '');
+                navigator.clipboard.writeText(formatStandupText(summary));
+                toast.success('站會摘要已複製');
+              }}
+              className="text-xs text-purple-600 hover:text-purple-700 font-bold flex items-center gap-1"
+            >
+              <Copy size={12} /> 複製摘要
+            </button>
+          </div>
+          <pre className="text-xs text-gray-600 whitespace-pre-wrap bg-gray-50 p-4 rounded-xl border border-gray-100 font-sans leading-relaxed">
+            {formatStandupText(generateStandupSummary(myTodos, augmentedData, user.displayName || ''))}
+          </pre>
+        </div>
+      )}
+
+      {/* Weekly Report */}
+      <WeeklyReport items={augmentedData} />
     </div>
   );
 };

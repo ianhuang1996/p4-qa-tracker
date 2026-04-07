@@ -315,7 +315,7 @@ export const QAPage: React.FC<QAPageProps> = () => {
 
   const handleSaveSortOrder = async (updates: { id: string; sortOrder: number }[]) => {
     try {
-      for (const { id, sortOrder } of updates) { await updateItem(id, { sortOrder }); }
+      for (const { id, sortOrder } of updates) { await updateItem(id, { sortOrder }, undefined, true); }
       toast.success('排序已儲存');
       setShowSortMode(false);
     } catch { toast.error('排序儲存失敗'); }

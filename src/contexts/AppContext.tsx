@@ -37,7 +37,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [currentPage, setCurrentPage] = useState<AppPage>(() => {
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('currentPage');
-      if (saved === 'overview' || saved === 'todo' || saved === 'qa') return saved;
+      if (['overview', 'todo', 'qa', 'release', 'wiki'].includes(saved || '')) return saved as any;
     }
     return 'overview';
   });

@@ -4,6 +4,7 @@ import { collection, onSnapshot, doc, setDoc, deleteDoc, writeBatch, addDoc, que
 import { User as FirebaseUser } from 'firebase/auth';
 import { toast } from 'sonner';
 import { QAItem, QAComment } from '../data';
+import { parseMentions } from '../utils/mentionUtils';
 import { AugmentedQAItem, OperationType, HistoryEntry, Notification } from '../types';
 
 interface FirestoreErrorInfo {
@@ -129,9 +130,9 @@ export function useQAItems(user: FirebaseUser | null, isAuthReady: boolean) {
     }
   };
 
-  const updateItem = async (itemId: string, updates: Partial<QAItem>, oldItem?: QAItem) => {
+  const updateItem = async (itemId: string, updates: Partial<QAItem>, oldItem?: QAItem, silent?: boolean) => {
     if (!user) return;
-    
+
     // Sanitize updates for Firestore (replace undefined with null or remove)
     const sanitizedUpdates: any = {};
     Object.keys(updates).forEach(key => {
@@ -147,8 +148,8 @@ export function useQAItems(user: FirebaseUser | null, isAuthReady: boolean) {
     try {
       const docRef = doc(db, 'qa_items', itemId);
       await setDoc(docRef, sanitizedUpdates, { merge: true });
-      
-      toast.success('更新成功');
+
+      if (!silent) toast.success('更新成功');
     } catch (error) {
       setData(previousData); // Rollback
       toast.error('更新失敗');
@@ -216,6 +217,23 @@ export function useQAItems(user: FirebaseUser | null, isAuthReady: boolean) {
           type: 'comment',
           newValue: text.trim()
         });
+      }
+
+      // Notify @mentioned users
+      const mentions = parseMentions(text);
+      for (const name of mentions) {
+        const mentionedUserId = await getUserIdByName(name);
+        if (mentionedUserId && mentionedUserId !== user.uid && mentionedUserId !== item?.authorUID) {
+          await createNotification({
+            userId: mentionedUserId,
+            fromUserId: user.uid,
+            fromUserName: user.displayName || '匿名用戶',
+            itemId: itemId,
+            itemTitle: item?.title || item?.description.substring(0, 30) || itemId,
+            type: 'comment',
+            newValue: `提及了你: ${text.trim().substring(0, 50)}`
+          });
+        }
       }
     } catch (error) {
       handleFirestoreError(error, OperationType.WRITE, path);

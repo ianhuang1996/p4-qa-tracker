@@ -39,7 +39,43 @@ export interface AugmentedQAItem extends QAItem {
 
 export type ViewMode = 'table' | 'kanban';
 export type QuickFilter = 'all' | 'my_tasks' | 'ready_for_test';
-export type AppPage = 'overview' | 'todo' | 'qa';
+export type AppPage = 'overview' | 'todo' | 'qa' | 'release' | 'wiki';
+
+export type WikiCategory = 'API' | '設計規範' | '產品規格' | '一般';
+
+export interface WikiPage {
+  id: string;
+  title: string;
+  content: string;
+  category: WikiCategory;
+  createdBy: string;
+  createdByName: string;
+  createdAt: number;
+  updatedAt: number;
+  updatedBy: string;
+  updatedByName: string;
+}
+
+export interface ChecklistItem {
+  id: string;
+  label: string;
+  checked: boolean;
+}
+
+export interface Release {
+  id: string;
+  version: string;
+  title: string;
+  status: 'planning' | 'uat' | 'released' | 'cancelled';
+  scheduledDate: string;
+  releasedAt: number | null;
+  linkedItemIds: string[];
+  checklist: ChecklistItem[];
+  releaseNotes: string;
+  createdBy: string;
+  createdByName: string;
+  createdAt: number;
+}
 
 export interface HistoryEntry {
   id: string;

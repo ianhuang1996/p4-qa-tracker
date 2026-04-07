@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { LayoutDashboard, CheckSquare, Bug, ChevronLeft, ChevronRight, Menu, X, LogOut, Moon, Sun, Bell } from 'lucide-react';
+import { LayoutDashboard, CheckSquare, Bug, Rocket, BookOpen, ChevronLeft, ChevronRight, Menu, X, LogOut, Moon, Sun, Bell } from 'lucide-react';
 import { User as FirebaseUser } from 'firebase/auth';
 import { AppPage } from '../types';
 import { getAvatarColor } from '../utils/qaUtils';
@@ -21,6 +21,8 @@ const NAV_ITEMS: { page: AppPage; label: string; icon: React.ReactNode }[] = [
   { page: 'overview', label: '今日總覽', icon: <LayoutDashboard size={20} /> },
   { page: 'todo', label: '每日待辦', icon: <CheckSquare size={20} /> },
   { page: 'qa', label: 'QA 追蹤', icon: <Bug size={20} /> },
+  { page: 'release', label: '版更管理', icon: <Rocket size={20} /> },
+  { page: 'wiki', label: '知識庫', icon: <BookOpen size={20} /> },
 ];
 
 export const Sidebar: React.FC<SidebarProps> = ({
