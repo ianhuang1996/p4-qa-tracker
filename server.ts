@@ -118,6 +118,11 @@ app.post('/api/slack/notify', async (req, res) => {
   }
 });
 
+// Health check for API
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'ok', slack: !!SLACK_BOT_TOKEN });
+});
+
 // Vite middleware
 async function startServer() {
   if (process.env.NODE_ENV !== "production") {
