@@ -135,6 +135,12 @@ service cloud.firestore {
       allow read, write: if isAuthenticated();
     }
 
+    match /daily_reports/{reportId} {
+      allow read: if isAuthenticated();
+      allow create, update: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+      allow delete: if isAuthenticated();
+    }
+
     match /wiki_pages/{pageId} {
       allow read: if isAuthenticated();
       allow create, update, delete: if isAuthenticated();

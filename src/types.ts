@@ -116,3 +116,14 @@ export interface TodoItem {
   createdAt: number;
   completedAt?: number;
 }
+
+export interface DailyReport {
+  id: string;
+  date: string;            // YYYY-MM-DD
+  userId: string;
+  completed: string;       // 🟢 今日完成
+  inProgress: string;      // 🟡 進行中 / 明日重點
+  risks: string;           // 🔴 風險 / 需協助
+  createdAt: number;
+  updatedAt: number;
+}

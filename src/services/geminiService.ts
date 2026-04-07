@@ -1,6 +1,6 @@
 import { GoogleGenAI } from "@google/genai";
 import { QAItem, QAComment } from "../data";
-import { AugmentedQAItem } from "../types";
+import { AugmentedQAItem, TodoItem, Release } from "../types";
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || "" });
 
@@ -62,5 +62,101 @@ ${itemList}
   } catch (error) {
     console.error("Gemini Release Note Error:", error);
     return "Release Note 生成失敗，請確認 Gemini API Key 設定。";
+  }
+};
+
+interface DailyReportInput {
+  date: string;
+  completedTodos: string[];
+  completedQAItems: { id: string; title: string; module: string }[];
+  inProgressQAItems: { id: string; title: string; module: string; assignee: string }[];
+  pendingTodos: string[];
+  riskItems: { id: string; title: string; reason: string }[];
+  activeRelease?: { version: string; scheduledDate: string; itemCount: number };
+  manualNotes?: string;
+}
+
+export const generateDailyReport = async (input: DailyReportInput): Promise<{ completed: string; inProgress: string; risks: string }> => {
+  const sections: string[] = [];
+
+  sections.push(`日期: ${input.date}`);
+
+  if (input.completedTodos.length > 0) {
+    sections.push(`今日完成的待辦:\n${input.completedTodos.map(t => `- ${t}`).join('\n')}`);
+  }
+  if (input.completedQAItems.length > 0) {
+    sections.push(`今日修復/關閉的 QA 項目:\n${input.completedQAItems.map(q => `- ${q.id}: ${q.title} (${q.module})`).join('\n')}`);
+  }
+  if (input.inProgressQAItems.length > 0) {
+    sections.push(`目前開發中的 QA 項目:\n${input.inProgressQAItems.map(q => `- ${q.id}: ${q.title} (${q.module}, 負責: ${q.assignee})`).join('\n')}`);
+  }
+  if (input.pendingTodos.length > 0) {
+    sections.push(`未完成的待辦:\n${input.pendingTodos.map(t => `- ${t}`).join('\n')}`);
+  }
+  if (input.riskItems.length > 0) {
+    sections.push(`風險項目:\n${input.riskItems.map(r => `- ${r.id}: ${r.title} — ${r.reason}`).join('\n')}`);
+  }
+  if (input.activeRelease) {
+    sections.push(`即將發布: ${input.activeRelease.version}，預計 ${input.activeRelease.scheduledDate}，包含 ${input.activeRelease.itemCount} 個項目`);
+  }
+  if (input.manualNotes) {
+    sections.push(`PM 補充:\n${input.manualNotes}`);
+  }
+
+  const prompt = `
+你是一位軟體團隊的 PM，請根據以下今日工作資料，產生一份簡潔專業的每日進度報告，給主管看的。
+
+${sections.join('\n\n')}
+
+請輸出三個區塊，用 --- 分隔。
+
+重要規則：
+- 每個區塊直接寫內容，不要加任何標題（不要寫「今日完成：」「進行中：」等標題文字，我會自己加）
+- 直接從列表項目開始
+
+第一區塊：
+- 總結今天完成了什麼，按類別分組（如前端修復、後台功能等）
+- 如果有 QA items，用 Q 編號列出
+- 簡潔扼要，每點一行
+
+---
+
+第二區塊：
+- 列出目前還在進行的工作和明天要做的重點
+- 如果有版更排程，提及時程
+
+---
+
+第三區塊：
+- 列出潛在風險（P0 未修、被退回的、逾期的）
+- 如果沒有風險就寫「目前無重大風險」
+
+要求：
+- 繁體中文
+- 語氣專業但簡潔
+- 每個區塊 3-6 行即可
+- 不要用 Markdown 標題語法（# ##），用純文字 + 列表（-）
+- 不要在每個區塊開頭重複寫區塊標題
+  `;
+
+  try {
+    const response = await ai.models.generateContent({
+      model: "gemini-3-flash-preview",
+      contents: prompt,
+    });
+    const text = response.text || '';
+    const parts = text.split('---').map(s => s.trim());
+    return {
+      completed: parts[0] || '今日無完成項目',
+      inProgress: parts[1] || '無進行中項目',
+      risks: parts[2] || '目前無重大風險',
+    };
+  } catch (error) {
+    console.error("Gemini Daily Report Error:", error);
+    return {
+      completed: '報告生成失敗，請手動填寫',
+      inProgress: '',
+      risks: '',
+    };
   }
 };
