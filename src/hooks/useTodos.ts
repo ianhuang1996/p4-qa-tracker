@@ -106,8 +106,13 @@ export function useTodos(user: FirebaseUser | null, date: string, dateMode: Date
 
   const updateTodo = async (todoId: string, updates: Partial<TodoItem>) => {
     if (!user) return;
+    const sanitized: Record<string, unknown> = {};
+    Object.entries(updates).forEach(([key, val]) => {
+      sanitized[key] = val === undefined ? null : val;
+    });
     try {
-      await setDoc(doc(db, 'todos', todoId), updates, { merge: true });
+      await setDoc(doc(db, 'todos', todoId), sanitized, { merge: true });
+      toast.success('更新成功');
     } catch (error) {
       toast.error('更新失敗');
       console.error(error);

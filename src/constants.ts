@@ -15,7 +15,7 @@ export const PRIORITY_COLORS: Record<string, string> = {
 export const QA_FLOWS = ['待處理', '開發中', '已修正待測試', '已修復', '退回重修', '已關閉'];
 export const PMS = ['Ian', 'Sienna'];
 export const RDS = ['Neo', 'Summer', '后玲', 'Popo', 'Unassigned'];
-export const MODULES = ['Presenter', 'Promoter', '企業組織', '雙模式', '全域設定', '其他'];
+export const MODULES = ['Presenter', 'Promoter', '企業組織', '雙模式', '全域設定', '後台', '其他'];
 
 export const ADMIN_EMAILS: string[] = [
   'ian@osensetech.com',
