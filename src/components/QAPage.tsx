@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useCallback } from 'react';
-import { Plus, Download, ArrowUpDown } from 'lucide-react';
+import { Plus, Download, ArrowUpDown, Eye, EyeOff } from 'lucide-react';
 import { toast } from 'sonner';
 import { AnimatePresence } from 'motion/react';
 import { QAItem } from '../data';
@@ -49,6 +49,7 @@ export const QAPage: React.FC<QAPageProps> = () => {
   const [moduleFilters, setModuleFilters] = useState<string[]>([]);
   const [selectedVersion, setSelectedVersion] = useState<string>('all');
   const [dateRange, setDateRange] = useState({ start: '', end: '' });
+  const [hideClosed, setHideClosed] = useState(true);
 
   // UI States
   const [viewMode, setViewMode] = useState<ViewMode>(() => {
@@ -119,6 +120,7 @@ export const QAPage: React.FC<QAPageProps> = () => {
 
   const filteredData = useMemo(() => {
     let result = augmentedData.filter(item => {
+      if (hideClosed && (item.currentFlow === '已關閉' || item.currentFlow === '已修復')) return false;
       const matchStatus = statusFilters.length === 0 || statusFilters.includes(item.currentFlow || '待處理');
       const matchAssignee = assigneeFilters.length === 0 || assigneeFilters.includes(item.assignee);
       const matchModule = moduleFilters.length === 0 || moduleFilters.includes(item.module);
@@ -158,7 +160,7 @@ export const QAPage: React.FC<QAPageProps> = () => {
     }
 
     return result;
-  }, [statusFilters, assigneeFilters, moduleFilters, priorityFilter, searchQuery, augmentedData, selectedVersion, dateRange, sortConfig]);
+  }, [statusFilters, assigneeFilters, moduleFilters, priorityFilter, searchQuery, augmentedData, selectedVersion, dateRange, sortConfig, hideClosed]);
 
   const versions = useMemo(() => {
     const vSet = new Set<string>();
@@ -340,6 +342,16 @@ export const QAPage: React.FC<QAPageProps> = () => {
         )}
         <button onClick={handleExport} className="flex items-center gap-2 bg-white hover:bg-gray-50 text-gray-700 px-3 py-2.5 rounded-xl transition-all border border-gray-200 shadow-sm text-sm font-bold" aria-label="匯出 CSV">
           <Download size={18} /> <span className="hidden sm:inline">匯出</span>
+        </button>
+        <button
+          onClick={() => setHideClosed(prev => !prev)}
+          className={`flex items-center gap-2 px-3 py-2.5 rounded-xl transition-all border shadow-sm text-sm font-bold ${
+            hideClosed ? 'bg-white hover:bg-gray-50 text-gray-700 border-gray-200' : 'bg-blue-50 text-blue-700 border-blue-200'
+          }`}
+          title={hideClosed ? '顯示已關閉/已修復' : '隱藏已關閉/已修復'}
+        >
+          {hideClosed ? <EyeOff size={18} /> : <Eye size={18} />}
+          <span className="hidden sm:inline">{hideClosed ? '已隱藏結案' : '顯示全部'}</span>
         </button>
       </div>
 

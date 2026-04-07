@@ -186,13 +186,13 @@ export const QAItemTable: React.FC<QAItemTableProps> = ({
                 </td>
                 <td className="px-4 py-4 whitespace-nowrap">
                   <div className="flex items-center gap-2">
-                    {item.imageLink && (
+                    {(item.imageLink || (item.imageLinks && item.imageLinks.length > 0)) && (
                       <div className="w-8 h-8 rounded border border-gray-200 overflow-hidden bg-gray-50 flex-shrink-0">
-                        <img src={getDirectImageUrl(item.imageLink)} alt="img" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                        <img src={getDirectImageUrl(item.imageLinks?.[0] || item.imageLink || '')} alt="img" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                       </div>
                     )}
-                    {item.videoLink && <Video size={16} className="text-purple-400" />}
-                    {item.attachmentUrl && <FileText size={16} className="text-orange-400" />}
+                    {(item.videoLink || (item.videoLinks && item.videoLinks.length > 0)) && <Video size={16} className="text-purple-400" />}
+                    {(item.attachmentUrl || (item.attachments && item.attachments.length > 0)) && <FileText size={16} className="text-orange-400" />}
                   </div>
                 </td>
                 <td className="px-4 py-4 whitespace-nowrap text-right text-sm font-medium">
