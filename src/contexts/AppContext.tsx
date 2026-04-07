@@ -17,8 +17,6 @@ interface AppContextValue {
   toggleSidebar: () => void;
   handleLogin: () => Promise<void>;
   handleLogout: () => Promise<void>;
-  unreadCount: number;
-  setUnreadCount: (count: number) => void;
   pendingItemId: string | null;
   navigateToQAItem: (itemId: string) => void;
 }
@@ -34,7 +32,6 @@ export const useAppContext = () => {
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<FirebaseUser | null>(null);
   const [isAuthReady, setIsAuthReady] = useState(false);
-  const [unreadCount, setUnreadCount] = useState(0);
   const [pendingItemId, setPendingItemId] = useState<string | null>(null);
 
   const navigateToQAItem = (itemId: string) => {
@@ -112,8 +109,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     toggleSidebar: () => setSidebarCollapsed(prev => !prev),
     handleLogin,
     handleLogout,
-    unreadCount,
-    setUnreadCount,
     pendingItemId,
     navigateToQAItem,
   };

@@ -3,12 +3,17 @@ import { CheckCircle2, Circle, Bug, ArrowRight, Flag } from 'lucide-react';
 import { User as FirebaseUser } from 'firebase/auth';
 import { useTodos } from '../hooks/useTodos';
 import { useQAItems } from '../hooks/useQAItems';
+import { useReleases } from '../hooks/useReleases';
+import { useWikiPages } from '../hooks/useWikiPages';
+import { useAchievements, useAllDailyReports } from '../hooks/useAchievements';
 import { useAppContext } from '../contexts/AppContext';
 import { getTodayStr, getAvatarColor, augmentQAItems } from '../utils/qaUtils';
 import { STATUS_COLORS, PRIORITY_COLORS } from '../constants';
 import { AugmentedQAItem } from '../types';
 import { WeeklyReport } from './WeeklyReport';
 import { DailyReportEditor } from './DailyReportEditor';
+import { AchievementCard } from './AchievementCard';
+import { TeamGoals } from './TeamGoals';
 
 const PRIORITY_FLAG: Record<string, string> = {
   high: 'text-red-500',
@@ -26,6 +31,18 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ onNavigateToQA, onNa
   const today = getTodayStr();
   const { todos } = useTodos(user, today, 'day');
   const { data } = useQAItems(user, isAuthReady);
+  const { releases } = useReleases(user);
+  const { pages: wikiPages } = useWikiPages(user);
+  const allDailyReports = useAllDailyReports(user);
+
+  const { unlockedAchievements, lockedAchievements, achievementProgress, teamGoals } = useAchievements({
+    user,
+    qaItems: data,
+    todos,
+    wikiPages,
+    releases,
+    dailyReports: allDailyReports,
+  });
 
   const myTodos = useMemo(() => {
     if (!user) return [];
@@ -181,6 +198,16 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ onNavigateToQA, onNa
 
       {/* Daily Report */}
       <DailyReportEditor />
+
+      {/* Gamification */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <AchievementCard
+          unlocked={unlockedAchievements}
+          locked={lockedAchievements}
+          progress={achievementProgress}
+        />
+        <TeamGoals goals={teamGoals} />
+      </div>
 
       </>
       ) : (

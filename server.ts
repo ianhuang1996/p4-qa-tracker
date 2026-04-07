@@ -28,7 +28,7 @@ const storage = multer.diskStorage({
     cb(null, uniqueSuffix + ext)
   }
 });
-const upload = multer({ storage: storage });
+const upload = multer({ storage, limits: { fileSize: 10 * 1024 * 1024 } }); // 10MB limit
 
 app.use(express.json());
 app.use('/uploads', express.static(uploadsDir));
@@ -52,6 +52,12 @@ app.post('/api/upload', upload.single('file'), (req, res) => {
 
 // Slack notification API
 const SLACK_BOT_TOKEN = process.env.SLACK_BOT_TOKEN;
+if (!SLACK_BOT_TOKEN) {
+  console.warn('⚠️  SLACK_BOT_TOKEN not set — Slack notifications disabled');
+}
+
+interface SlackUserResponse { ok: boolean; user?: { id: string }; error?: string }
+interface SlackPostResponse { ok: boolean; error?: string }
 
 // Cache: email -> Slack user ID
 const slackUserCache: Record<string, string> = {};
@@ -64,7 +70,7 @@ async function getSlackUserId(email: string): Promise<string | null> {
     const res = await fetch(`https://slack.com/api/users.lookupByEmail?email=${encodeURIComponent(email)}`, {
       headers: { 'Authorization': `Bearer ${SLACK_BOT_TOKEN}` },
     });
-    const data = await res.json() as any;
+    const data: SlackUserResponse = await res.json();
     if (data.ok && data.user?.id) {
       slackUserCache[email] = data.user.id;
       return data.user.id;
@@ -105,7 +111,7 @@ app.post('/api/slack/notify', async (req, res) => {
       }),
     });
 
-    const slackData = await slackRes.json() as any;
+    const slackData: SlackPostResponse = await slackRes.json();
     if (slackData.ok) {
       res.json({ success: true });
     } else {

@@ -127,3 +127,40 @@ export interface DailyReport {
   createdAt: number;
   updatedAt: number;
 }
+
+// ===== Gamification =====
+
+export type AchievementCategory = 'bugfix' | 'speed' | 'consistency' | 'todo' | 'wiki' | 'communication' | 'release' | 'special';
+
+export interface AchievementDef {
+  id: string;
+  name: string;
+  description: string;
+  icon: string;
+  category: AchievementCategory;
+  tier: 1 | 2 | 3;           // Bronze / Silver / Gold
+  condition: {
+    metric: string;           // e.g. 'bugs_fixed', 'p0_fixed', 'daily_report_streak'
+    threshold: number;
+  };
+}
+
+export interface UserAchievement {
+  achievementId: string;
+  unlockedAt: number;
+}
+
+export interface TeamGoalDef {
+  id: string;
+  name: string;
+  icon: string;
+  description: string;
+  type: 'release' | 'weekly';
+}
+
+export interface TeamGoalProgress {
+  goalId: string;
+  current: number;
+  target: number;
+  achieved: boolean;
+}
