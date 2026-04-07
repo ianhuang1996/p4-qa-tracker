@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
-import { Plus, Search, Edit2, Trash2, Save, X, BookOpen, FolderOpen } from 'lucide-react';
+import { Plus, Search, Edit2, Trash2, Save, X, BookOpen, FolderOpen, Clock, Bold, Italic, List, Code, Link2, Heading } from 'lucide-react';
 import { useAppContext } from '../contexts/AppContext';
 import { useWikiPages } from '../hooks/useWikiPages';
 import { WikiPage, WikiCategory } from '../types';
@@ -132,8 +132,30 @@ export const WikiPageView: React.FC = () => {
           ))}
         </div>
 
+        {/* Recent edits */}
+        {filteredPages.length > 0 && (
+          <div className="mb-2">
+            <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1 flex items-center gap-1">
+              <Clock size={12} /> 最近編輯
+            </h4>
+            <div className="space-y-1">
+              {[...filteredPages].sort((a, b) => b.updatedAt - a.updatedAt).slice(0, 3).map(page => (
+                <button
+                  key={`recent-${page.id}`}
+                  onClick={() => { setSelectedPageId(page.id); setIsEditing(false); }}
+                  className={`w-full text-left px-3 py-1.5 rounded-lg text-xs transition-colors ${
+                    selectedPageId === page.id ? 'bg-blue-50 text-blue-700 font-bold' : 'text-gray-600 hover:bg-gray-50'
+                  }`}
+                >
+                  {page.title}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Page list grouped by category */}
-        <div className="space-y-4 overflow-y-auto" style={{ maxHeight: 'calc(100vh - 350px)' }}>
+        <div className="space-y-4 overflow-y-auto" style={{ maxHeight: 'calc(100vh - 450px)' }}>
           {Object.entries(groupedPages).map(([category, categoryPages]) => (
             <div key={category}>
               <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1 flex items-center gap-1">
@@ -165,6 +187,14 @@ export const WikiPageView: React.FC = () => {
       <div className="flex-1 bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
         {selectedPage ? (
           <>
+            {/* Breadcrumb */}
+            <nav className="flex items-center gap-2 text-xs text-gray-400 px-5 pt-3">
+              <span>知識庫</span>
+              <span>/</span>
+              <span>{selectedPage.category}</span>
+              <span>/</span>
+              <span className="text-gray-700 font-bold truncate">{selectedPage.title}</span>
+            </nav>
             {/* Header */}
             <div className="flex items-center justify-between p-5 border-b border-gray-100">
               {isEditing ? (
@@ -205,12 +235,34 @@ export const WikiPageView: React.FC = () => {
             {/* Content */}
             <div className="p-6 overflow-y-auto" style={{ maxHeight: 'calc(100vh - 300px)' }}>
               {isEditing ? (
-                <textarea
-                  value={editContent}
-                  onChange={(e) => setEditContent(e.target.value)}
-                  className="w-full min-h-[400px] text-sm font-mono border border-gray-200 rounded-xl p-4 outline-none focus:ring-2 focus:ring-blue-500 resize-y"
-                  placeholder="開始撰寫內容... (支援 Markdown)"
-                />
+                <div className="space-y-2">
+                  {/* Markdown toolbar */}
+                  <div className="flex items-center gap-1 border border-gray-200 rounded-lg p-1 bg-gray-50">
+                    {[
+                      { icon: <Heading size={14} />, insert: '## ', label: '標題' },
+                      { icon: <Bold size={14} />, insert: '**粗體**', label: '粗體' },
+                      { icon: <Italic size={14} />, insert: '*斜體*', label: '斜體' },
+                      { icon: <List size={14} />, insert: '\n- ', label: '列表' },
+                      { icon: <Code size={14} />, insert: '`程式碼`', label: '程式碼' },
+                      { icon: <Link2 size={14} />, insert: '[文字](網址)', label: '連結' },
+                    ].map(btn => (
+                      <button
+                        key={btn.label}
+                        onClick={() => setEditContent(prev => prev + btn.insert)}
+                        className="p-1.5 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
+                        title={btn.label}
+                      >
+                        {btn.icon}
+                      </button>
+                    ))}
+                  </div>
+                  <textarea
+                    value={editContent}
+                    onChange={(e) => setEditContent(e.target.value)}
+                    className="w-full min-h-[400px] text-sm font-mono border border-gray-200 rounded-xl p-4 outline-none focus:ring-2 focus:ring-blue-500 resize-y"
+                    placeholder="開始撰寫內容... (支援 Markdown)"
+                  />
+                </div>
               ) : selectedPage.content ? (
                 <div className="prose prose-blue max-w-none">
                   <ReactMarkdown remarkPlugins={[remarkGfm]}>{selectedPage.content}</ReactMarkdown>

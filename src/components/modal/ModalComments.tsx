@@ -98,7 +98,7 @@ export const ModalComments: React.FC<ModalCommentsProps> = ({
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 10 }}
-              className="absolute bottom-full left-0 mb-2 w-48 bg-white border border-gray-200 rounded-xl shadow-xl p-2 z-20"
+              className="absolute top-full left-0 mt-1 w-48 bg-white border border-gray-200 rounded-xl shadow-2xl p-2 z-[60]"
             >
               <div className="text-[10px] font-bold text-gray-400 px-2 py-1 uppercase tracking-wider">提及成員</div>
               {[...RDS, ...PMS].filter(n => n !== 'Unassigned').map(name => (

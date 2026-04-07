@@ -15,20 +15,36 @@ interface SidebarProps {
   onToggleDarkMode: () => void;
   unreadCount?: number;
   onNotificationClick?: () => void;
+  badges?: Partial<Record<AppPage, number>>;
 }
 
-const NAV_ITEMS: { page: AppPage; label: string; icon: React.ReactNode }[] = [
-  { page: 'overview', label: '今日總覽', icon: <LayoutDashboard size={20} /> },
-  { page: 'todo', label: '每日待辦', icon: <CheckSquare size={20} /> },
-  { page: 'qa', label: 'QA 追蹤', icon: <Bug size={20} /> },
-  { page: 'release', label: '版更管理', icon: <Rocket size={20} /> },
-  { page: 'wiki', label: '知識庫', icon: <BookOpen size={20} /> },
+interface NavGroup {
+  label: string;
+  items: { page: AppPage; label: string; icon: React.ReactNode }[];
+}
+
+const NAV_GROUPS: NavGroup[] = [
+  {
+    label: '工作',
+    items: [
+      { page: 'overview', label: '今日總覽', icon: <LayoutDashboard size={20} /> },
+      { page: 'todo', label: '每日待辦', icon: <CheckSquare size={20} /> },
+      { page: 'qa', label: 'QA 追蹤', icon: <Bug size={20} /> },
+    ],
+  },
+  {
+    label: '管理',
+    items: [
+      { page: 'release', label: '版更管理', icon: <Rocket size={20} /> },
+      { page: 'wiki', label: '知識庫', icon: <BookOpen size={20} /> },
+    ],
+  },
 ];
 
 export const Sidebar: React.FC<SidebarProps> = ({
   currentPage, onNavigate, collapsed, onToggleCollapse,
   user, onLogout, isDarkMode, onToggleDarkMode,
-  unreadCount = 0, onNotificationClick
+  unreadCount = 0, onNotificationClick, badges = {}
 }) => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const displayName = user.displayName || '使用者';
@@ -55,25 +71,43 @@ export const Sidebar: React.FC<SidebarProps> = ({
       </div>
 
       {/* Nav */}
-      <nav className="p-2 space-y-1">
-        {NAV_ITEMS.map(item => (
-          <button
-            key={item.page}
-            onClick={() => handleNavigate(item.page)}
-            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors relative ${
-              currentPage === item.page
-                ? 'bg-blue-600/20 text-blue-400'
-                : 'text-gray-400 hover:text-white hover:bg-gray-800'
-            }`}
-            title={collapsed ? item.label : undefined}
-            aria-label={item.label}
-          >
-            {currentPage === item.page && (
-              <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 bg-blue-500 rounded-r-full" />
+      <nav className="p-2 space-y-4">
+        {NAV_GROUPS.map(group => (
+          <div key={group.label}>
+            {!collapsed && (
+              <p className="text-[10px] font-bold text-gray-600 uppercase tracking-wider px-3 mb-1">{group.label}</p>
             )}
-            <span className="shrink-0">{item.icon}</span>
-            {!collapsed && <span>{item.label}</span>}
-          </button>
+            <div className="space-y-1">
+              {group.items.map(item => {
+                const badge = badges[item.page];
+                return (
+                  <button
+                    key={item.page}
+                    onClick={() => handleNavigate(item.page)}
+                    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors relative ${
+                      currentPage === item.page
+                        ? 'bg-blue-600/20 text-blue-400'
+                        : 'text-gray-400 hover:text-white hover:bg-gray-800'
+                    }`}
+                    title={collapsed ? item.label : undefined}
+                    aria-label={item.label}
+                  >
+                    {currentPage === item.page && (
+                      <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 bg-blue-500 rounded-r-full" />
+                    )}
+                    <span className="shrink-0">{item.icon}</span>
+                    {!collapsed && <span className="flex-1 text-left">{item.label}</span>}
+                    {!collapsed && badge !== undefined && badge > 0 && (
+                      <span className="bg-gray-700 text-gray-300 text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[20px] text-center">{badge}</span>
+                    )}
+                    {collapsed && badge !== undefined && badge > 0 && (
+                      <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center">{badge > 9 ? '9+' : badge}</span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
         ))}
 
         {/* Notification bell */}

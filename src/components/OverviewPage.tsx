@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { CheckCircle2, Circle, Bug, ArrowRight, Flag, Copy, ClipboardList } from 'lucide-react';
 import { User as FirebaseUser } from 'firebase/auth';
 import { useTodos } from '../hooks/useTodos';
@@ -78,38 +78,66 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ onNavigateToQA, onNa
   const myPendingTodos = myTodos.filter(t => !t.completed);
   const myCompletedTodos = myTodos.filter(t => t.completed);
 
+  const [activeTab, setActiveTab] = useState<'today' | 'report'>('today');
+
+  const greeting = (() => {
+    const hour = new Date().getHours();
+    if (hour < 12) return '早安';
+    if (hour < 18) return '午安';
+    return '晚安';
+  })();
+
   return (
     <div className="max-w-4xl mx-auto space-y-8">
       {/* Greeting */}
-      <div>
-        <h2 className="text-xl font-bold text-gray-900">
-          早安，{user?.displayName || '使用者'} 👋
-        </h2>
-        <p className="text-sm text-gray-500 mt-1">以下是你今天的工作概況</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-xl font-bold text-gray-900">
+            {greeting}，{user?.displayName || '使用者'} 👋
+          </h2>
+          <p className="text-sm text-gray-500 mt-1">以下是你今天的工作概況</p>
+        </div>
+        {/* Tab switch */}
+        <div className="flex items-center gap-1 bg-gray-100 p-1 rounded-lg border border-gray-200">
+          <button
+            onClick={() => setActiveTab('today')}
+            className={`px-4 py-1.5 rounded-md text-xs font-bold transition-colors ${activeTab === 'today' ? 'bg-white shadow-sm text-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
+          >
+            今日
+          </button>
+          <button
+            onClick={() => setActiveTab('report')}
+            className={`px-4 py-1.5 rounded-md text-xs font-bold transition-colors ${activeTab === 'report' ? 'bg-white shadow-sm text-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
+          >
+            週報
+          </button>
+        </div>
       </div>
 
-      {/* Quick Stats Row */}
+      {/* Quick Stats Row — clickable */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
+        <button onClick={onNavigateToTodo} className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 text-left hover:border-blue-200 hover:shadow-md transition-all">
           <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">我的待辦</p>
           <p className="text-2xl font-black text-gray-900">{myPendingTodos.length}</p>
           <p className="text-[10px] text-gray-400 mt-1">已完成 {myCompletedTodos.length} 項</p>
-        </div>
-        <div className="bg-white p-4 rounded-2xl shadow-sm border border-red-100">
+        </button>
+        <button onClick={onNavigateToQA} className="bg-white p-4 rounded-2xl shadow-sm border border-red-100 text-left hover:border-red-200 hover:shadow-md transition-all">
           <p className="text-[10px] font-bold text-red-400 uppercase tracking-widest mb-1">P0/P1 未修</p>
           <p className="text-2xl font-black text-red-600">{qaStats.p0Count + qaStats.p1Count}</p>
           <p className="text-[10px] text-gray-400 mt-1">P0: {qaStats.p0Count} / P1: {qaStats.p1Count}</p>
-        </div>
-        <div className="bg-white p-4 rounded-2xl shadow-sm border border-teal-100">
+        </button>
+        <button onClick={onNavigateToQA} className="bg-white p-4 rounded-2xl shadow-sm border border-teal-100 text-left hover:border-teal-200 hover:shadow-md transition-all">
           <p className="text-[10px] font-bold text-teal-400 uppercase tracking-widest mb-1">待 PM 測試</p>
           <p className="text-2xl font-black text-teal-600">{qaStats.readyForTest}</p>
-        </div>
-        <div className="bg-white p-4 rounded-2xl shadow-sm border border-blue-100">
+        </button>
+        <button onClick={onNavigateToQA} className="bg-white p-4 rounded-2xl shadow-sm border border-blue-100 text-left hover:border-blue-200 hover:shadow-md transition-all">
           <p className="text-[10px] font-bold text-blue-400 uppercase tracking-widest mb-1">開發中</p>
           <p className="text-2xl font-black text-blue-600">{qaStats.inProgress}</p>
-        </div>
+        </button>
       </div>
 
+      {activeTab === 'today' ? (
+      <>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* My Today's Todos */}
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
@@ -172,7 +200,7 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ onNavigateToQA, onNa
         </div>
       </div>
 
-      {/* Daily Standup */}
+      {/* Daily Standup — in today tab */}
       {user && (
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
           <div className="flex items-center justify-between mb-4">
@@ -197,8 +225,11 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ onNavigateToQA, onNa
         </div>
       )}
 
-      {/* Weekly Report */}
-      <WeeklyReport items={augmentedData} />
+      </>
+      ) : (
+        /* Weekly Report tab */
+        <WeeklyReport items={augmentedData} />
+      )}
     </div>
   );
 };

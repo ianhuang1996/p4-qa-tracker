@@ -100,10 +100,12 @@ export const ReleasePage: React.FC = () => {
 
     return (
       <div className="max-w-4xl mx-auto">
-        {/* Back button + Header */}
-        <button onClick={() => setSelectedReleaseId(null)} className="flex items-center gap-2 text-sm text-gray-500 hover:text-gray-700 mb-6">
-          ← 返回版本列表
-        </button>
+        {/* Breadcrumb */}
+        <nav className="flex items-center gap-2 text-xs text-gray-400 mb-6">
+          <button onClick={() => setSelectedReleaseId(null)} className="hover:text-blue-600 transition-colors">版更管理</button>
+          <span>/</span>
+          <span className="text-gray-700 font-bold">{selectedRelease.version}</span>
+        </nav>
 
         <div className="flex items-center justify-between mb-6">
           <div>
@@ -158,6 +160,53 @@ export const ReleasePage: React.FC = () => {
             )}
           </div>
         </div>
+
+        {/* Status Stepper */}
+        <div className="flex items-center justify-center gap-0 mb-8 bg-white rounded-2xl border border-gray-200 shadow-sm p-4">
+          {(['planning', 'uat', 'released'] as const).map((step, idx) => {
+            const stepLabels = { planning: '規劃中', uat: 'UAT 測試', released: '已發布' };
+            const stepOrder = { planning: 0, uat: 1, released: 2, cancelled: -1 };
+            const currentOrder = stepOrder[selectedRelease.status];
+            const thisOrder = stepOrder[step];
+            const isDone = currentOrder >= thisOrder;
+            const isCurrent = selectedRelease.status === step;
+            return (
+              <React.Fragment key={step}>
+                {idx > 0 && (
+                  <div className={`flex-1 h-0.5 mx-2 ${isDone ? 'bg-blue-500' : 'bg-gray-200'}`} />
+                )}
+                <div className="flex flex-col items-center gap-1">
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold border-2 transition-all ${
+                    isCurrent ? 'bg-blue-600 text-white border-blue-600 scale-110' :
+                    isDone ? 'bg-blue-100 text-blue-600 border-blue-300' :
+                    'bg-gray-100 text-gray-400 border-gray-200'
+                  }`}>
+                    {isDone && !isCurrent ? <Check size={14} /> : idx + 1}
+                  </div>
+                  <span className={`text-[10px] font-bold ${isCurrent ? 'text-blue-600' : isDone ? 'text-blue-400' : 'text-gray-400'}`}>
+                    {stepLabels[step]}
+                  </span>
+                </div>
+              </React.Fragment>
+            );
+          })}
+        </div>
+
+        {/* Item fix progress */}
+        {linkedItems.length > 0 && (() => {
+          const fixedCount = linkedItems.filter(i => i.currentFlow === '已修復' || i.currentFlow === '已關閉' || i.currentFlow === '已修正待測試').length;
+          return (
+            <div className="mb-6 bg-white rounded-xl border border-gray-200 shadow-sm p-4">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs font-bold text-gray-500">項目修復進度</span>
+                <span className="text-xs font-bold text-gray-500">{fixedCount}/{linkedItems.length}</span>
+              </div>
+              <div className="w-full bg-gray-200 rounded-full h-2">
+                <div className="bg-green-500 h-2 rounded-full transition-all duration-300" style={{ width: `${(fixedCount / linkedItems.length) * 100}%` }} />
+              </div>
+            </div>
+          );
+        })()}
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left: Items + Notes */}
@@ -414,9 +463,12 @@ export const ReleasePage: React.FC = () => {
                     </div>
                     <p className="text-xs text-gray-500">{release.title} — {release.scheduledDate}</p>
                   </div>
-                  <div className="text-right shrink-0">
+                  <div className="text-right shrink-0 space-y-1">
                     <p className="text-xs text-gray-500">{release.linkedItemIds.length} 個項目</p>
                     <p className="text-xs text-gray-400">檢查 {checkDone}/{release.checklist.length}</p>
+                    <div className="w-20 bg-gray-200 rounded-full h-1">
+                      <div className="bg-green-500 h-1 rounded-full" style={{ width: `${release.checklist.length > 0 ? (checkDone / release.checklist.length) * 100 : 0}%` }} />
+                    </div>
                   </div>
                   <ChevronRight size={16} className="text-gray-300 shrink-0" />
                 </button>

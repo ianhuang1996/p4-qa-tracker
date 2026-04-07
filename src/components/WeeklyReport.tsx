@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { ChevronLeft, ChevronRight, TrendingUp, TrendingDown, Minus, Copy } from 'lucide-react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { toast } from 'sonner';
 import { AugmentedQAItem } from '../types';
 import { getWeekBoundaries, computeWeeklyStats, computeRDWorkload, computeTrendData } from '../utils/reportUtils';
@@ -95,28 +95,26 @@ export const WeeklyReport: React.FC<WeeklyReportProps> = ({ items }) => {
               <Legend wrapperStyle={{ fontSize: 11 }} />
               <Line type="monotone" dataKey="added" stroke="#ef4444" name="新增" strokeWidth={2} dot={{ r: 3 }} />
               <Line type="monotone" dataKey="fixed" stroke="#22c55e" name="修復" strokeWidth={2} dot={{ r: 3 }} />
+              <Line type="monotone" dataKey="remaining" stroke="#f59e0b" name="未結案" strokeWidth={2} dot={{ r: 3 }} strokeDasharray="5 5" />
             </LineChart>
           </ResponsiveContainer>
         </div>
 
-        {/* RD workload table */}
+        {/* RD workload bar chart */}
         <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
           <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-4">RD 工作量</h4>
-          <div className="space-y-2">
-            {rdWorkload.filter(r => r.name !== 'Unassigned').map(rd => (
-              <div key={rd.name} className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50">
-                <div className={`w-7 h-7 rounded-full flex items-center justify-center text-[10px] text-white font-bold ${getAvatarColor(rd.name)}`}>
-                  {rd.name.charAt(0)}
-                </div>
-                <span className="text-sm font-medium text-gray-900 w-16">{rd.name}</span>
-                <div className="flex-1 flex items-center gap-3">
-                  <span className="text-xs text-orange-600 font-bold">待處理 {rd.assigned}</span>
-                  <span className="text-xs text-blue-600 font-bold">開發中 {rd.inProgress}</span>
-                  <span className="text-xs text-green-600 font-bold">已修復 {rd.fixed}</span>
-                </div>
-              </div>
-            ))}
-          </div>
+          <ResponsiveContainer width="100%" height={200}>
+            <BarChart data={rdWorkload.filter(r => r.name !== 'Unassigned')} layout="vertical">
+              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+              <XAxis type="number" tick={{ fontSize: 10 }} />
+              <YAxis type="category" dataKey="name" tick={{ fontSize: 11 }} width={50} />
+              <Tooltip contentStyle={{ fontSize: 12 }} />
+              <Legend wrapperStyle={{ fontSize: 11 }} />
+              <Bar dataKey="assigned" fill="#f97316" name="待處理" radius={[0, 4, 4, 0]} />
+              <Bar dataKey="inProgress" fill="#3b82f6" name="開發中" radius={[0, 4, 4, 0]} />
+              <Bar dataKey="fixed" fill="#22c55e" name="已修復" radius={[0, 4, 4, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
         </div>
       </div>
     </div>

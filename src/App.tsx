@@ -1,8 +1,11 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { FileText } from 'lucide-react';
 import { Toaster } from 'sonner';
 import { AppProvider, useAppContext } from './contexts/AppContext';
 import { useNotifications } from './hooks/useNotifications';
+import { useQAItems } from './hooks/useQAItems';
+import { useTodos } from './hooks/useTodos';
+import { getTodayStr } from './utils/qaUtils';
 import { Sidebar } from './components/Sidebar';
 import { NotificationCenter } from './components/NotificationCenter';
 import { OverviewPage } from './components/OverviewPage';
@@ -11,6 +14,7 @@ import { ReleasePage } from './components/ReleasePage';
 import { WikiPageView } from './components/WikiPageView';
 import { DailyTodo } from './components/DailyTodo';
 import { ErrorBoundary } from './components/ErrorBoundary';
+import { GlobalSearch } from './components/GlobalSearch';
 
 function LoadingSkeleton() {
   return (
@@ -71,7 +75,15 @@ function LoginScreen() {
 function AppLayout() {
   const { user, isAuthReady, currentPage, setCurrentPage, sidebarCollapsed, toggleSidebar, handleLogout, isDarkMode, toggleDarkMode } = useAppContext();
   const { unreadCount } = useNotifications(user);
+  const { data: qaData } = useQAItems(user, isAuthReady);
+  const { todos } = useTodos(user, getTodayStr(), 'day');
   const [showNotifications, setShowNotifications] = useState(false);
+
+  const sidebarBadges = useMemo(() => {
+    const qaActive = qaData.filter(i => i.currentFlow !== '已關閉' && i.currentFlow !== '已修復').length;
+    const todoPending = todos.filter(t => !t.completed && t.assignee === (user?.displayName || '')).length;
+    return { qa: qaActive || undefined, todo: todoPending || undefined };
+  }, [qaData, todos, user]);
 
   if (!isAuthReady) return <LoadingSkeleton />;
   if (!user) return <LoginScreen />;
@@ -79,6 +91,7 @@ function AppLayout() {
   return (
     <div className="min-h-screen flex bg-gray-50 text-gray-900 font-sans">
       <Toaster position="top-center" richColors />
+      <GlobalSearch onNavigate={setCurrentPage} />
       <Sidebar
         currentPage={currentPage}
         onNavigate={setCurrentPage}
@@ -90,6 +103,7 @@ function AppLayout() {
         onToggleDarkMode={toggleDarkMode}
         unreadCount={unreadCount}
         onNotificationClick={() => setShowNotifications(prev => !prev)}
+        badges={sidebarBadges}
       />
 
       <main className="flex-1 min-h-screen overflow-y-auto p-4 md:p-8">
@@ -132,7 +146,7 @@ function AppLayout() {
       {showNotifications && (
         <>
           <div className="fixed inset-0 z-40" onClick={() => setShowNotifications(false)} />
-          <div className={`fixed top-0 z-50 w-80 h-screen bg-white border-r border-gray-200 shadow-2xl overflow-hidden transition-all duration-200 ${sidebarCollapsed ? 'left-16' : 'left-56'} max-lg:left-0`}>
+          <div className="fixed top-4 right-4 z-50 w-96 max-h-[80vh] bg-white border border-gray-200 rounded-2xl shadow-2xl overflow-hidden">
             <NotificationCenter
               user={user}
               onItemClick={() => {
