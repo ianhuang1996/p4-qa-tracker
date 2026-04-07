@@ -115,6 +115,31 @@ export function useQAItems(user: FirebaseUser | null, isAuthReady: boolean) {
     return null;
   };
 
+  const sendSlackNotification = async (email: string, message: string, itemId: string, itemTitle: string, type: string) => {
+    try {
+      await fetch('/api/slack/notify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, message, itemId, itemTitle, type }),
+      });
+    } catch (error) {
+      // Slack is best-effort, don't block the main flow
+      console.error('Slack notification failed:', error);
+    }
+  };
+
+  const getUserEmailById = async (userId: string): Promise<string | null> => {
+    try {
+      const userDoc = await getDocs(query(collection(db, 'users'), where('uid', '==', userId)));
+      if (!userDoc.empty) {
+        return userDoc.docs[0].data().email || null;
+      }
+    } catch (error) {
+      console.error('Error getting user email:', error);
+    }
+    return null;
+  };
+
   const createNotification = async (notification: Omit<Notification, 'id' | 'isRead' | 'createdAt'>) => {
     if (notification.userId === user?.uid) return; // Don't notify self
     try {
@@ -125,6 +150,18 @@ export function useQAItems(user: FirebaseUser | null, isAuthReady: boolean) {
         isRead: false,
         createdAt: Date.now()
       });
+
+      // Also send Slack notification
+      const recipientEmail = await getUserEmailById(notification.userId);
+      if (recipientEmail) {
+        const typeLabels: Record<string, string> = {
+          status_change: `狀態變更：${notification.oldValue} → ${notification.newValue}`,
+          assignment: `你被指派負責此項目`,
+          comment: `${notification.fromUserName} 留言了`,
+        };
+        const message = typeLabels[notification.type] || '新通知';
+        sendSlackNotification(recipientEmail, message, notification.itemId, notification.itemTitle, notification.type);
+      }
     } catch (error) {
       console.error('Failed to create notification:', error);
     }
