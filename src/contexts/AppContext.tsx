@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
 import { auth } from '../firebase';
-import { signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut, User as FirebaseUser } from 'firebase/auth';
+import { signInWithPopup, signInWithRedirect, GoogleAuthProvider, onAuthStateChanged, signOut, User as FirebaseUser } from 'firebase/auth';
 import { ADMIN_EMAILS, SORT_EDITOR_EMAILS } from '../constants';
 import { AppPage } from '../types';
 
@@ -76,7 +76,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const handleLogin = async () => {
     const provider = new GoogleAuthProvider();
-    try { await signInWithPopup(auth, provider); } catch (error) { console.error("Login failed", error); }
+    try {
+      // Use redirect for embedded browsers (LINE, etc.), popup for normal browsers
+      const isEmbedded = /Line|FBAN|FBAV|Instagram|Twitter/i.test(navigator.userAgent);
+      if (isEmbedded) {
+        await signInWithRedirect(auth, provider);
+      } else {
+        await signInWithPopup(auth, provider);
+      }
+    } catch (error) { console.error("Login failed", error); }
   };
 
   const handleLogout = async () => {

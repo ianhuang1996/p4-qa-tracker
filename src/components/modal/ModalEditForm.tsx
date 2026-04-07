@@ -14,11 +14,15 @@ interface ModalEditFormProps {
   onDragOver: (e: React.DragEvent) => void;
   onDragLeave: (e: React.DragEvent) => void;
   onDrop: (e: React.DragEvent) => void;
+  activeReleaseVersion?: string;
+  isInActiveRelease?: boolean;
+  onToggleRelease?: (add: boolean) => void;
 }
 
 export const ModalEditForm: React.FC<ModalEditFormProps> = ({
   editForm, setEditForm, isUploading, onImageUpload, onFileUpload,
-  isDragging, onDragOver, onDragLeave, onDrop
+  isDragging, onDragOver, onDragLeave, onDrop,
+  activeReleaseVersion, isInActiveRelease, onToggleRelease
 }) => {
   return (
     <div className="space-y-6">
@@ -82,37 +86,30 @@ export const ModalEditForm: React.FC<ModalEditFormProps> = ({
         />
       </div>
 
-      <div className="bg-indigo-50/50 p-4 rounded-xl border border-indigo-100 space-y-4">
-        <label className="flex items-center gap-3 cursor-pointer group">
-          <div className="relative flex items-center">
-            <input
-              type="checkbox"
-              className="peer sr-only"
-              checked={editForm?.isNextRelease || false}
-              onChange={(e) => setEditForm(prev => prev ? { ...prev, isNextRelease: e.target.checked } : null)}
-            />
-            <div className="w-5 h-5 rounded border-2 border-indigo-300 bg-white peer-checked:bg-indigo-500 peer-checked:border-indigo-500 transition-all flex items-center justify-center">
-              <Check size={14} className="text-white opacity-0 peer-checked:opacity-100 transition-opacity" />
-            </div>
-          </div>
-          <span className="text-sm font-bold text-indigo-900 group-hover:text-indigo-700 transition-colors">
-            排入下次發布 (Next Release)
-          </span>
-        </label>
-
-        {editForm?.isNextRelease && (
-          <div className="pl-8 animate-in fade-in slide-in-from-top-2 duration-200">
-            <label className="text-xs font-bold text-indigo-700 uppercase tracking-wider mb-2 block">發布備註 (選填)</label>
-            <input
-              type="text"
-              className="w-full p-3 border border-indigo-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all bg-white text-sm"
-              value={editForm?.releaseNote || ''}
-              onChange={(e) => setEditForm(prev => prev ? { ...prev, releaseNote: e.target.value } : null)}
-              placeholder="例如：Neo 需再確認"
-            />
-          </div>
-        )}
-      </div>
+      {onToggleRelease && (
+        <div className="bg-indigo-50/50 p-4 rounded-xl border border-indigo-100 space-y-2">
+          {activeReleaseVersion ? (
+            <label className="flex items-center gap-3 cursor-pointer group">
+              <div className="relative flex items-center">
+                <input
+                  type="checkbox"
+                  className="peer sr-only"
+                  checked={isInActiveRelease || false}
+                  onChange={(e) => onToggleRelease(e.target.checked)}
+                />
+                <div className="w-5 h-5 rounded border-2 border-indigo-300 bg-white peer-checked:bg-indigo-500 peer-checked:border-indigo-500 transition-all flex items-center justify-center">
+                  <Check size={14} className="text-white opacity-0 peer-checked:opacity-100 transition-opacity" />
+                </div>
+              </div>
+              <span className="text-sm font-bold text-indigo-900 group-hover:text-indigo-700 transition-colors">
+                排入 {activeReleaseVersion}
+              </span>
+            </label>
+          ) : (
+            <p className="text-xs text-indigo-400">目前沒有進行中的版本，請先至版更管理建立版本</p>
+          )}
+        </div>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="space-y-4">

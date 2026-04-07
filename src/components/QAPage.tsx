@@ -6,6 +6,7 @@ import { QAItem } from '../data';
 import { AugmentedQAItem, ViewMode } from '../types';
 import { PRIORITY_ORDER } from '../constants';
 import { useQAItems } from '../hooks/useQAItems';
+import { useReleases } from '../hooks/useReleases';
 import { normalizeDate, getTodayStr } from '../utils/qaUtils';
 import { useAppContext } from '../contexts/AppContext';
 import { z } from 'zod';
@@ -34,12 +35,15 @@ interface QAPageProps {
 }
 
 export const QAPage: React.FC<QAPageProps> = () => {
-  const { user, isAuthReady, canSort } = useAppContext();
+  const { user, isAuthReady, canSort, setCurrentPage } = useAppContext();
 
   const {
     data, isLoading, updateItem, addItem, deleteItem,
     addComment, deleteComment, editComment, bulkUpdate, bulkDelete
   } = useQAItems(user, isAuthReady);
+
+  const { releases, linkItems, unlinkItem } = useReleases(user);
+  const activeRelease = useMemo(() => releases.find(r => r.status === 'planning' || r.status === 'uat') || null, [releases]);
 
   // Filter States
   const [searchQuery, setSearchQuery] = useState('');
@@ -102,6 +106,11 @@ export const QAPage: React.FC<QAPageProps> = () => {
       return { ...item, priority, category, cleanDesc, displayTitle, date: normalizedDate, comments: item.comments || [] };
     });
   }, [data]);
+
+  const activeReleaseLinkedItems = useMemo(() => {
+    if (!activeRelease) return [];
+    return augmentedData.filter(i => activeRelease.linkedItemIds.includes(i.id));
+  }, [activeRelease, augmentedData]);
 
   const selectedItem = useMemo(() => {
     if (!selectedItemId) return null;
@@ -198,16 +207,6 @@ export const QAPage: React.FC<QAPageProps> = () => {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-  };
-
-  const handleRemoveFromRelease = (item: AugmentedQAItem) => {
-    updateItem(item.id, { isNextRelease: false, releaseNote: '' }, item);
-  };
-
-  const handleAutoAddReleaseItems = () => {
-    const eligibleItems = augmentedData.filter(i => i.currentFlow === '開發中' && !i.isNextRelease);
-    if (eligibleItems.length === 0) return;
-    bulkUpdate(eligibleItems.map(i => i.id), { isNextRelease: true });
   };
 
   const handleAddNew = () => {
@@ -355,7 +354,7 @@ export const QAPage: React.FC<QAPageProps> = () => {
         </button>
       </div>
 
-      <NextReleaseBlock items={augmentedData} onItemClick={(item) => setSelectedItemId(item.id)} onRemoveFromRelease={handleRemoveFromRelease} onAutoAddReleaseItems={handleAutoAddReleaseItems} />
+      <NextReleaseBlock activeRelease={activeRelease} linkedItems={activeReleaseLinkedItems} onNavigateToRelease={() => setCurrentPage('release')} />
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mt-8">
         {[
@@ -401,7 +400,18 @@ export const QAPage: React.FC<QAPageProps> = () => {
       <BulkActions selectedIds={selectedIds}
         onBulkUpdate={(updates) => { bulkUpdate(selectedIds, updates); setSelectedIds([]); }}
         onBulkDelete={() => { bulkDelete(selectedIds); setSelectedIds([]); }}
-        onClearSelection={() => setSelectedIds([])} />
+        onClearSelection={() => setSelectedIds([])}
+        activeReleaseVersion={activeRelease?.version}
+        onBulkAddToRelease={activeRelease ? () => {
+          linkItems(activeRelease.id, activeRelease.linkedItemIds, selectedIds);
+          setSelectedIds([]);
+        } : undefined}
+        onBulkRemoveFromRelease={activeRelease ? () => {
+          const remaining = activeRelease.linkedItemIds.filter(id => !selectedIds.includes(id));
+          activeRelease && linkItems(activeRelease.id, [], remaining);
+          setSelectedIds([]);
+        } : undefined}
+      />
 
       <AnimatePresence>
         {selectedItem && (
@@ -415,7 +425,17 @@ export const QAPage: React.FC<QAPageProps> = () => {
             onCommentSubmit={(text) => addComment(selectedItem.id, text)}
             onCommentDelete={(id) => deleteComment(selectedItem.id, id)}
             onCommentEdit={(id, text) => editComment(selectedItem.id, id, text)}
-            user={user} isUploading={isUploading} onImageUpload={handleImageUpload} onFileUpload={handleFileUpload} />
+            user={user} isUploading={isUploading} onImageUpload={handleImageUpload} onFileUpload={handleFileUpload}
+            activeReleaseVersion={activeRelease?.version}
+            isInActiveRelease={activeRelease ? activeRelease.linkedItemIds.includes(selectedItem.id) : false}
+            onToggleRelease={activeRelease ? (add) => {
+              if (add) {
+                linkItems(activeRelease.id, activeRelease.linkedItemIds, [selectedItem.id]);
+              } else {
+                unlinkItem(activeRelease.id, activeRelease.linkedItemIds, selectedItem.id);
+              }
+            } : undefined}
+          />
         )}
       </AnimatePresence>
 

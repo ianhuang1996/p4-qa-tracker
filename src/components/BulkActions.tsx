@@ -7,10 +7,14 @@ interface BulkActionsProps {
   onBulkUpdate: (data: Record<string, unknown>) => void;
   onBulkDelete: () => void;
   onClearSelection: () => void;
+  activeReleaseVersion?: string;
+  onBulkAddToRelease?: () => void;
+  onBulkRemoveFromRelease?: () => void;
 }
 
 export const BulkActions: React.FC<BulkActionsProps> = ({
-  selectedIds, onBulkUpdate, onBulkDelete, onClearSelection
+  selectedIds, onBulkUpdate, onBulkDelete, onClearSelection,
+  activeReleaseVersion, onBulkAddToRelease, onBulkRemoveFromRelease
 }) => {
   if (selectedIds.length === 0) return null;
 
@@ -24,23 +28,27 @@ export const BulkActions: React.FC<BulkActionsProps> = ({
       </div>
 
       <div className="flex items-center gap-4">
-        <div className="flex items-center gap-2 bg-indigo-500/10 rounded-lg p-1 border border-indigo-500/20">
-          <button
-            onClick={() => onBulkUpdate({ isNextRelease: true })}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-500 text-white hover:bg-indigo-600 rounded-md transition-colors text-xs font-bold shadow-sm"
-            title="排入下次發布"
-          >
-            <Rocket size={14} />
-            排入發布
-          </button>
-          <button
-            onClick={() => onBulkUpdate({ isNextRelease: false, releaseNote: '' })}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-indigo-300 hover:bg-indigo-500/20 hover:text-indigo-200 rounded-md transition-colors text-xs font-bold"
-            title="移出下次發布"
-          >
-            移出
-          </button>
-        </div>
+        {activeReleaseVersion && onBulkAddToRelease && (
+          <div className="flex items-center gap-2 bg-indigo-500/10 rounded-lg p-1 border border-indigo-500/20">
+            <button
+              onClick={onBulkAddToRelease}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-500 text-white hover:bg-indigo-600 rounded-md transition-colors text-xs font-bold shadow-sm"
+              title={`排入 ${activeReleaseVersion}`}
+            >
+              <Rocket size={14} />
+              排入 {activeReleaseVersion}
+            </button>
+            {onBulkRemoveFromRelease && (
+              <button
+                onClick={onBulkRemoveFromRelease}
+                className="flex items-center gap-1.5 px-3 py-1.5 text-indigo-300 hover:bg-indigo-500/20 hover:text-indigo-200 rounded-md transition-colors text-xs font-bold"
+                title="移出版更"
+              >
+                移出
+              </button>
+            )}
+          </div>
+        )}
 
         <div className="w-px h-6 bg-gray-700 mx-2"></div>
 

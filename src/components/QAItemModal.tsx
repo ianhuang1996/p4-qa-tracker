@@ -33,13 +33,17 @@ interface QAItemModalProps {
   isUploading: boolean;
   onImageUpload: (file: File) => void;
   onFileUpload: (file: File) => void;
+  activeReleaseVersion?: string;
+  isInActiveRelease?: boolean;
+  onToggleRelease?: (add: boolean) => void;
 }
 
 export const QAItemModal: React.FC<QAItemModalProps> = ({
   item, isEditing, isAdding, editForm, setEditForm,
   onClose, onEdit, onSave, onDelete, onCancel,
   onQuickStatusUpdate, onCommentSubmit, onCommentDelete,
-  user, isUploading, onImageUpload, onFileUpload
+  user, isUploading, onImageUpload, onFileUpload,
+  activeReleaseVersion, isInActiveRelease, onToggleRelease
 }) => {
   const [activeTab, setActiveTab] = useState<'details' | 'comments' | 'history'>('details');
   const [history, setHistory] = useState<HistoryEntry[]>([]);
@@ -200,6 +204,9 @@ export const QAItemModal: React.FC<QAItemModalProps> = ({
               onDragOver={handleDragOver}
               onDragLeave={handleDragLeave}
               onDrop={handleDrop}
+              activeReleaseVersion={activeReleaseVersion}
+              isInActiveRelease={isInActiveRelease}
+              onToggleRelease={onToggleRelease}
             />
           ) : activeTab === 'details' ? (
             <ModalDetails
