@@ -149,6 +149,53 @@ export function useQAItems(user: FirebaseUser | null, isAuthReady: boolean) {
       await setDoc(docRef, sanitizedUpdates, { merge: true });
 
       if (!silent) toast.success('更新成功');
+
+      // Auto-notify on status change
+      if (oldItem && updates.currentFlow && updates.currentFlow !== oldItem.currentFlow) {
+        // Notify assignee about status change
+        const assigneeId = await getUserIdByName(oldItem.assignee);
+        if (assigneeId && assigneeId !== user.uid) {
+          await createNotification({
+            userId: assigneeId,
+            fromUserId: user.uid,
+            fromUserName: user.displayName || '匿名',
+            itemId,
+            itemTitle: oldItem.title || oldItem.description.substring(0, 30),
+            type: 'status_change',
+            oldValue: oldItem.currentFlow,
+            newValue: updates.currentFlow,
+          });
+        }
+        // Also notify author if different
+        if (oldItem.authorUID && oldItem.authorUID !== user.uid && oldItem.authorUID !== assigneeId) {
+          await createNotification({
+            userId: oldItem.authorUID,
+            fromUserId: user.uid,
+            fromUserName: user.displayName || '匿名',
+            itemId,
+            itemTitle: oldItem.title || oldItem.description.substring(0, 30),
+            type: 'status_change',
+            oldValue: oldItem.currentFlow,
+            newValue: updates.currentFlow,
+          });
+        }
+      }
+
+      // Auto-notify on assignee change
+      if (oldItem && updates.assignee && updates.assignee !== oldItem.assignee) {
+        const newAssigneeId = await getUserIdByName(updates.assignee);
+        if (newAssigneeId && newAssigneeId !== user.uid) {
+          await createNotification({
+            userId: newAssigneeId,
+            fromUserId: user.uid,
+            fromUserName: user.displayName || '匿名',
+            itemId,
+            itemTitle: oldItem.title || oldItem.description.substring(0, 30),
+            type: 'assignment',
+            newValue: updates.assignee,
+          });
+        }
+      }
     } catch (error) {
       setData(previousData); // Rollback
       toast.error('更新失敗');

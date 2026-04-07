@@ -40,6 +40,7 @@ export const ReleasePage: React.FC = () => {
   const [newTitle, setNewTitle] = useState('');
   const [newDate, setNewDate] = useState(getTodayStr());
   const [showLinkPicker, setShowLinkPicker] = useState(false);
+  const [expandedTimelineId, setExpandedTimelineId] = useState<string | null>(null);
   const [editingNotes, setEditingNotes] = useState(false);
   const [noteDraft, setNoteDraft] = useState('');
   const [generatingNotes, setGeneratingNotes] = useState(false);
@@ -444,29 +445,94 @@ export const ReleasePage: React.FC = () => {
         </div>
       )}
 
-      {/* Past Releases */}
+      {/* Past Releases — Timeline */}
       {pastReleases.length > 0 && (
         <div className="mb-8">
-          <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 flex items-center gap-2">
-            <Rocket size={14} /> 歷史版本 ({pastReleases.length})
+          <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4 flex items-center gap-2">
+            <Rocket size={14} /> 版更歷程 ({pastReleases.length})
           </h3>
-          <div className="space-y-2">
-            {pastReleases.map(release => (
-              <button
-                key={release.id}
-                onClick={() => setSelectedReleaseId(release.id)}
-                className="w-full bg-white rounded-xl border border-gray-100 p-4 flex items-center gap-4 hover:bg-gray-50 transition-colors text-left"
-              >
-                <span className="font-bold text-gray-700 w-20">{release.version}</span>
-                <span className={`px-2 py-0.5 text-[10px] font-bold rounded-lg border ${STATUS_BADGE[release.status]}`}>
-                  {STATUS_LABEL[release.status]}
-                </span>
-                <span className="text-xs text-gray-500 flex-1">{release.title}</span>
-                <span className="text-xs text-gray-400">{release.linkedItemIds.length} 個項目</span>
-                {release.releasedAt && <span className="text-xs text-gray-400">{formatTimestamp(release.releasedAt)}</span>}
-                <ChevronRight size={14} className="text-gray-300" />
-              </button>
-            ))}
+          <div className="relative pl-6">
+            {/* Vertical line */}
+            <div className="absolute left-[11px] top-2 bottom-2 w-0.5 bg-gray-200" />
+
+            {pastReleases.map((release, idx) => {
+              const isExpanded = expandedTimelineId === release.id;
+              const items = augmentedData.filter(i => release.linkedItemIds.includes(i.id));
+              // Group by module
+              const grouped: Record<string, typeof items> = {};
+              items.forEach(item => {
+                const mod = item.module || '其他';
+                if (!grouped[mod]) grouped[mod] = [];
+                grouped[mod].push(item);
+              });
+
+              return (
+                <div key={release.id} className="relative mb-6 last:mb-0">
+                  {/* Timeline dot */}
+                  <div className="absolute -left-6 top-1 w-6 h-6 rounded-full bg-green-500 border-4 border-white shadow-sm flex items-center justify-center z-10">
+                    <Check size={10} className="text-white" />
+                  </div>
+
+                  {/* Content */}
+                  <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden ml-2">
+                    <button
+                      onClick={() => setExpandedTimelineId(isExpanded ? null : release.id)}
+                      className="w-full flex items-center gap-3 p-4 text-left hover:bg-gray-50 transition-colors"
+                    >
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="font-black text-gray-900">{release.version}</span>
+                          <span className="text-xs text-gray-400">{release.releasedAt ? formatTimestamp(release.releasedAt) : release.scheduledDate}</span>
+                        </div>
+                        <p className="text-xs text-gray-500 mt-0.5">{release.title} — {release.linkedItemIds.length} 個項目</p>
+                      </div>
+                      <ChevronRight size={16} className={`text-gray-300 transition-transform ${isExpanded ? 'rotate-90' : ''}`} />
+                    </button>
+
+                    {isExpanded && (
+                      <div className="border-t border-gray-100 p-4 space-y-3">
+                        {/* Release notes excerpt */}
+                        {release.releaseNotes && (
+                          <div className="text-xs text-gray-600 bg-gray-50 p-3 rounded-lg border border-gray-100 line-clamp-3">
+                            {release.releaseNotes.substring(0, 200)}{release.releaseNotes.length > 200 ? '...' : ''}
+                          </div>
+                        )}
+
+                        {/* Items grouped by module */}
+                        {Object.entries(grouped).map(([mod, modItems]) => (
+                          <div key={mod}>
+                            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">{mod}</p>
+                            <div className="space-y-1">
+                              {modItems.map(item => (
+                                <div
+                                  key={item.id}
+                                  className="flex items-center gap-2 text-xs text-gray-700 py-1 cursor-pointer hover:text-blue-600"
+                                  onClick={() => setSelectedReleaseId(release.id)}
+                                >
+                                  <span className="text-gray-400 font-bold w-8">{item.id}</span>
+                                  <span className="truncate">{item.displayTitle}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        ))}
+
+                        {items.length === 0 && (
+                          <p className="text-xs text-gray-400">此版本沒有關聯項目</p>
+                        )}
+
+                        <button
+                          onClick={() => setSelectedReleaseId(release.id)}
+                          className="text-xs text-blue-600 hover:text-blue-700 font-bold mt-2"
+                        >
+                          查看完整版本詳情 →
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
       )}

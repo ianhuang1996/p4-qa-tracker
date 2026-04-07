@@ -73,7 +73,7 @@ function LoginScreen() {
 }
 
 function AppLayout() {
-  const { user, isAuthReady, currentPage, setCurrentPage, sidebarCollapsed, toggleSidebar, handleLogout, isDarkMode, toggleDarkMode } = useAppContext();
+  const { user, isAuthReady, currentPage, setCurrentPage, sidebarCollapsed, toggleSidebar, handleLogout, isDarkMode, toggleDarkMode, navigateToQAItem } = useAppContext();
   const { unreadCount } = useNotifications(user);
   const { data: qaData } = useQAItems(user, isAuthReady);
   const { todos } = useTodos(user, getTodayStr(), 'day');
@@ -149,10 +149,11 @@ function AppLayout() {
           <div className="fixed top-4 right-4 z-50 w-96 max-h-[80vh] bg-white border border-gray-200 rounded-2xl shadow-2xl overflow-hidden">
             <NotificationCenter
               user={user}
-              onItemClick={() => {
-                setCurrentPage('qa');
+              onItemClick={(itemId) => {
+                navigateToQAItem(itemId);
                 setShowNotifications(false);
               }}
+              onClose={() => setShowNotifications(false)}
             />
           </div>
         </>

@@ -19,6 +19,8 @@ interface AppContextValue {
   handleLogout: () => Promise<void>;
   unreadCount: number;
   setUnreadCount: (count: number) => void;
+  pendingItemId: string | null;
+  navigateToQAItem: (itemId: string) => void;
 }
 
 const AppContext = createContext<AppContextValue | null>(null);
@@ -33,6 +35,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [user, setUser] = useState<FirebaseUser | null>(null);
   const [isAuthReady, setIsAuthReady] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [pendingItemId, setPendingItemId] = useState<string | null>(null);
+
+  const navigateToQAItem = (itemId: string) => {
+    setPendingItemId(itemId);
+    setCurrentPage('qa');
+  };
 
   const [currentPage, setCurrentPage] = useState<AppPage>(() => {
     if (typeof window !== 'undefined') {
@@ -106,6 +114,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     handleLogout,
     unreadCount,
     setUnreadCount,
+    pendingItemId,
+    navigateToQAItem,
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

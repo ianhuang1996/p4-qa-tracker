@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { Plus, Download, ArrowUpDown, Eye, EyeOff } from 'lucide-react';
 import { toast } from 'sonner';
 import { AnimatePresence } from 'motion/react';
@@ -35,7 +35,7 @@ interface QAPageProps {
 }
 
 export const QAPage: React.FC<QAPageProps> = () => {
-  const { user, isAuthReady, canSort, setCurrentPage } = useAppContext();
+  const { user, isAuthReady, canSort, setCurrentPage, pendingItemId } = useAppContext();
 
   const {
     data, isLoading, updateItem, addItem, deleteItem,
@@ -69,6 +69,14 @@ export const QAPage: React.FC<QAPageProps> = () => {
   }, [viewMode]);
 
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
+
+  // Open QA item from notification or external navigation
+  useEffect(() => {
+    if (pendingItemId) {
+      setSelectedItemId(pendingItemId);
+    }
+  }, [pendingItemId]);
+
   const [isEditing, setIsEditing] = useState(false);
   const [isAdding, setIsAdding] = useState(false);
   const [editForm, setEditForm] = useState<QAItem | null>(null);
