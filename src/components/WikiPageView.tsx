@@ -90,9 +90,9 @@ export const WikiPageView: React.FC = () => {
   if (!user) return null;
 
   return (
-    <div className="flex gap-6 max-w-6xl mx-auto" style={{ minHeight: 'calc(100vh - 200px)' }}>
-      {/* Left: Page list */}
-      <div className="w-72 shrink-0 space-y-4">
+    <div className="flex flex-col lg:flex-row gap-6 max-w-6xl mx-auto" style={{ minHeight: 'calc(100vh - 200px)' }}>
+      {/* Left: Page list — on mobile shows as top bar when no page selected */}
+      <div className={`lg:w-72 lg:shrink-0 space-y-4 ${selectedPageId ? 'hidden lg:block' : ''}`}>
         <div className="flex items-center gap-2">
           <div className="flex-1 relative">
             <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
@@ -155,7 +155,7 @@ export const WikiPageView: React.FC = () => {
         )}
 
         {/* Page list grouped by category */}
-        <div className="space-y-4 overflow-y-auto" style={{ maxHeight: 'calc(100vh - 450px)' }}>
+        <div className="space-y-4 overflow-y-auto max-h-[60vh] lg:max-h-[calc(100vh-450px)]">
           {Object.entries(groupedPages).map(([category, categoryPages]) => (
             <div key={category}>
               <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1 flex items-center gap-1">
@@ -184,9 +184,16 @@ export const WikiPageView: React.FC = () => {
       </div>
 
       {/* Right: Content */}
-      <div className="flex-1 bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+      <div className={`flex-1 bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden ${!selectedPageId ? 'hidden lg:block' : ''}`}>
         {selectedPage ? (
           <>
+            {/* Mobile back button */}
+            <button
+              onClick={() => setSelectedPageId(null)}
+              className="lg:hidden flex items-center gap-2 text-xs text-gray-500 hover:text-gray-700 px-5 pt-3"
+            >
+              ← 返回頁面列表
+            </button>
             {/* Breadcrumb */}
             <nav className="flex items-center gap-2 text-xs text-gray-400 px-5 pt-3">
               <span>知識庫</span>

@@ -107,10 +107,10 @@ export const ReleasePage: React.FC = () => {
           <span className="text-gray-700 font-bold">{selectedRelease.version}</span>
         </nav>
 
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
           <div>
-            <h2 className="text-2xl font-black text-gray-900 flex items-center gap-3">
-              <Package size={24} className="text-blue-600" />
+            <h2 className="text-xl sm:text-2xl font-black text-gray-900 flex items-center gap-3 flex-wrap">
+              <Package size={24} className="text-blue-600 shrink-0" />
               {selectedRelease.status !== 'released' ? (
                 <input
                   type="text"
@@ -137,7 +137,7 @@ export const ReleasePage: React.FC = () => {
               ) : <span>{selectedRelease.scheduledDate}</span>}
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             {selectedRelease.status === 'planning' && (
               <button
                 onClick={() => updateRelease(selectedRelease.id, { status: 'uat' })}

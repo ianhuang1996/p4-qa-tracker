@@ -38,7 +38,7 @@ export const WeeklyReport: React.FC<WeeklyReportProps> = ({ items }) => {
   return (
     <div className="space-y-6">
       {/* Week selector */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <h3 className="text-sm font-bold text-gray-900 flex items-center gap-2">
           <TrendingUp size={16} className="text-blue-600" />
           本週報告

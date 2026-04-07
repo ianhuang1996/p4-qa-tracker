@@ -112,7 +112,7 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({ onNavigate }) => {
   return (
     <>
       <div className="fixed inset-0 z-[200] bg-black/50 backdrop-blur-sm" onClick={() => setIsOpen(false)} />
-      <div className="fixed inset-x-4 top-[15%] z-[201] max-w-xl mx-auto">
+      <div className="fixed inset-x-2 sm:inset-x-4 top-[8%] sm:top-[15%] z-[201] max-w-xl mx-auto">
         <motion.div
           initial={{ opacity: 0, scale: 0.95, y: -10 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -129,7 +129,8 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({ onNavigate }) => {
               placeholder="搜尋 QA 項目、知識庫、待辦..."
               className="flex-1 text-sm border-none outline-none bg-transparent placeholder:text-gray-400"
             />
-            <kbd className="text-[10px] text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded border border-gray-200 font-mono">ESC</kbd>
+            <kbd className="hidden sm:inline text-[10px] text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded border border-gray-200 font-mono">ESC</kbd>
+            <button onClick={() => setIsOpen(false)} className="sm:hidden text-gray-400 hover:text-gray-600 text-xs">✕</button>
           </div>
 
           {/* Results */}

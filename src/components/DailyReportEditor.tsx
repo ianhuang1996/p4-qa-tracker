@@ -123,19 +123,12 @@ export const DailyReportEditor: React.FC = () => {
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
       {/* Header */}
-      <div className="flex items-center justify-between p-5 border-b border-gray-100">
-        <h3 className="text-sm font-bold text-gray-900">
-          每日進度報告
-        </h3>
-        <div className="flex items-center gap-2">
-          {/* Manual notes input for AI context */}
-          <input
-            type="text"
-            value={manualNotes}
-            onChange={(e) => setManualNotes(e.target.value)}
-            placeholder="補充給 AI 的備註..."
-            className="text-xs border border-gray-200 rounded-lg px-3 py-1.5 w-48 outline-none focus:ring-2 focus:ring-purple-500 bg-white"
-          />
+      <div className="p-5 border-b border-gray-100 space-y-3">
+        <div className="flex items-center justify-between">
+          <h3 className="text-sm font-bold text-gray-900">
+            每日進度報告
+          </h3>
+          <div className="flex items-center gap-2">
           <button
             onClick={handleGenerate}
             disabled={isGenerating}
@@ -150,7 +143,16 @@ export const DailyReportEditor: React.FC = () => {
           <button onClick={handleCopy} className="flex items-center gap-1.5 text-xs font-bold text-green-600 hover:text-green-700 bg-green-50 px-3 py-1.5 rounded-lg transition-colors">
             <Copy size={12} /> 複製
           </button>
+          </div>
         </div>
+        {/* Manual notes input — full width on mobile */}
+        <input
+          type="text"
+          value={manualNotes}
+          onChange={(e) => setManualNotes(e.target.value)}
+          placeholder="補充給 AI 的備註（選填，AI 生成前填寫）..."
+          className="w-full text-xs border border-gray-200 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-purple-500 bg-white"
+        />
       </div>
 
       {/* Editor */}

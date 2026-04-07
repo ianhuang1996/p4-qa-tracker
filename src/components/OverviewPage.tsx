@@ -89,9 +89,9 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ onNavigateToQA, onNa
   return (
     <div className="max-w-4xl mx-auto space-y-8">
       {/* Greeting */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h2 className="text-xl font-bold text-gray-900">
+          <h2 className="text-lg sm:text-xl font-bold text-gray-900">
             {greeting}，{user?.displayName || '使用者'} 👋
           </h2>
           <p className="text-sm text-gray-500 mt-1">以下是你今天的工作概況</p>
