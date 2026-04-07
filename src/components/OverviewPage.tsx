@@ -4,10 +4,9 @@ import { User as FirebaseUser } from 'firebase/auth';
 import { useTodos } from '../hooks/useTodos';
 import { useQAItems } from '../hooks/useQAItems';
 import { useAppContext } from '../contexts/AppContext';
-import { getTodayStr, getAvatarColor, formatTimestamp } from '../utils/qaUtils';
+import { getTodayStr, getAvatarColor, augmentQAItems } from '../utils/qaUtils';
 import { STATUS_COLORS, PRIORITY_COLORS } from '../constants';
 import { AugmentedQAItem } from '../types';
-import { normalizeDate } from '../utils/qaUtils';
 import { WeeklyReport } from './WeeklyReport';
 import { DailyReportEditor } from './DailyReportEditor';
 
@@ -34,26 +33,7 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ onNavigateToQA, onNa
     return todos.filter(t => t.assignee === name);
   }, [todos, user]);
 
-  const augmentedData: AugmentedQAItem[] = useMemo(() => {
-    return data.map(item => {
-      const desc = item.description || '';
-      let priority = item.priority;
-      let category = '';
-      let cleanDesc = desc;
-      const priorityMatch = desc.match(/【(P\d+)(?:-([^】]+))?】/);
-      if (priorityMatch) {
-        if (!priority || priority === '-') priority = priorityMatch[1];
-        category = priorityMatch[2] || '';
-        cleanDesc = desc.replace(priorityMatch[0], '').trim();
-      } else {
-        const generalMatch = desc.match(/【([^】]+)】/);
-        if (generalMatch) { category = generalMatch[1]; cleanDesc = desc.replace(generalMatch[0], '').trim(); }
-      }
-      if (!priority) priority = '-';
-      const displayTitle = item.title || (cleanDesc.split('\n')[0].length > 30 ? cleanDesc.split('\n')[0].substring(0, 30) + '...' : cleanDesc.split('\n')[0]) || '未命名問題';
-      return { ...item, priority, category, cleanDesc, displayTitle, date: normalizeDate(item.date), comments: item.comments || [] };
-    });
-  }, [data]);
+  const augmentedData = useMemo(() => augmentQAItems(data), [data]);
 
   const qaStats = useMemo(() => {
     const active = augmentedData.filter(i => i.currentFlow !== '已關閉' && i.currentFlow !== '已修復');

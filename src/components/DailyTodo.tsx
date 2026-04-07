@@ -262,7 +262,7 @@ export const DailyTodo: React.FC<DailyTodoProps> = ({ user, qaItems, onNavigateT
         toggleTodo(todo.id, true);
       }
     });
-  }, [qaItems]);
+  }, [qaItems, todos, toggleTodo]);
 
   // New todo form
   const [newText, setNewText] = useState('');

@@ -14,7 +14,7 @@ import { normalizeDate } from '../utils/qaUtils';
 export const DailyReportEditor: React.FC = () => {
   const { user, isAuthReady } = useAppContext();
   const today = getTodayStr();
-  const { report, recentReports, saveReport } = useDailyReport(user, today);
+  const { report, recentReports, isLoading: reportLoading, saveReport } = useDailyReport(user, today);
   const { todos } = useTodos(user, today, 'day');
   const { data: qaData } = useQAItems(user, isAuthReady);
   const { releases } = useReleases(user);
@@ -156,6 +156,16 @@ export const DailyReportEditor: React.FC = () => {
       </div>
 
       {/* Editor */}
+      {reportLoading ? (
+        <div className="p-5 space-y-4 animate-pulse">
+          {[1,2,3].map(i => (
+            <div key={i}>
+              <div className="h-3 w-20 bg-gray-200 rounded mb-2" />
+              <div className="h-20 bg-gray-100 rounded-xl" />
+            </div>
+          ))}
+        </div>
+      ) : (
       <div className="p-5 space-y-4">
         {/* 🟢 今日完成 */}
         <div>
@@ -190,6 +200,7 @@ export const DailyReportEditor: React.FC = () => {
           />
         </div>
       </div>
+      )}
 
       {/* History */}
       {recentReports.length > 0 && (

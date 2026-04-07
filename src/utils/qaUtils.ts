@@ -107,3 +107,33 @@ export const normalizeDate = (dateStr: string): string => {
 
   return dateStr;
 };
+
+import { QAItem } from '../data';
+import { AugmentedQAItem } from '../types';
+
+export const augmentQAItems = (data: QAItem[]): AugmentedQAItem[] => {
+  return data.map(item => {
+    const desc = item.description || '';
+    let priority = item.priority;
+    let category = '';
+    let cleanDesc = desc;
+
+    const priorityMatch = desc.match(/【(P\d+)(?:-([^】]+))?】/);
+    if (priorityMatch) {
+      if (!priority || priority === '-') priority = priorityMatch[1];
+      category = priorityMatch[2] || '';
+      cleanDesc = desc.replace(priorityMatch[0], '').trim();
+    } else {
+      const generalMatch = desc.match(/【([^】]+)】/);
+      if (generalMatch) {
+        category = generalMatch[1];
+        cleanDesc = desc.replace(generalMatch[0], '').trim();
+      }
+    }
+
+    if (!priority) priority = '-';
+    const displayTitle = item.title || (cleanDesc.split('\n')[0].length > 30 ? cleanDesc.split('\n')[0].substring(0, 30) + '...' : cleanDesc.split('\n')[0]) || '未命名問題';
+
+    return { ...item, priority, category, cleanDesc, displayTitle, date: normalizeDate(item.date), comments: item.comments || [] };
+  });
+};

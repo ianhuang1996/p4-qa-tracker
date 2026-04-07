@@ -9,7 +9,7 @@ import { useReleases } from '../hooks/useReleases';
 import { useQAItems } from '../hooks/useQAItems';
 import { Release, AugmentedQAItem } from '../types';
 import { STATUS_COLORS, PRIORITY_COLORS } from '../constants';
-import { normalizeDate, formatTimestamp, getAvatarColor, getTodayStr } from '../utils/qaUtils';
+import { formatTimestamp, getAvatarColor, getTodayStr, augmentQAItems } from '../utils/qaUtils';
 import { EmptyState } from './EmptyState';
 import { generateReleaseNotes } from '../services/geminiService';
 import ReactMarkdown from 'react-markdown';
@@ -44,26 +44,7 @@ export const ReleasePage: React.FC = () => {
   const [noteDraft, setNoteDraft] = useState('');
   const [generatingNotes, setGeneratingNotes] = useState(false);
 
-  const augmentedData: AugmentedQAItem[] = useMemo(() => {
-    return data.map(item => {
-      const desc = item.description || '';
-      let priority = item.priority;
-      let category = '';
-      let cleanDesc = desc;
-      const priorityMatch = desc.match(/【(P\d+)(?:-([^】]+))?】/);
-      if (priorityMatch) {
-        if (!priority || priority === '-') priority = priorityMatch[1];
-        category = priorityMatch[2] || '';
-        cleanDesc = desc.replace(priorityMatch[0], '').trim();
-      } else {
-        const generalMatch = desc.match(/【([^】]+)】/);
-        if (generalMatch) { category = generalMatch[1]; cleanDesc = desc.replace(generalMatch[0], '').trim(); }
-      }
-      if (!priority) priority = '-';
-      const displayTitle = item.title || (cleanDesc.split('\n')[0].length > 30 ? cleanDesc.split('\n')[0].substring(0, 30) + '...' : cleanDesc.split('\n')[0]) || '未命名問題';
-      return { ...item, priority, category, cleanDesc, displayTitle, date: normalizeDate(item.date), comments: item.comments || [] };
-    });
-  }, [data]);
+  const augmentedData = useMemo(() => augmentQAItems(data), [data]);
 
   const selectedRelease = releases.find(r => r.id === selectedReleaseId) || null;
   const linkedItems = useMemo(() => {
@@ -218,27 +199,12 @@ export const ReleasePage: React.FC = () => {
                   <Link2 size={16} /> 關聯 QA 項目 ({linkedItems.length})
                 </h3>
                 {selectedRelease.status !== 'released' && (
-                  <div className="flex items-center gap-3">
-                    {(() => {
-                      const nextReleaseIds = augmentedData
-                        .filter(i => i.isNextRelease && !selectedRelease.linkedItemIds.includes(i.id))
-                        .map(i => i.id);
-                      return nextReleaseIds.length > 0 ? (
-                        <button
-                          onClick={() => linkItems(selectedRelease.id, selectedRelease.linkedItemIds, nextReleaseIds)}
-                          className="text-xs font-bold text-purple-600 hover:text-purple-700 flex items-center gap-1"
-                        >
-                          <Rocket size={14} /> 匯入預計更新 ({nextReleaseIds.length})
-                        </button>
-                      ) : null;
-                    })()}
-                    <button
-                      onClick={() => setShowLinkPicker(true)}
-                      className="text-xs font-bold text-blue-600 hover:text-blue-700 flex items-center gap-1"
-                    >
-                      <Plus size={14} /> 加入項目
-                    </button>
-                  </div>
+                  <button
+                    onClick={() => setShowLinkPicker(true)}
+                    className="text-xs font-bold text-blue-600 hover:text-blue-700 flex items-center gap-1"
+                  >
+                    <Plus size={14} /> 加入項目
+                  </button>
                 )}
               </div>
               <div className="divide-y divide-gray-100">

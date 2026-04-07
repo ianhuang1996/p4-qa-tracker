@@ -7,7 +7,7 @@ import { AugmentedQAItem, ViewMode } from '../types';
 import { PRIORITY_ORDER } from '../constants';
 import { useQAItems } from '../hooks/useQAItems';
 import { useReleases } from '../hooks/useReleases';
-import { normalizeDate, getTodayStr } from '../utils/qaUtils';
+import { getTodayStr, augmentQAItems } from '../utils/qaUtils';
 import { useAppContext } from '../contexts/AppContext';
 import { z } from 'zod';
 
@@ -78,34 +78,7 @@ export const QAPage: React.FC<QAPageProps> = () => {
   const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>(null);
   const [showSortMode, setShowSortMode] = useState(false);
 
-  // Augmented Data
-  const augmentedData: AugmentedQAItem[] = useMemo(() => {
-    return data.map(item => {
-      const desc = item.description || '';
-      let priority = item.priority;
-      let category = '';
-      let cleanDesc = desc;
-
-      const priorityMatch = desc.match(/【(P\d+)(?:-([^】]+))?】/);
-      if (priorityMatch) {
-        if (!priority || priority === '-') priority = priorityMatch[1];
-        category = priorityMatch[2] || '';
-        cleanDesc = desc.replace(priorityMatch[0], '').trim();
-      } else {
-        const generalMatch = desc.match(/【([^】]+)】/);
-        if (generalMatch) {
-          category = generalMatch[1];
-          cleanDesc = desc.replace(generalMatch[0], '').trim();
-        }
-      }
-
-      if (!priority) priority = '-';
-      const displayTitle = item.title || (cleanDesc.split('\n')[0].length > 30 ? cleanDesc.split('\n')[0].substring(0, 30) + '...' : cleanDesc.split('\n')[0]) || '未命名問題';
-      const normalizedDate = normalizeDate(item.date);
-
-      return { ...item, priority, category, cleanDesc, displayTitle, date: normalizedDate, comments: item.comments || [] };
-    });
-  }, [data]);
+  const augmentedData = useMemo(() => augmentQAItems(data), [data]);
 
   const activeReleaseLinkedItems = useMemo(() => {
     if (!activeRelease) return [];
@@ -391,7 +364,8 @@ export const QAPage: React.FC<QAPageProps> = () => {
           <QAItemTable items={filteredData} onItemClick={(item) => setSelectedItemId(item.id)}
             onStatusChange={(item, status) => updateItem(item.id, { currentFlow: status }, item)}
             onAssigneeChange={(item, assignee) => updateItem(item.id, { assignee }, item)}
-            selectedIds={selectedIds} setSelectedIds={setSelectedIds} sortConfig={sortConfig} onSort={handleSort} />
+            selectedIds={selectedIds} setSelectedIds={setSelectedIds} sortConfig={sortConfig} onSort={handleSort}
+            releaseLinkedIds={activeRelease?.linkedItemIds || []} />
         ) : (
           <QAItemKanban items={filteredData} onItemClick={handleKanbanItemClick} onStatusChange={handleKanbanStatusChange} />
         )}

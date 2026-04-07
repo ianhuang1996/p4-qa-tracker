@@ -85,7 +85,7 @@ export const WikiPageView: React.FC = () => {
       updatePage(selectedPage.id, { title: editTitle, content: editContent });
     }, 2000);
     return () => { if (saveTimerRef.current) clearTimeout(saveTimerRef.current); };
-  }, [editContent, editTitle]);
+  }, [editContent, editTitle, isEditing, selectedPage, updatePage]);
 
   if (!user) return null;
 

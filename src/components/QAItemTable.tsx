@@ -14,10 +14,11 @@ interface QAItemTableProps {
   setSelectedIds: (ids: string[]) => void;
   sortConfig: { key: string; direction: 'asc' | 'desc' } | null;
   onSort: (key: string) => void;
+  releaseLinkedIds?: string[];
 }
 
-export const QAItemTable: React.FC<QAItemTableProps> = ({ 
-  items, onItemClick, onStatusChange, onAssigneeChange, selectedIds, setSelectedIds, sortConfig, onSort
+export const QAItemTable: React.FC<QAItemTableProps> = ({
+  items, onItemClick, onStatusChange, onAssigneeChange, selectedIds, setSelectedIds, sortConfig, onSort, releaseLinkedIds = []
 }) => {
   const [openAssigneeId, setOpenAssigneeId] = React.useState<string | null>(null);
 
@@ -120,7 +121,7 @@ export const QAItemTable: React.FC<QAItemTableProps> = ({
                     <div className="text-sm font-semibold text-gray-900 line-clamp-1 group-hover:text-blue-600 transition-colors">
                       {item.displayTitle}
                     </div>
-                    {item.isNextRelease && (
+                    {releaseLinkedIds.includes(item.id) && (
                       <div className="flex items-center gap-1 px-1.5 py-0.5 bg-indigo-50 text-indigo-600 rounded text-[10px] font-bold border border-indigo-100" title="排入下次發布">
                         <Rocket size={10} />
                         Next
