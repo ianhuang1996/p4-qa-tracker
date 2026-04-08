@@ -1,10 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { X, Edit2, Trash2, Save, Info, AlertTriangle, MessageSquare, History } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { AugmentedQAItem, HistoryEntry } from '../types';
+import { QAItem, QAComment, AugmentedQAItem, HistoryEntry } from '../types';
 import { STATUS_COLORS } from '../constants';
 import { getVideoEmbedUrl } from '../utils/qaUtils';
-import { QAItem, QAComment } from '../data';
 import { db } from '../firebase';
 import { collection, query, orderBy, onSnapshot } from 'firebase/firestore';
 import { User as FirebaseUser } from 'firebase/auth';

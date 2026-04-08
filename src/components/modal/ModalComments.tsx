@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import { X, Share2, MessageSquare, Sparkles, Loader2, Trash2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { QAComment } from '../../data';
-import { AugmentedQAItem } from '../../types';
+import { QAComment, AugmentedQAItem } from '../../types';
 import { RDS, PMS } from '../../constants';
 import { summarizeDiscussion } from '../../services/geminiService';
 import { User as FirebaseUser } from 'firebase/auth';

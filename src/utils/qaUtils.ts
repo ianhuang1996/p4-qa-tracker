@@ -114,8 +114,7 @@ export const normalizeDate = (dateStr: string): string => {
   return dateStr;
 };
 
-import { QAItem } from '../data';
-import { AugmentedQAItem } from '../types';
+import { QAItem, AugmentedQAItem } from '../types';
 
 export const augmentQAItems = (data: QAItem[]): AugmentedQAItem[] => {
   return data.map(item => {

@@ -3,9 +3,8 @@ import { db, auth } from '../firebase';
 import { collection, onSnapshot, doc, setDoc, deleteDoc, writeBatch, addDoc, query, where, getDocs, increment } from 'firebase/firestore';
 import { User as FirebaseUser } from 'firebase/auth';
 import { toast } from 'sonner';
-import { QAItem } from '../data';
+import { QAItem, OperationType, Notification } from '../types';
 import { parseMentions } from '../utils/mentionUtils';
-import { OperationType, Notification } from '../types';
 
 interface FirestoreErrorInfo {
   error: string;

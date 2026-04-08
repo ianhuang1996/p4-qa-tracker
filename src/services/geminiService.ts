@@ -1,6 +1,5 @@
 import { GoogleGenAI } from "@google/genai";
-import { QAItem, QAComment } from "../data";
-import { AugmentedQAItem, TodoItem, Release } from "../types";
+import { QAItem, QAComment, AugmentedQAItem, TodoItem, Release } from "../types";
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || "" });
 

@@ -2,8 +2,7 @@ import { useMemo, useState, useEffect } from 'react';
 import { User as FirebaseUser } from 'firebase/auth';
 import { db } from '../firebase';
 import { collection, onSnapshot, query, where, orderBy, limit as fbLimit } from 'firebase/firestore';
-import { QAItem } from '../data';
-import { AugmentedQAItem, TodoItem, WikiPage, Release, DailyReport, TeamGoalProgress } from '../types';
+import { QAItem, AugmentedQAItem, TodoItem, WikiPage, Release, DailyReport, TeamGoalProgress } from '../types';
 import { ACHIEVEMENT_DEFS, TEAM_GOAL_DEFS, HOLIDAYS_2026, PMS, RDS } from '../constants';
 import { augmentQAItems } from '../utils/qaUtils';
 

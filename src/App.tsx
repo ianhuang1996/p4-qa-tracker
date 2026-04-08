@@ -1,5 +1,5 @@
-import { useState, useMemo } from 'react';
-import { FileText } from 'lucide-react';
+import { useState, useMemo, lazy, Suspense } from 'react';
+import { FileText, Loader2 } from 'lucide-react';
 import { Toaster } from 'sonner';
 import { AppProvider, useAppContext } from './contexts/AppContext';
 import { useNotifications } from './hooks/useNotifications';
@@ -9,12 +9,14 @@ import { getTodayStr } from './utils/qaUtils';
 import { Sidebar } from './components/Sidebar';
 import { NotificationCenter } from './components/NotificationCenter';
 import { OverviewPage } from './components/OverviewPage';
-import { QAPage } from './components/QAPage';
-import { ReleasePage } from './components/ReleasePage';
-import { WikiPageView } from './components/WikiPageView';
-import { DailyTodo } from './components/DailyTodo';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { GlobalSearch } from './components/GlobalSearch';
+
+// Lazy-loaded pages — only downloaded when user navigates to them
+const QAPage = lazy(() => import('./components/QAPage').then(m => ({ default: m.QAPage })));
+const ReleasePage = lazy(() => import('./components/ReleasePage').then(m => ({ default: m.ReleasePage })));
+const WikiPageView = lazy(() => import('./components/WikiPageView').then(m => ({ default: m.WikiPageView })));
+const DailyTodo = lazy(() => import('./components/DailyTodo').then(m => ({ default: m.DailyTodo })));
 
 function LoadingSkeleton() {
   return (
@@ -129,14 +131,18 @@ function AppLayout() {
                 onNavigateToQA={() => setCurrentPage('qa')}
                 onNavigateToTodo={() => setCurrentPage('todo')}
               />
-            ) : currentPage === 'todo' ? (
-              <DailyTodo user={user} onNavigateToQA={() => setCurrentPage('qa')} />
-            ) : currentPage === 'release' ? (
-              <ReleasePage />
-            ) : currentPage === 'wiki' ? (
-              <WikiPageView />
             ) : (
-              <QAPage />
+              <Suspense fallback={<div className="flex items-center justify-center py-32"><Loader2 className="w-6 h-6 animate-spin text-blue-500" /></div>}>
+                {currentPage === 'todo' ? (
+                  <DailyTodo user={user} onNavigateToQA={() => setCurrentPage('qa')} />
+                ) : currentPage === 'release' ? (
+                  <ReleasePage />
+                ) : currentPage === 'wiki' ? (
+                  <WikiPageView />
+                ) : (
+                  <QAPage />
+                )}
+              </Suspense>
             )}
           </ErrorBoundary>
         </div>

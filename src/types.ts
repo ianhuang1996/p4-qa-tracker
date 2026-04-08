@@ -1,4 +1,42 @@
-import { QAItem, QAComment } from './data';
+export interface QAItem {
+  id: string;
+  title?: string;
+  priority?: string;
+  date: string;
+  module: string;
+  tester: string;
+  description: string;
+  imageLink: string;
+  imageLinks?: string[];
+  videoLink?: string;
+  videoLinks?: string[];
+  currentFlow: string;
+  assignee: string;
+  fixVersion?: string;
+  answer: string;
+  rdFix?: string;
+  testMethod?: string;
+  comments?: QAComment[];
+  commentCount?: number;
+  fixedAt?: number;
+  version?: string;
+  authorUID?: string;
+  attachmentUrl?: string;
+  attachmentName?: string;
+  attachments?: { name: string; url: string }[];
+  isNextRelease?: boolean;
+  releaseNote?: string;
+  sortOrder?: number;
+}
+
+export interface QAComment {
+  id: string;
+  userId: string;
+  userName: string;
+  text: string;
+  createdAt: number;
+  updatedAt?: number;
+}
 
 export enum OperationType {
   CREATE = 'create',
