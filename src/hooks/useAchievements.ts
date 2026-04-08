@@ -339,6 +339,68 @@ export function useAchievementLogs(user: FirebaseUser | null): AchievementLog[] 
   return logs;
 }
 
+// ─── Hook to compute per-user highest achievement tier ──
+
+/** Maps userId → highest tier (1/2/3), and also userName → highest tier for avatar usage */
+export function useUserTiers(user: FirebaseUser | null): {
+  tierByUserId: Record<string, number>;
+  tierByUserName: Record<string, number>;
+  highestIconByUserId: Record<string, string>;
+} {
+  const [logs, setLogs] = useState<AchievementLog[]>([]);
+
+  useEffect(() => {
+    if (!user) return;
+    const q = query(collection(db, 'achievement_logs'), orderBy('unlockedAt', 'desc'));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const items: AchievementLog[] = [];
+      snapshot.forEach(d => items.push({ id: d.id, ...d.data() } as AchievementLog));
+      setLogs(items);
+    }, (error) => {
+      console.error('Failed to fetch user tiers:', error);
+    });
+    return () => unsubscribe();
+  }, [user]);
+
+  return useMemo(() => {
+    const tierByUserId: Record<string, number> = {};
+    const tierByUserName: Record<string, number> = {};
+    const highestIconByUserId: Record<string, string> = {};
+    // Track highest tier + most recent icon per user
+    const bestByUserId: Record<string, { tier: number; icon: string; unlockedAt: number }> = {};
+
+    logs.forEach(log => {
+      const def = ACHIEVEMENT_DEFS.find(d => d.id === log.achievementId);
+      if (!def) return;
+      const prev = bestByUserId[log.userId];
+      if (!prev || def.tier > prev.tier || (def.tier === prev.tier && log.unlockedAt > prev.unlockedAt)) {
+        bestByUserId[log.userId] = { tier: def.tier, icon: def.icon, unlockedAt: log.unlockedAt };
+      }
+      // Also track by userName
+      if (!tierByUserName[log.userName] || def.tier > tierByUserName[log.userName]) {
+        tierByUserName[log.userName] = def.tier;
+      }
+    });
+
+    Object.entries(bestByUserId).forEach(([userId, info]) => {
+      tierByUserId[userId] = info.tier;
+      highestIconByUserId[userId] = info.icon;
+    });
+
+    return { tierByUserId, tierByUserName, highestIconByUserId };
+  }, [logs]);
+}
+
+/** Get avatar ring class based on tier */
+export function getAvatarRing(tier: number | undefined): string {
+  switch (tier) {
+    case 1: return 'ring-2 ring-amber-700';
+    case 2: return 'ring-2 ring-gray-400';
+    case 3: return 'ring-2 ring-yellow-400 shadow-sm shadow-yellow-200';
+    default: return '';
+  }
+}
+
 // ─── Lightweight hook to fetch all daily reports (for team goals) ──
 
 export function useAllDailyReports(user: FirebaseUser | null): DailyReport[] {

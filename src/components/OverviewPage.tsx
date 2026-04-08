@@ -5,7 +5,7 @@ import { useTodos } from '../hooks/useTodos';
 import { useQAItems } from '../hooks/useQAItems';
 import { useReleases } from '../hooks/useReleases';
 import { useWikiPages } from '../hooks/useWikiPages';
-import { useAchievements, useAllDailyReports, useAchievementLogs } from '../hooks/useAchievements';
+import { useAchievements, useAllDailyReports, useAchievementLogs, useUserTiers, getAvatarRing } from '../hooks/useAchievements';
 import { useAppContext } from '../contexts/AppContext';
 import { getTodayStr, getAvatarColor, augmentQAItems } from '../utils/qaUtils';
 import { STATUS_COLORS, PRIORITY_COLORS, ACHIEVEMENT_DEFS } from '../constants';
@@ -47,6 +47,7 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ onNavigateToQA, onNa
   const allDailyReports = useAllDailyReports(user);
 
   const achievementLogs = useAchievementLogs(user);
+  const { tierByUserName } = useUserTiers(user);
 
   const { unlockedAchievements, lockedAchievements, achievementProgress, teamGoals } = useAchievements({
     user,
@@ -196,7 +197,7 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ onNavigateToQA, onNa
                     <span className={`px-1.5 py-0.5 text-[9px] font-bold rounded border ${PRIORITY_COLORS[item.priority]}`}>{item.priority}</span>
                   )}
                   <span className="text-sm text-gray-900 flex-1 truncate">{item.displayTitle}</span>
-                  <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[8px] text-white font-bold shrink-0 ${getAvatarColor(item.assignee)}`}>
+                  <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[8px] text-white font-bold shrink-0 ${getAvatarColor(item.assignee)} ${getAvatarRing(tierByUserName[item.assignee])}`}>
                     {item.assignee.charAt(0)}
                   </div>
                   <span className={`px-2 py-0.5 text-[9px] font-bold rounded-full border shrink-0 ${STATUS_COLORS[item.currentFlow || '待處理']}`}>

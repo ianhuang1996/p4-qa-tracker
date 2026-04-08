@@ -10,6 +10,7 @@ import { useQAItems } from '../hooks/useQAItems';
 import { Release, AugmentedQAItem } from '../types';
 import { STATUS_COLORS, PRIORITY_COLORS } from '../constants';
 import { formatTimestamp, getAvatarColor, getTodayStr, augmentQAItems } from '../utils/qaUtils';
+import { useUserTiers, getAvatarRing } from '../hooks/useAchievements';
 import { EmptyState } from './EmptyState';
 import { generateReleaseNotes } from '../services/geminiService';
 import ReactMarkdown from 'react-markdown';
@@ -33,6 +34,7 @@ export const ReleasePage: React.FC = () => {
   const { user, isAuthReady } = useAppContext();
   const { releases, isLoading, addRelease, updateRelease, deleteRelease, toggleChecklist, linkItems, unlinkItem, executeRelease } = useReleases(user);
   const { data } = useQAItems(user, isAuthReady);
+  const { tierByUserName } = useUserTiers(user);
 
   const [selectedReleaseId, setSelectedReleaseId] = useState<string | null>(null);
   const [showCreateForm, setShowCreateForm] = useState(false);
@@ -218,7 +220,7 @@ export const ReleasePage: React.FC = () => {
                       <span className={`px-1.5 py-0.5 text-[9px] font-bold rounded border ${PRIORITY_COLORS[item.priority]}`}>{item.priority}</span>
                     )}
                     <span className="text-sm text-gray-900 flex-1 truncate">{item.displayTitle}</span>
-                    <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[8px] text-white font-bold ${getAvatarColor(item.assignee)}`}>
+                    <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[8px] text-white font-bold ${getAvatarColor(item.assignee)} ${getAvatarRing(tierByUserName[item.assignee])}`}>
                       {item.assignee.charAt(0)}
                     </div>
                     <span className={`px-2 py-0.5 text-[9px] font-bold rounded-full border ${STATUS_COLORS[item.currentFlow || '待處理']}`}>

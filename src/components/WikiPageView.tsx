@@ -12,6 +12,7 @@ const CATEGORIES: { value: WikiCategory; label: string }[] = [
   { value: 'API', label: 'API' },
   { value: '設計規範', label: '設計規範' },
   { value: '產品規格', label: '產品規格' },
+  { value: '專案', label: '專案' },
   { value: '一般', label: '一般' },
 ];
 

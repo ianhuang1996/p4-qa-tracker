@@ -3,6 +3,7 @@ import { LayoutDashboard, CheckSquare, Bug, Rocket, BookOpen, ChevronLeft, Chevr
 import { User as FirebaseUser } from 'firebase/auth';
 import { AppPage } from '../types';
 import { getAvatarColor } from '../utils/qaUtils';
+import { useUserTiers, getAvatarRing } from '../hooks/useAchievements';
 
 interface SidebarProps {
   currentPage: AppPage;
@@ -48,6 +49,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
 }) => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const displayName = user.displayName || '使用者';
+  const { tierByUserId, highestIconByUserId } = useUserTiers(user);
+  const myTier = tierByUserId[user.uid];
+  const myIcon = highestIconByUserId[user.uid];
 
   const handleNavigate = (page: AppPage) => {
     onNavigate(page);
@@ -167,12 +171,15 @@ export const Sidebar: React.FC<SidebarProps> = ({
       {/* User info + Logout */}
       <div className="border-t border-gray-800 p-3">
         <div className={`flex items-center gap-3 ${collapsed ? 'justify-center' : ''}`}>
-          <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs text-white font-bold shrink-0 ${getAvatarColor(displayName)}`}>
+          <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs text-white font-bold shrink-0 ${getAvatarColor(displayName)} ${getAvatarRing(myTier)}`}>
             {displayName.charAt(0)}
           </div>
           {!collapsed && (
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-bold text-gray-200 truncate">{displayName}</p>
+              <p className="text-sm font-bold text-gray-200 truncate">
+                {displayName}
+                {myIcon && <span className="ml-1">{myIcon}</span>}
+              </p>
               <p className="text-[10px] text-gray-500 truncate">{user.email}</p>
             </div>
           )}

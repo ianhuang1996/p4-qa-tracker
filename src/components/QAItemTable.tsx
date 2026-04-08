@@ -4,6 +4,8 @@ import { EmptyState } from './EmptyState';
 import { AugmentedQAItem } from '../types';
 import { PRIORITY_COLORS, STATUS_COLORS, RDS } from '../constants';
 import { getDirectImageUrl, getAvatarColor } from '../utils/qaUtils';
+import { useUserTiers, getAvatarRing } from '../hooks/useAchievements';
+import { useAppContext } from '../contexts/AppContext';
 
 interface QAItemTableProps {
   items: AugmentedQAItem[];
@@ -21,6 +23,8 @@ export const QAItemTable: React.FC<QAItemTableProps> = ({
   items, onItemClick, onStatusChange, onAssigneeChange, selectedIds, setSelectedIds, sortConfig, onSort, releaseLinkedIds = []
 }) => {
   const [openAssigneeId, setOpenAssigneeId] = React.useState<string | null>(null);
+  const { user } = useAppContext();
+  const { tierByUserName } = useUserTiers(user);
 
   const toggleSelectAll = () => {
     if (selectedIds.length === items.length) {
@@ -144,7 +148,7 @@ export const QAItemTable: React.FC<QAItemTableProps> = ({
                         setOpenAssigneeId(openAssigneeId === item.id ? null : item.id);
                       }}
                     >
-                      <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] text-white font-bold ${getAvatarColor(item.assignee)}`}>
+                      <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] text-white font-bold ${getAvatarColor(item.assignee)} ${getAvatarRing(tierByUserName[item.assignee])}`}>
                         {item.assignee.charAt(0)}
                       </div>
                       <span className="text-xs text-gray-600 font-medium">{item.assignee}</span>

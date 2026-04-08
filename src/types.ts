@@ -79,7 +79,7 @@ export type ViewMode = 'table' | 'kanban';
 export type QuickFilter = 'all' | 'my_tasks' | 'ready_for_test';
 export type AppPage = 'overview' | 'todo' | 'qa' | 'release' | 'wiki';
 
-export type WikiCategory = 'API' | '設計規範' | '產品規格' | '一般';
+export type WikiCategory = 'API' | '設計規範' | '產品規格' | '專案' | '一般';
 
 export interface WikiPage {
   id: string;
