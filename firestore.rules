@@ -157,5 +157,10 @@ service cloud.firestore {
       allow update, delete: if isAuthenticated() &&
         (resource.data.creatorId == request.auth.uid || isAdmin());
     }
+
+    match /achievement_logs/{logId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated();
+    }
   }
 }

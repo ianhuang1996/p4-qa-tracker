@@ -5,15 +5,26 @@ import { useTodos } from '../hooks/useTodos';
 import { useQAItems } from '../hooks/useQAItems';
 import { useReleases } from '../hooks/useReleases';
 import { useWikiPages } from '../hooks/useWikiPages';
-import { useAchievements, useAllDailyReports } from '../hooks/useAchievements';
+import { useAchievements, useAllDailyReports, useAchievementLogs } from '../hooks/useAchievements';
 import { useAppContext } from '../contexts/AppContext';
 import { getTodayStr, getAvatarColor, augmentQAItems } from '../utils/qaUtils';
-import { STATUS_COLORS, PRIORITY_COLORS } from '../constants';
+import { STATUS_COLORS, PRIORITY_COLORS, ACHIEVEMENT_DEFS } from '../constants';
 import { AugmentedQAItem } from '../types';
 import { WeeklyReport } from './WeeklyReport';
 import { DailyReportEditor } from './DailyReportEditor';
 import { AchievementCard } from './AchievementCard';
 import { TeamGoals } from './TeamGoals';
+
+function getTimeAgo(ts: number): string {
+  const diff = Date.now() - ts;
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return '剛剛';
+  if (mins < 60) return `${mins}分鐘前`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs}hr`;
+  const days = Math.floor(hrs / 24);
+  return `${days}d`;
+}
 
 const PRIORITY_FLAG: Record<string, string> = {
   high: 'text-red-500',
@@ -34,6 +45,8 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ onNavigateToQA, onNa
   const { releases } = useReleases(user);
   const { pages: wikiPages } = useWikiPages(user);
   const allDailyReports = useAllDailyReports(user);
+
+  const achievementLogs = useAchievementLogs(user);
 
   const { unlockedAchievements, lockedAchievements, achievementProgress, teamGoals } = useAchievements({
     user,
@@ -206,7 +219,37 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ onNavigateToQA, onNa
           locked={lockedAchievements}
           progress={achievementProgress}
         />
-        <TeamGoals goals={teamGoals} />
+        <div className="space-y-8">
+          <TeamGoals goals={teamGoals} />
+
+          {/* Recent Achievement Logs */}
+          {achievementLogs.length > 0 && (
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100">
+              <div className="p-5 border-b border-gray-100">
+                <h3 className="text-sm font-bold text-gray-900">🎉 最近成就</h3>
+              </div>
+              <div className="p-4 space-y-2">
+                {achievementLogs.slice(0, 5).map(log => {
+                  const def = ACHIEVEMENT_DEFS.find(d => d.id === log.achievementId);
+                  if (!def) return null;
+                  const ago = getTimeAgo(log.unlockedAt);
+                  return (
+                    <div key={log.id} className="flex items-center gap-3 px-2 py-1.5">
+                      <span className="text-base">{def.icon}</span>
+                      <div className="flex-1 min-w-0">
+                        <span className="text-xs text-gray-900">
+                          <span className="font-bold">{log.userName}</span>
+                          {' '}解鎖了「{def.name}」
+                        </span>
+                      </div>
+                      <span className="text-[10px] text-gray-400 shrink-0">{ago}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </div>
       </div>
 
       </>

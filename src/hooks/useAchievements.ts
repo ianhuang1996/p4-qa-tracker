@@ -1,10 +1,11 @@
-import { useMemo, useState, useEffect } from 'react';
+import { useMemo, useState, useEffect, useRef } from 'react';
 import { User as FirebaseUser } from 'firebase/auth';
 import { db } from '../firebase';
-import { collection, onSnapshot, query, where, orderBy, limit as fbLimit } from 'firebase/firestore';
-import { QAItem, AugmentedQAItem, TodoItem, WikiPage, Release, DailyReport, TeamGoalProgress } from '../types';
+import { collection, onSnapshot, query, where, orderBy, limit as fbLimit, addDoc, getDocs } from 'firebase/firestore';
+import { QAItem, AugmentedQAItem, TodoItem, WikiPage, Release, DailyReport, TeamGoalProgress, AchievementLog } from '../types';
 import { ACHIEVEMENT_DEFS, TEAM_GOAL_DEFS, HOLIDAYS_2026, PMS, RDS } from '../constants';
 import { augmentQAItems } from '../utils/qaUtils';
+import { toast } from 'sonner';
 
 // ─── Workday helpers ──────────────────────────────────────
 
@@ -232,6 +233,45 @@ export function useAchievements({ user, qaItems, todos, wikiPages, releases, dai
     return progress;
   }, [metrics]);
 
+  // ─── Detect new unlocks → save to Firestore + toast ───
+  const loggedIdsRef = useRef<Set<string>>(new Set());
+  const [logsReady, setLogsReady] = useState(false);
+
+  // Load already-logged achievements for this user on mount
+  useEffect(() => {
+    if (!user) return;
+    setLogsReady(false);
+    const q = query(collection(db, 'achievement_logs'), where('userId', '==', user.uid));
+    getDocs(q).then(snapshot => {
+      snapshot.forEach(d => loggedIdsRef.current.add(d.data().achievementId));
+      setLogsReady(true);
+    }).catch(err => {
+      console.error('Failed to load achievement logs:', err);
+      setLogsReady(true); // Still allow new unlocks even if load fails
+    });
+  }, [user]);
+
+  // Watch for new unlocks (triggers when logsReady flips to true OR unlocked list changes)
+  useEffect(() => {
+    if (!user || !logsReady || unlockedAchievements.length === 0) return;
+
+    unlockedAchievements.forEach(ach => {
+      if (loggedIdsRef.current.has(ach.id)) return;
+      loggedIdsRef.current.add(ach.id);
+
+      // Save to Firestore
+      addDoc(collection(db, 'achievement_logs'), {
+        achievementId: ach.id,
+        userId: user.uid,
+        userName: user.displayName || '匿名',
+        unlockedAt: Date.now(),
+      }).catch(err => console.error('Failed to log achievement:', err));
+
+      // Toast celebration
+      toast.success(`🎉 解鎖成就「${ach.name}」— ${ach.description}`, { duration: 5000 });
+    });
+  }, [user, logsReady, unlockedAchievements]);
+
   // Team goals
   const teamGoals = useMemo((): TeamGoalProgress[] => {
     const activeRelease = releases.find(r => r.status === 'planning' || r.status === 'uat');
@@ -272,6 +312,31 @@ export function useAchievements({ user, qaItems, todos, wikiPages, releases, dai
     achievementProgress,
     teamGoals,
   };
+}
+
+// ─── Hook to fetch recent achievement logs (all users) ──
+
+export function useAchievementLogs(user: FirebaseUser | null): AchievementLog[] {
+  const [logs, setLogs] = useState<AchievementLog[]>([]);
+
+  useEffect(() => {
+    if (!user) return;
+    const q = query(
+      collection(db, 'achievement_logs'),
+      orderBy('unlockedAt', 'desc'),
+      fbLimit(20)
+    );
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const items: AchievementLog[] = [];
+      snapshot.forEach(d => items.push({ id: d.id, ...d.data() } as AchievementLog));
+      setLogs(items);
+    }, (error) => {
+      console.error('Failed to fetch achievement logs:', error);
+    });
+    return () => unsubscribe();
+  }, [user]);
+
+  return logs;
 }
 
 // ─── Lightweight hook to fetch all daily reports (for team goals) ──

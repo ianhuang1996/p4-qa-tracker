@@ -202,3 +202,11 @@ export interface TeamGoalProgress {
   target: number;
   achieved: boolean;
 }
+
+export interface AchievementLog {
+  id: string;
+  achievementId: string;
+  userId: string;
+  userName: string;
+  unlockedAt: number;
+}
