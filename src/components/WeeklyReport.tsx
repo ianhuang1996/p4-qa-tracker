@@ -5,6 +5,7 @@ import { toast } from 'sonner';
 import { AugmentedQAItem } from '../types';
 import { getWeekBoundaries, computeWeeklyStats, computeRDWorkload, computeTrendData } from '../utils/reportUtils';
 import { getAvatarColor } from '../utils/qaUtils';
+import { SEMANTIC } from '../constants';
 
 interface WeeklyReportProps {
   items: AugmentedQAItem[];
@@ -93,9 +94,9 @@ export const WeeklyReport: React.FC<WeeklyReportProps> = ({ items }) => {
               <YAxis tick={{ fontSize: 10 }} />
               <Tooltip contentStyle={{ fontSize: 12 }} />
               <Legend wrapperStyle={{ fontSize: 11 }} />
-              <Line type="monotone" dataKey="added" stroke="#ef4444" name="新增" strokeWidth={2} dot={{ r: 3 }} />
-              <Line type="monotone" dataKey="fixed" stroke="#22c55e" name="修復" strokeWidth={2} dot={{ r: 3 }} />
-              <Line type="monotone" dataKey="remaining" stroke="#f59e0b" name="未結案" strokeWidth={2} dot={{ r: 3 }} strokeDasharray="5 5" />
+              <Line type="monotone" dataKey="added" stroke={SEMANTIC.danger.hex} name="新增" strokeWidth={2} dot={{ r: 3 }} />
+              <Line type="monotone" dataKey="fixed" stroke={SEMANTIC.success.hex} name="修復" strokeWidth={2} dot={{ r: 3 }} />
+              <Line type="monotone" dataKey="remaining" stroke={SEMANTIC.caution.hex} name="未結案" strokeWidth={2} dot={{ r: 3 }} strokeDasharray="5 5" />
             </LineChart>
           </ResponsiveContainer>
         </div>
@@ -110,9 +111,9 @@ export const WeeklyReport: React.FC<WeeklyReportProps> = ({ items }) => {
               <YAxis type="category" dataKey="name" tick={{ fontSize: 11 }} width={50} />
               <Tooltip contentStyle={{ fontSize: 12 }} />
               <Legend wrapperStyle={{ fontSize: 11 }} />
-              <Bar dataKey="assigned" fill="#f97316" name="待處理" radius={[0, 4, 4, 0]} />
-              <Bar dataKey="inProgress" fill="#3b82f6" name="開發中" radius={[0, 4, 4, 0]} />
-              <Bar dataKey="fixed" fill="#22c55e" name="已修復" radius={[0, 4, 4, 0]} />
+              <Bar dataKey="assigned" fill={SEMANTIC.warning.hex} name="待處理" radius={[0, 4, 4, 0]} />
+              <Bar dataKey="inProgress" fill={SEMANTIC.info.hex} name="開發中" radius={[0, 4, 4, 0]} />
+              <Bar dataKey="fixed" fill={SEMANTIC.success.hex} name="已修復" radius={[0, 4, 4, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>

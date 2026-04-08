@@ -1,9 +1,66 @@
-export const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];
+// ═══════════════════════════════════════════════════════════
+// 🎨 統一色彩系統 — Single Source of Truth
+// ═══════════════════════════════════════════════════════════
 
-export const SEVERITY_COLORS = {
-  '嚴重': '#ef4444',
-  '一般': '#3b82f6',
+/** 語意色：hex（圖表用）+ Tailwind class（UI 用） */
+export const SEMANTIC = {
+  danger:  { hex: '#ef4444', tw: 'red-500' },     // P0, 退回重修, 高優先
+  warning: { hex: '#f97316', tw: 'orange-500' },   // P1, 待處理
+  caution: { hex: '#f59e0b', tw: 'amber-500' },    // P2, 趨勢
+  success: { hex: '#22c55e', tw: 'green-500' },    // P3, 已修復, 完成
+  info:    { hex: '#3b82f6', tw: 'blue-500' },     // 開發中, 主色
+  teal:    { hex: '#14b8a6', tw: 'teal-500' },     // 已修正待測試
+  neutral: { hex: '#9ca3af', tw: 'gray-400' },     // 已關閉, Unassigned
+} as const;
+
+/** 團隊成員固定色 — avatar + 圖表共用 */
+export const MEMBER_COLORS: Record<string, { hex: string; bg: string }> = {
+  'Ian':        { hex: '#3b82f6', bg: 'bg-blue-500' },
+  'Sienna':     { hex: '#ec4899', bg: 'bg-pink-500' },
+  'Neo':        { hex: '#10b981', bg: 'bg-emerald-500' },
+  'Summer':     { hex: '#f59e0b', bg: 'bg-amber-500' },
+  '后玲':       { hex: '#8b5cf6', bg: 'bg-violet-500' },
+  'Popo':       { hex: '#06b6d4', bg: 'bg-cyan-500' },
+  'Unassigned': { hex: '#9ca3af', bg: 'bg-gray-400' },
 };
+
+/** 模組固定色 — 圓餅圖 + 標籤共用 */
+export const MODULE_COLORS: Record<string, { hex: string; bg: string }> = {
+  'Presenter':  { hex: '#3b82f6', bg: 'bg-blue-500' },
+  'Promoter':   { hex: '#10b981', bg: 'bg-emerald-500' },
+  '企業組織':    { hex: '#f97316', bg: 'bg-orange-500' },
+  '雙模式':      { hex: '#f59e0b', bg: 'bg-amber-500' },
+  '全域設定':    { hex: '#8b5cf6', bg: 'bg-violet-500' },
+  '後台':        { hex: '#06b6d4', bg: 'bg-cyan-500' },
+  '其他':        { hex: '#f43f5e', bg: 'bg-rose-500' },
+};
+
+/** 圖表用 hex 陣列（從 MODULE_COLORS 導出，保證順序一致） */
+export const MODULES = ['Presenter', 'Promoter', '企業組織', '雙模式', '全域設定', '後台', '其他'];
+export const CHART_COLORS = MODULES.map(m => MODULE_COLORS[m].hex);
+
+/** 版更狀態色 */
+export const RELEASE_STATUS_COLORS: Record<string, string> = {
+  planning:  'bg-blue-100 text-blue-700 border-blue-200',
+  uat:       'bg-orange-100 text-orange-700 border-orange-200',
+  released:  'bg-green-100 text-green-700 border-green-200',
+  cancelled: 'bg-gray-100 text-gray-500 border-gray-200',
+};
+
+/** 成就階級色（inline style 用） */
+export const ACHIEVEMENT_TIER_STYLES: Record<number, React.CSSProperties> = {
+  1: { background: 'linear-gradient(135deg, #b45309, #92400e)' },  // Bronze
+  2: { background: 'linear-gradient(135deg, #9ca3af, #6b7280)' },  // Silver
+  3: { background: 'linear-gradient(135deg, #fbbf24, #f59e0b)' },  // Gold
+};
+import React from 'react';
+
+// ═══════════════════════════════════════════════════════════
+// 🏷️ 業務常數
+// ═══════════════════════════════════════════════════════════
+
+/** 向後兼容：舊的 COLORS 陣列（= CHART_COLORS） */
+export const COLORS = CHART_COLORS;
 
 export const PRIORITY_COLORS: Record<string, string> = {
   'P0': 'bg-red-500 text-white border-red-600',
@@ -15,7 +72,6 @@ export const PRIORITY_COLORS: Record<string, string> = {
 export const QA_FLOWS = ['待處理', '開發中', '已修正待測試', '已修復', '退回重修', '已關閉'];
 export const PMS = ['Ian', 'Sienna'];
 export const RDS = ['Neo', 'Summer', '后玲', 'Popo', 'Unassigned'];
-export const MODULES = ['Presenter', 'Promoter', '企業組織', '雙模式', '全域設定', '後台', '其他'];
 
 export const ADMIN_EMAILS: string[] = [
   'ian@osensetech.com',
@@ -106,8 +162,3 @@ export const TEAM_GOAL_DEFS: TeamGoalDef[] = [
   { id: 'bug_clear', name: 'Bug 清零', icon: '🧹', description: '本版所有關聯 QA items 全部關閉', type: 'release' },
 ];
 
-export const ACHIEVEMENT_TIER_COLORS: Record<number, string> = {
-  1: 'from-amber-600 to-amber-800',    // Bronze
-  2: 'from-gray-300 to-gray-500',       // Silver
-  3: 'from-yellow-300 to-yellow-500',    // Gold
-};

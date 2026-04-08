@@ -23,19 +23,25 @@ export const formatTimestamp = (ts: number): string => {
   });
 };
 
-const AVATAR_COLORS = [
-  'bg-red-500', 'bg-orange-500', 'bg-amber-500', 'bg-emerald-500',
-  'bg-teal-500', 'bg-cyan-500', 'bg-blue-500', 'bg-indigo-500',
-  'bg-violet-500', 'bg-purple-500', 'bg-fuchsia-500', 'bg-pink-500',
+import { MEMBER_COLORS } from '../constants';
+
+// Fallback colors for members not in MEMBER_COLORS
+const FALLBACK_COLORS = [
+  'bg-red-500', 'bg-orange-500', 'bg-emerald-500',
+  'bg-cyan-500', 'bg-blue-500', 'bg-indigo-500',
+  'bg-violet-500', 'bg-pink-500',
 ];
 
 export const getAvatarColor = (name: string): string => {
   if (!name || name === 'Unassigned') return 'bg-gray-400';
+  // Use fixed color if member is defined
+  if (MEMBER_COLORS[name]) return MEMBER_COLORS[name].bg;
+  // Fallback: hash for unknown members
   let hash = 0;
   for (let i = 0; i < name.length; i++) {
     hash = name.charCodeAt(i) + ((hash << 5) - hash);
   }
-  return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length];
+  return FALLBACK_COLORS[Math.abs(hash) % FALLBACK_COLORS.length];
 };
 
 export const getDirectImageUrl = (url: string) => {

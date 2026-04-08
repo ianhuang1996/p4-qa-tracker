@@ -4,7 +4,7 @@ import {
   PieChart, Pie, Cell
 } from 'recharts';
 import { AugmentedQAItem } from '../types';
-import { COLORS, SEVERITY_COLORS } from '../constants';
+import { MEMBER_COLORS, MODULE_COLORS, SEMANTIC } from '../constants';
 
 interface DashboardProps {
   items: AugmentedQAItem[];
@@ -70,7 +70,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ items }) => {
               />
               <Bar dataKey="count" name="問題數" radius={[4, 4, 0, 0]}>
                 {assigneeStats.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  <Cell key={`cell-${index}`} fill={MEMBER_COLORS[entry.name]?.hex || SEMANTIC.neutral.hex} />
                 ))}
               </Bar>
             </BarChart>
@@ -98,7 +98,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ items }) => {
                 label={({name, percent}) => `${name} ${(percent * 100).toFixed(0)}%`}
               >
                 {moduleStats.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  <Cell key={`cell-${index}`} fill={MODULE_COLORS[entry.name]?.hex || SEMANTIC.neutral.hex} />
                 ))}
               </Pie>
               <Tooltip contentStyle={{borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)'}} />
@@ -124,7 +124,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ items }) => {
               />
               <Legend verticalAlign="top" align="right" height={36} iconType="circle" />
               <Bar dataKey="total" name="總問題數" fill="#e5e7eb" radius={[4, 4, 0, 0]} />
-              <Bar dataKey="fixed" name="已修復" fill="#10b981" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="fixed" name="已修復" fill={SEMANTIC.success.hex} radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Trophy, ChevronDown, ChevronUp, Lock } from 'lucide-react';
 import { AchievementDef } from '../types';
+import { ACHIEVEMENT_TIER_STYLES } from '../constants';
 
 interface AchievementCardProps {
   unlocked: AchievementDef[];
@@ -17,13 +18,6 @@ const CATEGORY_LABELS: Record<string, string> = {
   communication: '溝通',
   release: '版更',
   special: '特殊',
-};
-
-// Use inline styles for gradients to avoid Tailwind purge issues
-const TIER_STYLES: Record<number, React.CSSProperties> = {
-  1: { background: 'linear-gradient(135deg, #b45309, #92400e)' },  // Bronze
-  2: { background: 'linear-gradient(135deg, #9ca3af, #6b7280)' },  // Silver
-  3: { background: 'linear-gradient(135deg, #fbbf24, #f59e0b)' },  // Gold
 };
 
 export const AchievementCard: React.FC<AchievementCardProps> = ({ unlocked, locked, progress }) => {
@@ -65,7 +59,7 @@ export const AchievementCard: React.FC<AchievementCardProps> = ({ unlocked, lock
               >
                 <div
                   className="w-12 h-12 rounded-full flex items-center justify-center text-xl shadow-md ring-2 ring-white"
-                  style={TIER_STYLES[ach.tier]}
+                  style={ACHIEVEMENT_TIER_STYLES[ach.tier]}
                 >
                   {ach.icon}
                 </div>
@@ -103,7 +97,7 @@ export const AchievementCard: React.FC<AchievementCardProps> = ({ unlocked, lock
                       <div key={ach.id} className={`flex items-center gap-3 p-2 rounded-lg ${isUnlocked ? 'bg-yellow-50' : 'bg-gray-50'}`}>
                         <div
                           className="w-8 h-8 rounded-full flex items-center justify-center text-base shrink-0"
-                          style={isUnlocked ? { ...TIER_STYLES[ach.tier], boxShadow: '0 1px 2px rgba(0,0,0,0.1)' } : { background: '#e5e7eb' }}
+                          style={isUnlocked ? { ...ACHIEVEMENT_TIER_STYLES[ach.tier], boxShadow: '0 1px 2px rgba(0,0,0,0.1)' } : { background: '#e5e7eb' }}
                         >
                           {isUnlocked ? ach.icon : <Lock size={12} className="text-gray-400" />}
                         </div>
