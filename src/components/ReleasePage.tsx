@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import {
   Plus, Rocket, Calendar, CheckSquare, Square, Check, Trash2, X,
-  ChevronRight, FileText, Link2, Play, Clock, Package, Sparkles, Loader2
+  ChevronRight, FileText, Link2, Play, Clock, Package, Sparkles, Loader2, Edit2
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAppContext } from '../contexts/AppContext';
@@ -96,12 +96,15 @@ export const ReleasePage: React.FC = () => {
             <h2 className="text-xl sm:text-2xl font-black text-gray-900 flex items-center gap-3 flex-wrap">
               <Package size={24} className="text-blue-600 shrink-0" />
               {selectedRelease.status !== 'released' ? (
-                <input
-                  type="text"
-                  value={selectedRelease.version}
-                  onChange={(e) => updateRelease(selectedRelease.id, { version: e.target.value })}
-                  className="bg-transparent border-b border-dashed border-gray-300 focus:border-blue-500 outline-none text-2xl font-black w-32"
-                />
+                <span className="relative group/edit">
+                  <input
+                    type="text"
+                    value={selectedRelease.version}
+                    onChange={(e) => updateRelease(selectedRelease.id, { version: e.target.value })}
+                    className="bg-transparent border-b border-dashed border-gray-300 hover:border-blue-400 focus:border-blue-500 outline-none text-2xl font-black w-32 transition-colors"
+                  />
+                  <Edit2 size={12} className="absolute -right-4 top-1/2 -translate-y-1/2 text-gray-300 group-hover/edit:text-blue-400 transition-colors" />
+                </span>
               ) : selectedRelease.version}
               <span className={`px-3 py-1 text-xs font-bold rounded-lg border ${STATUS_BADGE[selectedRelease.status]}`}>
                 {STATUS_LABEL[selectedRelease.status]}

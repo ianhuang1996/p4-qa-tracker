@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { Sparkles, Copy, Save, Loader2, ChevronDown, Clock } from 'lucide-react';
 import { toast } from 'sonner';
 import { User as FirebaseUser } from 'firebase/auth';
@@ -35,10 +35,24 @@ export const DailyReportEditor: React.FC = () => {
     }
   }, [report]);
 
+  // Auto-save after 2 seconds of inactivity
+  const autoSaveTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const hasContent = completed.trim() || inProgress.trim() || risks.trim();
+  useEffect(() => {
+    if (!hasContent || reportLoading) return;
+    clearTimeout(autoSaveTimer.current);
+    autoSaveTimer.current = setTimeout(() => {
+      saveReport(completed, inProgress, risks);
+    }, 2000);
+    return () => clearTimeout(autoSaveTimer.current);
+  }, [completed, inProgress, risks]);
+
   const activeRelease = releases.find(r => r.status === 'planning' || r.status === 'uat');
 
   const handleGenerate = async () => {
     if (!user) return;
+    const hasExisting = completed.trim() || inProgress.trim() || risks.trim();
+    if (hasExisting && !window.confirm('目前已有內容，AI 生成將覆蓋現有內容。確定要繼續嗎？')) return;
     setIsGenerating(true);
     try {
       const completedTodos = todos.filter(t => t.completed).map(t => t.text);

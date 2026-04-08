@@ -88,7 +88,7 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ onNavigateToQA, onNa
   const myPendingTodos = myTodos.filter(t => !t.completed);
   const myCompletedTodos = myTodos.filter(t => t.completed);
 
-  const [activeTab, setActiveTab] = useState<'today' | 'report'>('today');
+  const [activeTab, setActiveTab] = useState<'today' | 'report' | 'achievement'>('today');
 
   const greeting = (() => {
     const hour = new Date().getHours();
@@ -120,6 +120,12 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ onNavigateToQA, onNa
             className={`px-4 py-1.5 rounded-md text-xs font-bold transition-colors ${activeTab === 'report' ? 'bg-white shadow-sm text-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
           >
             週報
+          </button>
+          <button
+            onClick={() => setActiveTab('achievement')}
+            className={`px-4 py-1.5 rounded-md text-xs font-bold transition-colors ${activeTab === 'achievement' ? 'bg-white shadow-sm text-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
+          >
+            成就
           </button>
         </div>
       </div>
@@ -213,15 +219,20 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ onNavigateToQA, onNa
       {/* Daily Report */}
       <DailyReportEditor />
 
-      {/* Gamification */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <AchievementCard
-          unlocked={unlockedAchievements}
-          locked={lockedAchievements}
-          progress={achievementProgress}
-        />
+      </>
+      ) : activeTab === 'report' ? (
+        <WeeklyReport items={augmentedData} />
+      ) : (
+        /* Achievement tab */
         <div className="space-y-8">
-          <TeamGoals goals={teamGoals} />
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <AchievementCard
+              unlocked={unlockedAchievements}
+              locked={lockedAchievements}
+              progress={achievementProgress}
+            />
+            <TeamGoals goals={teamGoals} />
+          </div>
 
           {/* Recent Achievement Logs */}
           {achievementLogs.length > 0 && (
@@ -230,7 +241,7 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ onNavigateToQA, onNa
                 <h3 className="text-sm font-bold text-gray-900">🎉 最近成就</h3>
               </div>
               <div className="p-4 space-y-2">
-                {achievementLogs.slice(0, 5).map(log => {
+                {achievementLogs.slice(0, 10).map(log => {
                   const def = ACHIEVEMENT_DEFS.find(d => d.id === log.achievementId);
                   if (!def) return null;
                   const ago = getTimeAgo(log.unlockedAt);
@@ -251,12 +262,6 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ onNavigateToQA, onNa
             </div>
           )}
         </div>
-      </div>
-
-      </>
-      ) : (
-        /* Weekly Report tab */
-        <WeeklyReport items={augmentedData} />
       )}
     </div>
   );

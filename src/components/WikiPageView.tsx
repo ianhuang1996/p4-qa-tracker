@@ -256,7 +256,23 @@ export const WikiPageView: React.FC = () => {
                     ].map(btn => (
                       <button
                         key={btn.label}
-                        onClick={() => setEditContent(prev => prev + btn.insert)}
+                        onClick={() => {
+                          const ta = document.querySelector<HTMLTextAreaElement>('.wiki-editor');
+                          if (ta) {
+                            const start = ta.selectionStart;
+                            const end = ta.selectionEnd;
+                            const before = editContent.substring(0, start);
+                            const after = editContent.substring(end);
+                            setEditContent(before + btn.insert + after);
+                            requestAnimationFrame(() => {
+                              ta.focus();
+                              const pos = start + btn.insert.length;
+                              ta.setSelectionRange(pos, pos);
+                            });
+                          } else {
+                            setEditContent(prev => prev + btn.insert);
+                          }
+                        }}
                         className="p-1.5 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
                         title={btn.label}
                       >
@@ -267,7 +283,7 @@ export const WikiPageView: React.FC = () => {
                   <textarea
                     value={editContent}
                     onChange={(e) => setEditContent(e.target.value)}
-                    className="w-full min-h-[400px] text-sm font-mono border border-gray-200 rounded-xl p-4 outline-none focus:ring-2 focus:ring-blue-500 resize-y"
+                    className="wiki-editor w-full min-h-[400px] text-sm font-mono border border-gray-200 rounded-xl p-4 outline-none focus:ring-2 focus:ring-blue-500 resize-y"
                     placeholder="開始撰寫內容... (支援 Markdown)"
                   />
                 </div>

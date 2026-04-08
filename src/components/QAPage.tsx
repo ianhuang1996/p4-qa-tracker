@@ -44,15 +44,29 @@ export const QAPage: React.FC<QAPageProps> = () => {
   const { releases, linkItems, unlinkItem } = useReleases(user);
   const activeRelease = useMemo(() => releases.find(r => r.status === 'planning' || r.status === 'uat') || null, [releases]);
 
-  // Filter States
+  // Filter States — persisted to localStorage
+  const loadFilter = <T,>(key: string, fallback: T): T => {
+    try { const v = localStorage.getItem(`qa_filter_${key}`); return v ? JSON.parse(v) : fallback; } catch { return fallback; }
+  };
   const [searchQuery, setSearchQuery] = useState('');
-  const [priorityFilter, setPriorityFilter] = useState('全部');
-  const [statusFilters, setStatusFilters] = useState<string[]>([]);
-  const [assigneeFilters, setAssigneeFilters] = useState<string[]>([]);
-  const [moduleFilters, setModuleFilters] = useState<string[]>([]);
-  const [selectedVersion, setSelectedVersion] = useState<string>('all');
-  const [dateRange, setDateRange] = useState({ start: '', end: '' });
-  const [hideClosed, setHideClosed] = useState(true);
+  const [priorityFilter, setPriorityFilter] = useState(() => loadFilter('priority', '全部'));
+  const [statusFilters, setStatusFilters] = useState<string[]>(() => loadFilter('status', []));
+  const [assigneeFilters, setAssigneeFilters] = useState<string[]>(() => loadFilter('assignee', []));
+  const [moduleFilters, setModuleFilters] = useState<string[]>(() => loadFilter('module', []));
+  const [selectedVersion, setSelectedVersion] = useState<string>(() => loadFilter('version', 'all'));
+  const [dateRange, setDateRange] = useState(() => loadFilter('dateRange', { start: '', end: '' }));
+  const [hideClosed, setHideClosed] = useState(() => loadFilter('hideClosed', true));
+
+  // Persist filters
+  useEffect(() => {
+    localStorage.setItem('qa_filter_priority', JSON.stringify(priorityFilter));
+    localStorage.setItem('qa_filter_status', JSON.stringify(statusFilters));
+    localStorage.setItem('qa_filter_assignee', JSON.stringify(assigneeFilters));
+    localStorage.setItem('qa_filter_module', JSON.stringify(moduleFilters));
+    localStorage.setItem('qa_filter_version', JSON.stringify(selectedVersion));
+    localStorage.setItem('qa_filter_dateRange', JSON.stringify(dateRange));
+    localStorage.setItem('qa_filter_hideClosed', JSON.stringify(hideClosed));
+  }, [priorityFilter, statusFilters, assigneeFilters, moduleFilters, selectedVersion, dateRange, hideClosed]);
 
   // UI States
   const [viewMode, setViewMode] = useState<ViewMode>(() => {

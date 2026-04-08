@@ -53,7 +53,7 @@ const KanbanCard = React.memo(({ item, onClick, onStatusChange }: KanbanCardProp
       {...attributes}
       {...listeners}
       onClick={onClick}
-      className={`bg-white p-4 rounded-lg shadow-sm border border-gray-100 cursor-pointer hover:shadow-md transition-all group relative ${
+      className={`bg-white p-4 rounded-lg shadow-sm border border-gray-100 cursor-grab active:cursor-grabbing hover:shadow-md transition-all group relative ${
         item.priority === 'P0' ? 'ring-2 ring-red-200 border-red-100 bg-red-50/30' : ''
       }`}
     >

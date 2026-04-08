@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Bell, Check, Trash2, AlertCircle, UserPlus, MessageSquare, X, RefreshCw } from 'lucide-react';
+import { Bell, Check, Trash2, AlertCircle, UserPlus, MessageSquare, X } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { zhTW } from 'date-fns/locale';
 import { Notification } from '../types';
@@ -145,7 +145,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ user, on
                   </div>
                   <button
                     onClick={(e) => { e.stopPropagation(); deleteNotification(notif.id); }}
-                    className="opacity-0 group-hover:opacity-100 p-1 text-gray-400 hover:text-red-500 transition-all shrink-0"
+                    className="p-1 text-gray-300 hover:text-red-500 transition-all shrink-0 sm:opacity-0 sm:group-hover:opacity-100"
                   >
                     <Trash2 size={12} />
                   </button>

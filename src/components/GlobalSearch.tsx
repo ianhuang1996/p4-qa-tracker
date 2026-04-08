@@ -14,13 +14,14 @@ interface GlobalSearchProps {
 }
 
 export const GlobalSearch: React.FC<GlobalSearchProps> = ({ onNavigate }) => {
-  const { user, isAuthReady } = useAppContext();
+  const { user, isAuthReady, navigateToQAItem } = useAppContext();
   const { data: qaData } = useQAItems(user, isAuthReady);
   const { pages: wikiPages } = useWikiPages(user);
   const { todos } = useTodos(user, getTodayStr(), 'day');
 
   const [isOpen, setIsOpen] = useState(false);
   const [query, setQuery] = useState('');
+  const [selectedIdx, setSelectedIdx] = useState(-1);
   const inputRef = useRef<HTMLInputElement>(null);
 
   // Ctrl+K shortcut
@@ -125,7 +126,16 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({ onNavigate }) => {
               ref={inputRef}
               type="text"
               value={query}
-              onChange={(e) => setQuery(e.target.value)}
+              onChange={(e) => { setQuery(e.target.value); setSelectedIdx(-1); }}
+              onKeyDown={(e) => {
+                if (e.key === 'ArrowDown') { e.preventDefault(); setSelectedIdx(i => Math.min(i + 1, results.length - 1)); }
+                else if (e.key === 'ArrowUp') { e.preventDefault(); setSelectedIdx(i => Math.max(i - 1, -1)); }
+                else if (e.key === 'Enter' && selectedIdx >= 0 && results[selectedIdx]) {
+                  const item = results[selectedIdx];
+                  if (item.type === 'qa') { navigateToQAItem(item.id); } else { onNavigate(item.page); }
+                  setIsOpen(false);
+                }
+              }}
               placeholder="搜尋 QA 項目、知識庫、待辦..."
               className="flex-1 text-sm border-none outline-none bg-transparent placeholder:text-gray-400"
             />
@@ -142,10 +152,14 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({ onNavigate }) => {
               <button
                 key={`${item.type}-${item.id}-${idx}`}
                 onClick={() => {
-                  onNavigate(item.page);
+                  if (item.type === 'qa') {
+                    navigateToQAItem(item.id);
+                  } else {
+                    onNavigate(item.page);
+                  }
                   setIsOpen(false);
                 }}
-                className="w-full flex items-center gap-3 px-5 py-3 hover:bg-blue-50 transition-colors text-left border-b border-gray-50 last:border-0"
+                className={`w-full flex items-center gap-3 px-5 py-3 hover:bg-blue-50 transition-colors text-left border-b border-gray-50 last:border-0 ${idx === selectedIdx ? 'bg-blue-50' : ''}`}
               >
                 {typeIcon(item.type)}
                 <div className="flex-1 min-w-0">
