@@ -5,9 +5,11 @@ import {
 } from 'lucide-react';
 import { User as FirebaseUser } from 'firebase/auth';
 import { useTodos, DateMode } from '../hooks/useTodos';
+import { useQAItems } from '../hooks/useQAItems';
+import { useAppContext } from '../contexts/AppContext';
 import { TodoItem, AugmentedQAItem } from '../types';
 import { RDS, PMS, ADMIN_EMAILS, STATUS_COLORS } from '../constants';
-import { getAvatarColor, getTodayStr, toDateStr } from '../utils/qaUtils';
+import { getAvatarColor, getTodayStr, toDateStr, augmentQAItems } from '../utils/qaUtils';
 import { EmptyState } from './EmptyState';
 
 interface DailyTodoProps {
@@ -143,7 +145,7 @@ const TodoCard: React.FC<{
               className="text-xs border border-gray-200 rounded-lg px-2 py-1.5 bg-white max-w-[200px]"
             >
               <option value="">不關聯 QA</option>
-              {qaItems.filter(q => q.currentFlow !== '已關閉').slice(0, 20).map(q => (
+              {qaItems.filter(q => q.currentFlow !== '已關閉').map(q => (
                 <option key={q.id} value={q.id}>{q.id} - {q.displayTitle}</option>
               ))}
             </select>
@@ -240,7 +242,10 @@ const TodoCard: React.FC<{
 };
 
 // ─── Main Component ────────────────────────────────────────────
-export const DailyTodo: React.FC<DailyTodoProps> = ({ user, qaItems, onNavigateToQA }) => {
+export const DailyTodo: React.FC<DailyTodoProps> = ({ user, qaItems: qaItemsProp, onNavigateToQA }) => {
+  const { isAuthReady } = useAppContext();
+  const { data: rawQAData } = useQAItems(user, isAuthReady);
+  const qaItems = qaItemsProp || useMemo(() => augmentQAItems(rawQAData), [rawQAData]);
   const today = getTodayStr();
   const [selectedDate, setSelectedDate] = useState(today);
   const [dateMode, setDateMode] = useState<DateMode>('day');
@@ -268,6 +273,7 @@ export const DailyTodo: React.FC<DailyTodoProps> = ({ user, qaItems, onNavigateT
   const [newText, setNewText] = useState('');
   const [newAssignee, setNewAssignee] = useState(user.displayName || ALL_MEMBERS[0]);
   const [newPriority, setNewPriority] = useState<TodoItem['priority']>(undefined);
+  const [newLinkedQA, setNewLinkedQA] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
 
   const isAdmin = !!user.email && ADMIN_EMAILS.includes(user.email);
@@ -284,9 +290,10 @@ export const DailyTodo: React.FC<DailyTodoProps> = ({ user, qaItems, onNavigateT
 
   const handleAdd = () => {
     if (!newText.trim()) return;
-    addTodo(newText, newAssignee, selectedDate, newPriority);
+    addTodo(newText, newAssignee, selectedDate, newPriority, newLinkedQA || undefined);
     setNewText('');
     setNewPriority(undefined);
+    setNewLinkedQA('');
     setTimeout(() => inputRef.current?.focus(), 0);
   };
 
@@ -467,6 +474,16 @@ export const DailyTodo: React.FC<DailyTodoProps> = ({ user, qaItems, onNavigateT
             <option value="high">高</option>
             <option value="medium">中</option>
             <option value="low">低</option>
+          </select>
+          <select
+            value={newLinkedQA}
+            onChange={(e) => setNewLinkedQA(e.target.value)}
+            className="text-xs border border-gray-200 rounded-lg px-2 py-1.5 bg-white max-w-[180px]"
+          >
+            <option value="">關聯 QA</option>
+            {qaItems.filter(q => q.currentFlow !== '已關閉' && q.currentFlow !== '已修復').map(q => (
+              <option key={q.id} value={q.id}>{q.id} — {(q.title || q.description).substring(0, 20)}</option>
+            ))}
           </select>
         </div>
       </div>
