@@ -123,7 +123,7 @@ export const QAPage: React.FC<QAPageProps> = () => {
 
   const filteredData = useMemo(() => {
     let result = augmentedData.filter(item => {
-      if (hideClosed && (item.currentFlow === '已關閉' || item.currentFlow === '已修復')) return false;
+      if (hideClosed && item.currentFlow === '已關閉') return false;
       const matchStatus = statusFilters.length === 0 || statusFilters.includes(item.currentFlow || '待處理');
       const matchAssignee = assigneeFilters.length === 0 || assigneeFilters.includes(item.assignee);
       const matchModule = moduleFilters.length === 0 || moduleFilters.includes(item.module);
@@ -341,10 +341,10 @@ export const QAPage: React.FC<QAPageProps> = () => {
           className={`flex items-center gap-2 px-3 py-2.5 rounded-xl transition-all border shadow-sm text-sm font-bold ${
             hideClosed ? 'bg-white hover:bg-gray-50 text-gray-700 border-gray-200' : 'bg-blue-50 text-blue-700 border-blue-200'
           }`}
-          title={hideClosed ? '顯示已關閉/已修復' : '隱藏已關閉/已修復'}
+          title={hideClosed ? '顯示已關閉' : '隱藏已關閉'}
         >
           {hideClosed ? <EyeOff size={18} /> : <Eye size={18} />}
-          <span className="hidden sm:inline">{hideClosed ? '已隱藏結案' : '顯示全部'}</span>
+          <span className="hidden sm:inline">{hideClosed ? '已隱藏關閉' : '顯示全部'}</span>
         </button>
       </div>
 
