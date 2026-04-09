@@ -125,6 +125,7 @@ export const QAItemModal: React.FC<QAItemModalProps> = ({
       aria-label={isAdding ? '新增問題' : `問題詳情 ${item.id}`}
       tabIndex={-1}
       className="fixed inset-0 z-50 flex justify-end bg-black/60 backdrop-blur-sm overflow-hidden outline-none"
+      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
       <motion.div
         initial={{ opacity: 0, x: '100%' }}
