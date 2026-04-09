@@ -172,7 +172,7 @@ export interface DailyReport {
 
 // ===== Gamification =====
 
-export type AchievementCategory = 'bugfix' | 'speed' | 'consistency' | 'todo' | 'wiki' | 'communication' | 'release' | 'special';
+export type AchievementCategory = 'bugfix' | 'speed' | 'consistency' | 'todo' | 'wiki' | 'communication' | 'release' | 'qa' | 'special';
 
 export interface AchievementDef {
   id: string;

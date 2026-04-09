@@ -151,9 +151,18 @@ export const ACHIEVEMENT_DEFS: AchievementDef[] = [
   // 版更
   { id: 'release_5', name: '出貨達人', description: '參與 5 次版更', icon: '📦', category: 'release', tier: 1, condition: { metric: 'releases_participated', threshold: 5 } },
   { id: 'release_10', name: '里程碑', description: '參與 10 次版更', icon: '🏅', category: 'release', tier: 2, condition: { metric: 'releases_participated', threshold: 10 } },
+  // QA (PM)
+  { id: 'bugs_filed_20', name: '鷹眼', description: '提交 20 個 bug', icon: '🦅', category: 'qa', tier: 1, condition: { metric: 'bugs_filed', threshold: 20 } },
+  { id: 'bugs_filed_50', name: '品質守門員', description: '提交 50 個 bug', icon: '🛡️', category: 'qa', tier: 2, condition: { metric: 'bugs_filed', threshold: 50 } },
+  { id: 'retest_10', name: '嚴格把關', description: '複測 10 次', icon: '🔍', category: 'qa', tier: 1, condition: { metric: 'retest_count', threshold: 10 } },
+  { id: 'retest_fail_5', name: '零容忍', description: '退回重修 5 次', icon: '🚫', category: 'qa', tier: 2, condition: { metric: 'retest_failed', threshold: 5 } },
+  { id: 'release_pub_3', name: '出貨指揮官', description: '發布 3 個版本', icon: '🚀', category: 'qa', tier: 1, condition: { metric: 'releases_published', threshold: 3 } },
+  { id: 'release_pub_10', name: '發行大師', description: '發布 10 個版本', icon: '🎖️', category: 'qa', tier: 3, condition: { metric: 'releases_published', threshold: 10 } },
+  { id: 'todos_assigned_50', name: '任務分配王', description: '幫團隊建立 50 個 todo', icon: '📋', category: 'qa', tier: 1, condition: { metric: 'todos_created_for_others', threshold: 50 } },
+  { id: 'todos_assigned_100', name: '團隊教練', description: '幫團隊建立 100 個 todo', icon: '🏅', category: 'qa', tier: 2, condition: { metric: 'todos_created_for_others', threshold: 100 } },
   // 特殊
   { id: 'first_bug', name: '先驅者', description: '提交系統第一個 bug', icon: '🌟', category: 'special', tier: 2, condition: { metric: 'is_first_bug_author', threshold: 1 } },
-  { id: 'all_categories', name: '全能王', description: '解鎖所有類別各一個成就', icon: '👑', category: 'special', tier: 3, condition: { metric: 'categories_unlocked', threshold: 6 } },
+  { id: 'all_categories', name: '全能王', description: '解鎖所有類別各一個成就', icon: '👑', category: 'special', tier: 3, condition: { metric: 'categories_unlocked', threshold: 7 } },
 ];
 
 export const TEAM_GOAL_DEFS: TeamGoalDef[] = [

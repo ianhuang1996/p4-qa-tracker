@@ -160,6 +160,17 @@ function computeMetrics(inputs: MetricInputs): Record<string, number> {
   });
   metrics.releases_participated = releaseParticipation;
 
+  // --- PM metrics: bugs filed, retest, releases published, todos assigned ---
+  metrics.bugs_filed = rawQAItems.filter(i => i.tester === userName || i.authorUID === userId).length;
+
+  const myRetested = rawQAItems.filter(i => i.retestBy === userName);
+  metrics.retest_count = myRetested.length;
+  metrics.retest_failed = myRetested.filter(i => i.retestResult === 'failed').length;
+
+  metrics.releases_published = releases.filter(r => r.status === 'released' && r.createdBy === userId).length;
+
+  metrics.todos_created_for_others = todos.filter(t => t.creatorId === userId && t.assignee !== userName).length;
+
   // --- Special: first bug author ---
   const sortedByNum = [...rawQAItems].sort((a, b) => {
     const numA = parseInt(a.id.replace(/\D/g, ''), 10) || 0;

@@ -17,6 +17,7 @@ const CATEGORY_LABELS: Record<string, string> = {
   wiki: '知識貢獻',
   communication: '溝通',
   release: '版更',
+  qa: '品質管理',
   special: '特殊',
 };
 
