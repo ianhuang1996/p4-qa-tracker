@@ -383,7 +383,11 @@ export const QAPage: React.FC<QAPageProps> = () => {
       <div className="mt-6">
         {viewMode === 'table' ? (
           <QAItemTable items={filteredData} onItemClick={(item) => setSelectedItemId(item.id)}
-            onStatusChange={(item, status) => updateItem(item.id, { currentFlow: status }, item)}
+            onStatusChange={(item, status, retest) => updateItem(item.id, {
+              currentFlow: status,
+              ...(retest ? { retestResult: retest.retestResult, retestNote: retest.retestNote, retestDate: retest.retestDate, retestBy: retest.retestBy } : {}),
+              ...(status === '已修復' ? { fixedAt: Date.now() } : {}),
+            }, item)}
             onAssigneeChange={(item, assignee) => updateItem(item.id, { assignee }, item)}
             selectedIds={selectedIds} setSelectedIds={setSelectedIds} sortConfig={sortConfig} onSort={handleSort}
             releaseLinkedIds={activeRelease?.linkedItemIds || []} />

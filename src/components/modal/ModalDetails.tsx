@@ -1,11 +1,11 @@
 import React from 'react';
 import {
   ExternalLink, Image as ImageIcon, Video, Calendar, User, Tag,
-  LayoutGrid, Play, FileText
+  LayoutGrid, Play, FileText, ClipboardCheck
 } from 'lucide-react';
 import { AugmentedQAItem } from '../../types';
 import { QA_FLOWS, PRIORITY_COLORS } from '../../constants';
-import { getDirectImageUrl, getVideoEmbedUrl, isDirectVideo } from '../../utils/qaUtils';
+import { getDirectImageUrl, getVideoEmbedUrl, isDirectVideo, formatTimestamp } from '../../utils/qaUtils';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 
@@ -196,6 +196,27 @@ export const ModalDetails: React.FC<ModalDetailsProps> = ({
                   </div>
                 </a>
               ))}
+            </div>
+          </div>
+        )}
+        {/* Retest Result */}
+        {item.retestResult && (
+          <div className="space-y-4">
+            <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wider flex items-center gap-2">
+              <ClipboardCheck size={16} /> 複測結果
+            </h3>
+            <div className={`p-4 rounded-2xl border ${item.retestResult === 'passed' ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}`}>
+              <div className="flex items-center justify-between mb-2">
+                <span className={`text-xs font-bold ${item.retestResult === 'passed' ? 'text-green-700' : 'text-red-700'}`}>
+                  {item.retestResult === 'passed' ? '✓ 通過' : '✗ 不通過'}
+                </span>
+                <span className="text-[10px] text-gray-400">
+                  {item.retestBy} · {item.retestDate ? formatTimestamp(item.retestDate) : ''}
+                </span>
+              </div>
+              {item.retestNote && (
+                <p className="text-sm text-gray-700">{item.retestNote}</p>
+              )}
             </div>
           </div>
         )}

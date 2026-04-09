@@ -76,7 +76,11 @@ service cloud.firestore {
              (!('sortOrder' in data) || (data.sortOrder is number || data.sortOrder == null)) &&
              (!('rdFix' in data) || (data.rdFix is string || data.rdFix == null)) &&
              (!('testMethod' in data) || (data.testMethod is string || data.testMethod == null)) &&
-             (!('commentCount' in data) || (data.commentCount is number || data.commentCount == null));
+             (!('commentCount' in data) || (data.commentCount is number || data.commentCount == null)) &&
+             (!('retestResult' in data) || (data.retestResult is string || data.retestResult == null)) &&
+             (!('retestNote' in data) || (data.retestNote is string || data.retestNote == null)) &&
+             (!('retestDate' in data) || (data.retestDate is number || data.retestDate == null)) &&
+             (!('retestBy' in data) || (data.retestBy is string || data.retestBy == null));
     }
 
     function isValidNotification(data) {

@@ -7,10 +7,17 @@ import { getDirectImageUrl, getAvatarColor } from '../utils/qaUtils';
 import { useUserTiers, getAvatarRing } from '../hooks/useAchievements';
 import { useAppContext } from '../contexts/AppContext';
 
+interface RetestData {
+  retestResult: 'passed' | 'failed';
+  retestNote: string;
+  retestDate: number;
+  retestBy: string;
+}
+
 interface QAItemTableProps {
   items: AugmentedQAItem[];
   onItemClick: (item: AugmentedQAItem) => void;
-  onStatusChange: (item: AugmentedQAItem, newStatus: string) => void;
+  onStatusChange: (item: AugmentedQAItem, newStatus: string, retest?: RetestData) => void;
   onAssigneeChange: (item: AugmentedQAItem, newAssignee: string) => void;
   selectedIds: string[];
   setSelectedIds: (ids: string[]) => void;
@@ -23,8 +30,23 @@ export const QAItemTable: React.FC<QAItemTableProps> = ({
   items, onItemClick, onStatusChange, onAssigneeChange, selectedIds, setSelectedIds, sortConfig, onSort, releaseLinkedIds = []
 }) => {
   const [openAssigneeId, setOpenAssigneeId] = React.useState<string | null>(null);
+  const [retestDialog, setRetestDialog] = React.useState<{ item: AugmentedQAItem; status: string } | null>(null);
+  const [retestNote, setRetestNote] = React.useState('');
   const { user } = useAppContext();
   const { tierByUserName } = useUserTiers(user);
+
+  const handleRetestSubmit = () => {
+    if (!retestDialog || !user) return;
+    const retest: RetestData = {
+      retestResult: retestDialog.status === '已修復' ? 'passed' : 'failed',
+      retestNote: retestNote.trim(),
+      retestDate: Date.now(),
+      retestBy: user.displayName || '',
+    };
+    onStatusChange(retestDialog.item, retestDialog.status, retest);
+    setRetestDialog(null);
+    setRetestNote('');
+  };
 
   const toggleSelectAll = () => {
     if (selectedIds.length === items.length) {
@@ -215,7 +237,7 @@ export const QAItemTable: React.FC<QAItemTableProps> = ({
                     {item.currentFlow === '已修正待測試' && (
                       <>
                         <button
-                          onClick={(e) => { e.stopPropagation(); onStatusChange(item, '已修復'); }}
+                          onClick={(e) => { e.stopPropagation(); setRetestDialog({ item, status: '已修復' }); }}
                           className="p-1.5 bg-green-100 text-green-600 rounded-lg hover:bg-green-200"
                           title="測試通過"
                           aria-label="標記為已修復"
@@ -223,7 +245,7 @@ export const QAItemTable: React.FC<QAItemTableProps> = ({
                           <CheckCircle size={14} />
                         </button>
                         <button
-                          onClick={(e) => { e.stopPropagation(); onStatusChange(item, '退回重修'); }}
+                          onClick={(e) => { e.stopPropagation(); setRetestDialog({ item, status: '退回重修' }); }}
                           className="p-1.5 bg-red-100 text-red-600 rounded-lg hover:bg-red-200"
                           title="退回重修"
                           aria-label="退回重修"
@@ -246,6 +268,53 @@ export const QAItemTable: React.FC<QAItemTableProps> = ({
           </tbody>
         </table>
       </div>
+
+      {/* Retest Dialog */}
+      {retestDialog && (
+        <>
+          <div className="fixed inset-0 z-50 bg-black/50" onClick={() => { setRetestDialog(null); setRetestNote(''); }} />
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
+            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md pointer-events-auto" onClick={(e) => e.stopPropagation()}>
+              <div className="p-5 border-b border-gray-100">
+                <h3 className="text-sm font-bold text-gray-900 flex items-center gap-2">
+                  {retestDialog.status === '已修復' ? (
+                    <><CheckCircle size={16} className="text-green-500" /> 複測通過</>
+                  ) : (
+                    <><XCircle size={16} className="text-red-500" /> 退回重修</>
+                  )}
+                </h3>
+                <p className="text-xs text-gray-400 mt-1">{retestDialog.item.id} — {retestDialog.item.displayTitle}</p>
+              </div>
+              <div className="p-5">
+                <label className="text-xs font-bold text-gray-700 mb-2 block">複測說明</label>
+                <textarea
+                  value={retestNote}
+                  onChange={(e) => setRetestNote(e.target.value)}
+                  className="w-full p-3 border border-gray-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-500 min-h-[80px] resize-y"
+                  placeholder={retestDialog.status === '已修復' ? '驗證環境、測試步驟...' : '退回原因、殘留問題...'}
+                  autoFocus
+                />
+              </div>
+              <div className="flex justify-end gap-2 p-5 pt-0">
+                <button
+                  onClick={() => { setRetestDialog(null); setRetestNote(''); }}
+                  className="px-4 py-2 text-sm font-bold text-gray-500 hover:text-gray-700 rounded-lg transition-colors"
+                >
+                  取消
+                </button>
+                <button
+                  onClick={handleRetestSubmit}
+                  className={`px-4 py-2 text-sm font-bold text-white rounded-lg transition-colors ${
+                    retestDialog.status === '已修復' ? 'bg-green-600 hover:bg-green-700' : 'bg-red-600 hover:bg-red-700'
+                  }`}
+                >
+                  確認送出
+                </button>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 };

@@ -27,6 +27,10 @@ export interface QAItem {
   isNextRelease?: boolean;
   releaseNote?: string;
   sortOrder?: number;
+  retestResult?: 'passed' | 'failed';
+  retestNote?: string;
+  retestDate?: number;
+  retestBy?: string;
 }
 
 export interface QAComment {
