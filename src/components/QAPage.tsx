@@ -110,6 +110,13 @@ export const QAPage: React.FC<QAPageProps> = () => {
 
   const augmentedData = useMemo(() => augmentQAItems(data), [data]);
 
+  // Map: version string → Set of linked item IDs (for version filtering)
+  const releaseVersionItemMap = useMemo(() => {
+    const map: Record<string, Set<string>> = {};
+    releases.forEach(r => { map[r.version] = new Set(r.linkedItemIds); });
+    return map;
+  }, [releases]);
+
   const activeReleaseLinkedItems = useMemo(() => {
     if (!activeRelease) return [];
     return augmentedData.filter(i => activeRelease.linkedItemIds.includes(i.id));
@@ -137,7 +144,7 @@ export const QAPage: React.FC<QAPageProps> = () => {
       const matchAssignee = assigneeFilters.length === 0 || assigneeFilters.includes(item.assignee);
       const matchModule = moduleFilters.length === 0 || moduleFilters.includes(item.module);
       const matchPriority = priorityFilter === '全部' || item.priority === priorityFilter;
-      const matchVersion = selectedVersion === 'all' || item.version === selectedVersion;
+      const matchVersion = selectedVersion === 'all' || (releaseVersionItemMap[selectedVersion]?.has(item.id) ?? false);
       const matchSearch =
         item.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
         item.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -172,13 +179,12 @@ export const QAPage: React.FC<QAPageProps> = () => {
     }
 
     return result;
-  }, [statusFilters, assigneeFilters, moduleFilters, priorityFilter, searchQuery, augmentedData, selectedVersion, dateRange, sortConfig, hideClosed]);
+  }, [statusFilters, assigneeFilters, moduleFilters, priorityFilter, searchQuery, augmentedData, selectedVersion, releaseVersionItemMap, dateRange, sortConfig, hideClosed]);
 
+  // Release versions for filter dropdown (all releases, newest first)
   const versions = useMemo(() => {
-    const vSet = new Set<string>();
-    data.forEach(item => { if (item.version) vSet.add(item.version); });
-    return Array.from(vSet).sort().reverse();
-  }, [data]);
+    return releases.map(r => r.version);
+  }, [releases]);
 
   const quickStats = useMemo(() => {
     const totalActive = augmentedData.filter(i => i.currentFlow !== '已關閉' && i.currentFlow !== '已修復').length;
