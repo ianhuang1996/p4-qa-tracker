@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { CheckCircle2, Circle, Bug, ArrowRight, Flag } from 'lucide-react';
+import { CheckCircle2, Circle, Bug, ArrowRight, Flag, AlertTriangle } from 'lucide-react';
 import { User as FirebaseUser } from 'firebase/auth';
 import { useTodos } from '../hooks/useTodos';
 import { useQAItems } from '../hooks/useQAItems';
@@ -88,6 +88,24 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ onNavigateToQA, onNa
   const myPendingTodos = myTodos.filter(t => !t.completed);
   const myCompletedTodos = myTodos.filter(t => t.completed);
 
+  // Release urgency alerts
+  const releaseAlerts = useMemo(() => {
+    const now = new Date();
+    now.setHours(0, 0, 0, 0);
+    return releases
+      .filter(r => r.status === 'planning' || r.status === 'uat')
+      .map(r => {
+        const target = new Date(r.scheduledDate + 'T00:00:00');
+        const days = Math.ceil((target.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+        const unfixed = augmentedData.filter(
+          i => r.linkedItemIds.includes(i.id) && i.currentFlow !== '已修復' && i.currentFlow !== '已關閉' && i.currentFlow !== '已修正待測試'
+        ).length;
+        return { version: r.version, days, unfixed, total: r.linkedItemIds.length };
+      })
+      .filter(a => a.days <= 7 && a.unfixed > 0)
+      .sort((a, b) => a.days - b.days);
+  }, [releases, augmentedData]);
+
   const [activeTab, setActiveTab] = useState<'today' | 'report' | 'achievement'>('today');
 
   const greeting = (() => {
@@ -154,6 +172,34 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ onNavigateToQA, onNa
 
       {activeTab === 'today' ? (
       <>
+      {/* Release urgency alerts */}
+      {releaseAlerts.length > 0 && (
+        <div className="space-y-2">
+          {releaseAlerts.map(alert => (
+            <div
+              key={alert.version}
+              className={`flex items-center gap-3 px-4 py-3 rounded-2xl border ${
+                alert.days <= 0
+                  ? 'bg-red-50 border-red-200 text-red-800'
+                  : alert.days <= 3
+                    ? 'bg-red-50 border-red-200 text-red-700'
+                    : 'bg-amber-50 border-amber-200 text-amber-700'
+              }`}
+            >
+              <AlertTriangle size={16} className={`shrink-0 ${alert.days <= 3 ? 'text-red-500 animate-pulse' : 'text-amber-500'}`} />
+              <span className="text-sm font-bold">
+                {alert.days < 0
+                  ? `⚠️ ${alert.version} 已逾期 ${Math.abs(alert.days)} 天，剩 ${alert.unfixed} 個未修復`
+                  : alert.days === 0
+                    ? `⚠️ ${alert.version} 今天到期！剩 ${alert.unfixed} 個未修復`
+                    : `⚠️ ${alert.version} 還有 ${alert.days} 天，剩 ${alert.unfixed} 個未修復`
+                }
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* My Today's Todos */}
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">

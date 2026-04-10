@@ -1,94 +1,129 @@
-import React from 'react';
-import { ArrowRight, Check, Square, Calendar, Package } from 'lucide-react';
+import React, { useState, useMemo } from 'react';
+import { ArrowRight, Calendar, Package, Clock } from 'lucide-react';
 import { Release, AugmentedQAItem } from '../types';
 
+function getDaysUntil(dateStr: string): number {
+  const target = new Date(dateStr + 'T00:00:00');
+  const now = new Date();
+  now.setHours(0, 0, 0, 0);
+  return Math.ceil((target.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+}
+
+function getCountdownDisplay(days: number): { text: string; color: string; urgent: boolean } {
+  if (days < 0) return { text: `已逾期 ${Math.abs(days)} 天`, color: 'bg-red-500 text-white', urgent: true };
+  if (days === 0) return { text: '今天到期！', color: 'bg-red-500 text-white', urgent: true };
+  if (days <= 3) return { text: `剩 ${days} 天！`, color: 'bg-red-100 text-red-700 border border-red-200', urgent: true };
+  if (days <= 7) return { text: `剩 ${days} 天`, color: 'bg-orange-100 text-orange-700 border border-orange-200', urgent: false };
+  return { text: `還有 ${days} 天`, color: 'bg-green-100 text-green-700 border border-green-200', urgent: false };
+}
+
+const STATUS_LABEL: Record<string, string> = {
+  planning: '規劃中',
+  uat: 'UAT',
+  released: '已發布',
+  cancelled: '已取消',
+};
+
 interface Props {
-  activeRelease: Release | null;
-  linkedItems: AugmentedQAItem[];
+  releases: Release[];
+  allItems: AugmentedQAItem[];
   onNavigateToRelease: () => void;
 }
 
-export const NextReleaseBlock: React.FC<Props> = ({ activeRelease, linkedItems, onNavigateToRelease }) => {
-  if (!activeRelease) return null;
+export const NextReleaseBlock: React.FC<Props> = ({ releases, allItems, onNavigateToRelease }) => {
+  // Sort by scheduledDate ascending (nearest deadline first, newer plans to the right)
+  const unreleased = useMemo(() =>
+    releases
+      .filter(r => r.status === 'planning' || r.status === 'uat')
+      .sort((a, b) => (a.scheduledDate || '').localeCompare(b.scheduledDate || '')),
+  [releases]);
 
-  const checklistDone = activeRelease.checklist.filter(c => c.checked).length;
-  const checklistTotal = activeRelease.checklist.length;
+  // Default to the nearest deadline (index 0 after sort)
+  const [selectedIdx, setSelectedIdx] = useState(0);
+
+  if (unreleased.length === 0) return null;
+
+  const current = unreleased[Math.min(selectedIdx, unreleased.length - 1)];
+  const linkedItems = allItems.filter(i => current.linkedItemIds.includes(i.id));
   const fixedCount = linkedItems.filter(i => i.currentFlow === '已修復' || i.currentFlow === '已關閉' || i.currentFlow === '已修正待測試').length;
   const totalItems = linkedItems.length;
-
-  const STATUS_LABEL: Record<string, string> = {
-    planning: '規劃中',
-    uat: 'UAT 測試',
-    released: '已發布',
-    cancelled: '已取消',
-  };
+  const fixPct = totalItems > 0 ? Math.round((fixedCount / totalItems) * 100) : 0;
+  const checklistDone = current.checklist.filter(c => c.checked).length;
+  const checklistTotal = current.checklist.length;
 
   return (
-    <div className="bg-gradient-to-br from-indigo-50 to-blue-50 p-5 sm:p-6 rounded-2xl border border-indigo-100 shadow-sm">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-5">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center text-white shrink-0">
-            <Package size={20} />
+    <div className="bg-gradient-to-br from-indigo-50 to-blue-50 rounded-2xl border border-indigo-100 shadow-sm overflow-hidden">
+      {/* Tabs — only show if multiple */}
+      {unreleased.length > 1 && (
+        <div className="flex items-center gap-1 px-4 pt-3">
+          {unreleased.map((r, idx) => (
+            <button
+              key={r.id}
+              onClick={() => setSelectedIdx(idx)}
+              className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-colors ${
+                idx === selectedIdx
+                  ? 'bg-indigo-600 text-white'
+                  : 'bg-white/60 text-indigo-500 hover:bg-white border border-indigo-100'
+              }`}
+            >
+              {r.version} <span className="opacity-60">{STATUS_LABEL[r.status]}</span>
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* Compact info row */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4">
+        <div className="flex items-center gap-3 min-w-0">
+          <div className="w-9 h-9 bg-indigo-600 rounded-xl flex items-center justify-center text-white shrink-0">
+            <Package size={18} />
           </div>
-          <div>
-            <h2 className="text-lg font-black text-indigo-900 flex items-center gap-2">
-              {activeRelease.version}
-              <span className="text-xs font-bold bg-indigo-200 text-indigo-700 px-2 py-0.5 rounded-lg">
-                {STATUS_LABEL[activeRelease.status]}
+          <div className="min-w-0">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-base font-black text-indigo-900">{current.version}</span>
+              {unreleased.length === 1 && (
+                <span className="text-[10px] font-bold bg-indigo-200 text-indigo-700 px-1.5 py-0.5 rounded">
+                  {STATUS_LABEL[current.status]}
+                </span>
+              )}
+              <span className="text-[10px] text-indigo-500 flex items-center gap-1">
+                <Calendar size={10} /> {current.scheduledDate}
               </span>
-            </h2>
-            <p className="text-xs text-indigo-600 flex items-center gap-1 mt-0.5">
-              <Calendar size={12} />
-              預計 {activeRelease.scheduledDate}
-            </p>
+              {current.scheduledDate && (() => {
+                const days = getDaysUntil(current.scheduledDate);
+                const { text, color, urgent } = getCountdownDisplay(days);
+                return (
+                  <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${color} ${urgent ? 'animate-pulse' : ''} flex items-center gap-1`}>
+                    <Clock size={9} /> {text}
+                  </span>
+                );
+              })()}
+            </div>
+            {/* Progress summary */}
+            <div className="flex items-center gap-4 mt-1">
+              <div className="flex items-center gap-2 min-w-0">
+                <span className="text-[10px] text-indigo-500 shrink-0">修復</span>
+                <div className="w-24 sm:w-32 bg-indigo-100 rounded-full h-1.5">
+                  <div
+                    className={`h-full rounded-full transition-all duration-300 ${fixPct === 100 ? 'bg-green-500' : 'bg-indigo-600'}`}
+                    style={{ width: `${fixPct}%` }}
+                  />
+                </div>
+                <span className="text-[10px] font-bold text-indigo-600 shrink-0">{fixedCount}/{totalItems}</span>
+              </div>
+              <span className="text-[10px] text-indigo-400">
+                檢查表 {checklistDone}/{checklistTotal}
+              </span>
+            </div>
           </div>
         </div>
+
         <button
           onClick={onNavigateToRelease}
-          className="flex items-center gap-2 bg-white hover:bg-indigo-50 text-indigo-700 px-4 py-2 rounded-xl text-sm font-bold border border-indigo-200 transition-colors shadow-sm"
+          className="flex items-center gap-1.5 bg-white hover:bg-indigo-50 text-indigo-700 px-3 py-1.5 rounded-lg text-xs font-bold border border-indigo-200 transition-colors shadow-sm shrink-0"
         >
-          前往版更管理 <ArrowRight size={14} />
+          前往版更管理 <ArrowRight size={12} />
         </button>
-      </div>
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        {/* Fix progress */}
-        <div className="bg-white/80 rounded-xl border border-indigo-100 p-4">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-bold text-indigo-700">修復進度</span>
-            <span className="text-xs font-bold text-indigo-500">{fixedCount}/{totalItems}</span>
-          </div>
-          <div className="w-full bg-indigo-100 rounded-full h-2 mb-3">
-            <div
-              className="bg-indigo-600 h-2 rounded-full transition-all duration-300"
-              style={{ width: `${totalItems > 0 ? (fixedCount / totalItems) * 100 : 0}%` }}
-            />
-          </div>
-          <p className="text-[10px] text-indigo-400">
-            {totalItems === 0 ? '尚未加入項目' :
-             fixedCount === totalItems ? '所有項目已就緒！' :
-             `還有 ${totalItems - fixedCount} 個項目待修復`}
-          </p>
-        </div>
-
-        {/* Checklist progress */}
-        <div className="bg-white/80 rounded-xl border border-indigo-100 p-4">
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-xs font-bold text-indigo-700">發布檢查表</span>
-            <span className="text-xs font-bold text-indigo-500">{checklistDone}/{checklistTotal}</span>
-          </div>
-          <div className="space-y-1.5">
-            {activeRelease.checklist.map(item => (
-              <div key={item.id} className="flex items-center gap-2 text-xs">
-                {item.checked ?
-                  <Check size={14} className="text-green-500 shrink-0" /> :
-                  <Square size={14} className="text-indigo-300 shrink-0" />
-                }
-                <span className={item.checked ? 'text-indigo-400 line-through' : 'text-indigo-700'}>{item.label}</span>
-              </div>
-            ))}
-          </div>
-        </div>
       </div>
     </div>
   );

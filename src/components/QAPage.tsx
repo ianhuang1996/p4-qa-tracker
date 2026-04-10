@@ -363,7 +363,7 @@ export const QAPage: React.FC<QAPageProps> = () => {
         </button>
       </div>
 
-      <NextReleaseBlock activeRelease={activeRelease} linkedItems={activeReleaseLinkedItems} onNavigateToRelease={() => setCurrentPage('release')} />
+      <NextReleaseBlock releases={releases} allItems={augmentedData} onNavigateToRelease={() => setCurrentPage('release')} />
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mt-8">
         {[
