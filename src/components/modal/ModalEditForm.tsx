@@ -101,13 +101,22 @@ export const ModalEditForm: React.FC<ModalEditFormProps> = ({
                 <label key={r.id} className="flex items-center gap-3 cursor-pointer group">
                   <div className="relative flex items-center">
                     <input
-                      type="checkbox"
+                      type="radio"
+                      name="releaseVersion"
                       className="peer sr-only"
                       checked={isLinked}
-                      onChange={(e) => e.target.checked ? onLinkToRelease(r.id) : onUnlinkFromRelease(r.id)}
+                      onChange={() => {
+                        // Unlink from all other releases first, then link to this one
+                        unreleasedReleases.forEach(other => {
+                          if (other.id !== r.id && other.linkedItemIds.includes(itemId)) {
+                            onUnlinkFromRelease(other.id);
+                          }
+                        });
+                        if (!isLinked) onLinkToRelease(r.id);
+                      }}
                     />
-                    <div className="w-5 h-5 rounded border-2 border-indigo-300 bg-white peer-checked:bg-indigo-500 peer-checked:border-indigo-500 transition-all flex items-center justify-center">
-                      <Check size={14} className="text-white opacity-0 peer-checked:opacity-100 transition-opacity" />
+                    <div className="w-5 h-5 rounded-full border-2 border-indigo-300 bg-white peer-checked:bg-indigo-500 peer-checked:border-indigo-500 transition-all flex items-center justify-center">
+                      <div className="w-2 h-2 rounded-full bg-white opacity-0 peer-checked:opacity-100 transition-opacity" />
                     </div>
                   </div>
                   <span className={`text-sm font-bold transition-colors ${isLinked ? 'text-indigo-700' : 'text-gray-500 group-hover:text-indigo-600'}`}>
@@ -116,6 +125,17 @@ export const ModalEditForm: React.FC<ModalEditFormProps> = ({
                 </label>
               );
             })}
+            {/* Option to unlink from all */}
+            {unreleasedReleases.some(r => r.linkedItemIds.includes(itemId)) && (
+              <button
+                onClick={() => unreleasedReleases.forEach(r => {
+                  if (r.linkedItemIds.includes(itemId)) onUnlinkFromRelease(r.id);
+                })}
+                className="text-xs text-gray-400 hover:text-red-500 font-bold mt-1 transition-colors"
+              >
+                移除版本關聯
+              </button>
+            )}
           </div>
         </div>
       ) : onToggleRelease ? (
