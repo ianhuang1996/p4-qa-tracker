@@ -7,6 +7,7 @@ interface AchievementCardProps {
   unlocked: AchievementDef[];
   locked: AchievementDef[];
   progress: Record<string, number>;
+  metrics: Record<string, number>;
 }
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -21,7 +22,7 @@ const CATEGORY_LABELS: Record<string, string> = {
   special: '特殊',
 };
 
-export const AchievementCard: React.FC<AchievementCardProps> = ({ unlocked, locked, progress }) => {
+export const AchievementCard: React.FC<AchievementCardProps> = ({ unlocked, locked, progress, metrics }) => {
   const [expanded, setExpanded] = useState(false);
 
   // Group by category
@@ -117,7 +118,9 @@ export const AchievementCard: React.FC<AchievementCardProps> = ({ unlocked, lock
                                   style={{ width: `${pct}%` }}
                                 />
                               </div>
-                              <span className="text-[10px] text-gray-400 shrink-0">{pct}%</span>
+                              <span className="text-[10px] text-gray-400 shrink-0">
+                                {metrics[ach.condition.metric] || 0}/{ach.condition.threshold}
+                              </span>
                             </div>
                           )}
                         </div>

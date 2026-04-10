@@ -49,7 +49,7 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ onNavigateToQA, onNa
   const achievementLogs = useAchievementLogs(user);
   const { tierByUserName } = useUserTiers(user);
 
-  const { unlockedAchievements, lockedAchievements, achievementProgress, teamGoals } = useAchievements({
+  const { unlockedAchievements, lockedAchievements, achievementProgress, teamGoals, metrics } = useAchievements({
     user,
     qaItems: data,
     todos,
@@ -276,6 +276,7 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ onNavigateToQA, onNa
               unlocked={unlockedAchievements}
               locked={lockedAchievements}
               progress={achievementProgress}
+              metrics={metrics}
             />
             <TeamGoals goals={teamGoals} />
           </div>
