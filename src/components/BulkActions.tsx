@@ -10,11 +10,14 @@ interface BulkActionsProps {
   activeReleaseVersion?: string;
   onBulkAddToRelease?: () => void;
   onBulkRemoveFromRelease?: () => void;
+  unreleasedReleases?: { id: string; version: string }[];
+  onBulkAddToSpecificRelease?: (releaseId: string) => void;
 }
 
 export const BulkActions: React.FC<BulkActionsProps> = ({
   selectedIds, onBulkUpdate, onBulkDelete, onClearSelection,
-  activeReleaseVersion, onBulkAddToRelease, onBulkRemoveFromRelease
+  activeReleaseVersion, onBulkAddToRelease, onBulkRemoveFromRelease,
+  unreleasedReleases = [], onBulkAddToSpecificRelease
 }) => {
   if (selectedIds.length === 0) return null;
 
@@ -28,16 +31,17 @@ export const BulkActions: React.FC<BulkActionsProps> = ({
       </div>
 
       <div className="flex items-center gap-4">
-        {activeReleaseVersion && onBulkAddToRelease && (
+        {unreleasedReleases.length > 0 && onBulkAddToSpecificRelease && (
           <div className="flex items-center gap-2 bg-indigo-500/10 rounded-lg p-1 border border-indigo-500/20">
-            <button
-              onClick={onBulkAddToRelease}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-500 text-white hover:bg-indigo-600 rounded-md transition-colors text-xs font-bold shadow-sm"
-              title={`排入 ${activeReleaseVersion}`}
+            <Rocket size={14} className="text-indigo-400 ml-2" />
+            <select
+              className="bg-transparent border-none text-xs font-bold text-indigo-300 rounded-lg focus:ring-0 cursor-pointer"
+              onChange={(e) => { if (e.target.value) { onBulkAddToSpecificRelease(e.target.value); e.target.value = ''; } }}
+              defaultValue=""
             >
-              <Rocket size={14} />
-              排入 {activeReleaseVersion}
-            </button>
+              <option value="" disabled>排入版本...</option>
+              {unreleasedReleases.map(r => <option key={r.id} value={r.id}>{r.version}</option>)}
+            </select>
             {onBulkRemoveFromRelease && (
               <button
                 onClick={onBulkRemoveFromRelease}

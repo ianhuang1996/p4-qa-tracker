@@ -17,12 +17,17 @@ interface ModalEditFormProps {
   activeReleaseVersion?: string;
   isInActiveRelease?: boolean;
   onToggleRelease?: (add: boolean) => void;
+  unreleasedReleases?: { id: string; version: string; linkedItemIds: string[] }[];
+  itemId?: string;
+  onLinkToRelease?: (releaseId: string) => void;
+  onUnlinkFromRelease?: (releaseId: string) => void;
 }
 
 export const ModalEditForm: React.FC<ModalEditFormProps> = ({
   editForm, setEditForm, isUploading, onImageUpload, onFileUpload,
   isDragging, onDragOver, onDragLeave, onDrop,
-  activeReleaseVersion, isInActiveRelease, onToggleRelease
+  activeReleaseVersion, isInActiveRelease, onToggleRelease,
+  unreleasedReleases = [], itemId, onLinkToRelease, onUnlinkFromRelease
 }) => {
   return (
     <div className="space-y-6">
@@ -86,30 +91,38 @@ export const ModalEditForm: React.FC<ModalEditFormProps> = ({
         />
       </div>
 
-      {onToggleRelease && (
+      {unreleasedReleases.length > 0 && itemId && onLinkToRelease && onUnlinkFromRelease ? (
         <div className="bg-indigo-50/50 p-4 rounded-xl border border-indigo-100 space-y-2">
-          {activeReleaseVersion ? (
-            <label className="flex items-center gap-3 cursor-pointer group">
-              <div className="relative flex items-center">
-                <input
-                  type="checkbox"
-                  className="peer sr-only"
-                  checked={isInActiveRelease || false}
-                  onChange={(e) => onToggleRelease(e.target.checked)}
-                />
-                <div className="w-5 h-5 rounded border-2 border-indigo-300 bg-white peer-checked:bg-indigo-500 peer-checked:border-indigo-500 transition-all flex items-center justify-center">
-                  <Check size={14} className="text-white opacity-0 peer-checked:opacity-100 transition-opacity" />
-                </div>
-              </div>
-              <span className="text-sm font-bold text-indigo-900 group-hover:text-indigo-700 transition-colors">
-                排入 {activeReleaseVersion}
-              </span>
-            </label>
-          ) : (
-            <p className="text-xs text-indigo-400">目前沒有進行中的版本，請先至版更管理建立版本</p>
-          )}
+          <label className="text-xs font-bold text-indigo-600 uppercase tracking-wider">排入版本</label>
+          <div className="space-y-1.5">
+            {unreleasedReleases.map(r => {
+              const isLinked = r.linkedItemIds.includes(itemId);
+              return (
+                <label key={r.id} className="flex items-center gap-3 cursor-pointer group">
+                  <div className="relative flex items-center">
+                    <input
+                      type="checkbox"
+                      className="peer sr-only"
+                      checked={isLinked}
+                      onChange={(e) => e.target.checked ? onLinkToRelease(r.id) : onUnlinkFromRelease(r.id)}
+                    />
+                    <div className="w-5 h-5 rounded border-2 border-indigo-300 bg-white peer-checked:bg-indigo-500 peer-checked:border-indigo-500 transition-all flex items-center justify-center">
+                      <Check size={14} className="text-white opacity-0 peer-checked:opacity-100 transition-opacity" />
+                    </div>
+                  </div>
+                  <span className={`text-sm font-bold transition-colors ${isLinked ? 'text-indigo-700' : 'text-gray-500 group-hover:text-indigo-600'}`}>
+                    {r.version}
+                  </span>
+                </label>
+              );
+            })}
+          </div>
         </div>
-      )}
+      ) : onToggleRelease ? (
+        <div className="bg-indigo-50/50 p-4 rounded-xl border border-indigo-100 space-y-2">
+          <p className="text-xs text-indigo-400">目前沒有進行中的版本，請先至版更管理建立版本</p>
+        </div>
+      ) : null}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="space-y-4">

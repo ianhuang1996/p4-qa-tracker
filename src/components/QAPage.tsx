@@ -43,6 +43,15 @@ export const QAPage: React.FC<QAPageProps> = () => {
 
   const { releases, linkItems, unlinkItem } = useReleases(user);
   const activeRelease = useMemo(() => releases.find(r => r.status === 'planning' || r.status === 'uat') || null, [releases]);
+  const unreleasedReleases = useMemo(() => releases.filter(r => r.status === 'planning' || r.status === 'uat'), [releases]);
+  // Map: itemId → version string (for badge display)
+  const itemReleaseMap = useMemo(() => {
+    const map: Record<string, string> = {};
+    unreleasedReleases.forEach(r => {
+      r.linkedItemIds.forEach(id => { map[id] = r.version; });
+    });
+    return map;
+  }, [unreleasedReleases]);
 
   // Filter States — persisted to localStorage
   const loadFilter = <T,>(key: string, fallback: T): T => {
@@ -390,7 +399,7 @@ export const QAPage: React.FC<QAPageProps> = () => {
             }, item)}
             onAssigneeChange={(item, assignee) => updateItem(item.id, { assignee }, item)}
             selectedIds={selectedIds} setSelectedIds={setSelectedIds} sortConfig={sortConfig} onSort={handleSort}
-            releaseLinkedIds={activeRelease?.linkedItemIds || []} />
+            itemReleaseMap={itemReleaseMap} />
         ) : (
           <QAItemKanban items={filteredData} onItemClick={handleKanbanItemClick} onStatusChange={handleKanbanStatusChange} />
         )}
@@ -410,6 +419,11 @@ export const QAPage: React.FC<QAPageProps> = () => {
           activeRelease && linkItems(activeRelease.id, [], remaining);
           setSelectedIds([]);
         } : undefined}
+        unreleasedReleases={unreleasedReleases.map(r => ({ id: r.id, version: r.version }))}
+        onBulkAddToSpecificRelease={(releaseId) => {
+          const rel = unreleasedReleases.find(r => r.id === releaseId);
+          if (rel) { linkItems(rel.id, rel.linkedItemIds, selectedIds); setSelectedIds([]); }
+        }}
       />
 
       <AnimatePresence>
@@ -434,6 +448,15 @@ export const QAPage: React.FC<QAPageProps> = () => {
                 unlinkItem(activeRelease.id, activeRelease.linkedItemIds, selectedItem.id);
               }
             } : undefined}
+            unreleasedReleases={unreleasedReleases.map(r => ({ id: r.id, version: r.version, linkedItemIds: r.linkedItemIds }))}
+            onLinkToRelease={(releaseId) => {
+              const rel = unreleasedReleases.find(r => r.id === releaseId);
+              if (rel) linkItems(rel.id, rel.linkedItemIds, [selectedItem.id]);
+            }}
+            onUnlinkFromRelease={(releaseId) => {
+              const rel = unreleasedReleases.find(r => r.id === releaseId);
+              if (rel) unlinkItem(rel.id, rel.linkedItemIds, selectedItem.id);
+            }}
           />
         )}
       </AnimatePresence>

@@ -35,6 +35,9 @@ interface QAItemModalProps {
   activeReleaseVersion?: string;
   isInActiveRelease?: boolean;
   onToggleRelease?: (add: boolean) => void;
+  unreleasedReleases?: { id: string; version: string; linkedItemIds: string[] }[];
+  onLinkToRelease?: (releaseId: string) => void;
+  onUnlinkFromRelease?: (releaseId: string) => void;
 }
 
 export const QAItemModal: React.FC<QAItemModalProps> = ({
@@ -42,7 +45,8 @@ export const QAItemModal: React.FC<QAItemModalProps> = ({
   onClose, onEdit, onSave, onDelete, onCancel,
   onQuickStatusUpdate, onCommentSubmit, onCommentDelete,
   user, isUploading, onImageUpload, onFileUpload,
-  activeReleaseVersion, isInActiveRelease, onToggleRelease
+  activeReleaseVersion, isInActiveRelease, onToggleRelease,
+  unreleasedReleases = [], onLinkToRelease, onUnlinkFromRelease
 }) => {
   const [activeTab, setActiveTab] = useState<'details' | 'comments' | 'history'>('details');
   const [history, setHistory] = useState<HistoryEntry[]>([]);
@@ -207,6 +211,10 @@ export const QAItemModal: React.FC<QAItemModalProps> = ({
               activeReleaseVersion={activeReleaseVersion}
               isInActiveRelease={isInActiveRelease}
               onToggleRelease={onToggleRelease}
+              unreleasedReleases={unreleasedReleases}
+              itemId={item.id}
+              onLinkToRelease={onLinkToRelease}
+              onUnlinkFromRelease={onUnlinkFromRelease}
             />
           ) : activeTab === 'details' ? (
             <ModalDetails
