@@ -49,30 +49,14 @@ export const ReleasePage: React.FC = () => {
 
   const augmentedData = useMemo(() => augmentQAItems(data), [data]);
 
-  const copyReleaseContent = (release: Release, items: AugmentedQAItem[]) => {
-    const grouped: Record<string, AugmentedQAItem[]> = {};
-    items.forEach(i => {
-      const mod = i.module || '其他';
-      if (!grouped[mod]) grouped[mod] = [];
-      grouped[mod].push(i);
-    });
-
+  const copyReleaseContent = (release: Release, _items: AugmentedQAItem[]) => {
+    const date = release.scheduledDate.replace(/-/g, '/');
     const lines = [
-      `📦 OVideo ${release.version} 更版通知`,
-      `📅 ${release.scheduledDate}`,
+      `標題：${release.version} — ${date}`,
       '',
-      `共 ${items.length} 個項目：`,
-      '',
-      ...Object.entries(grouped).flatMap(([mod, modItems]) => [
-        `【${mod}】`,
-        ...modItems.map(i => `✅ ${i.id} — ${i.displayTitle}`),
-        '',
-      ]),
+      '版更內容：',
+      release.releaseNotes || '（請先生成 Release Note）',
     ];
-
-    if (release.releaseNotes) {
-      lines.push('── Release Note ──', '', release.releaseNotes);
-    }
 
     navigator.clipboard.writeText(lines.join('\n'));
     toast.success('更版內容已複製，可貼到 LINE 群組');
