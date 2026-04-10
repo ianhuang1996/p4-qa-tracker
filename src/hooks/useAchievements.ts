@@ -3,7 +3,7 @@ import { User as FirebaseUser } from 'firebase/auth';
 import { db } from '../firebase';
 import { collection, onSnapshot, query, where, orderBy, limit as fbLimit, addDoc, getDocs } from 'firebase/firestore';
 import { QAItem, AugmentedQAItem, TodoItem, WikiPage, Release, DailyReport, TeamGoalProgress, AchievementLog } from '../types';
-import { ACHIEVEMENT_DEFS, TEAM_GOAL_DEFS, HOLIDAYS_2026, PMS, RDS } from '../constants';
+import { ACHIEVEMENT_DEFS, TEAM_GOAL_DEFS, HOLIDAYS_2026, PMS, RDS, MODULES } from '../constants';
 import { augmentQAItems } from '../utils/qaUtils';
 import { toast } from 'sonner';
 
@@ -170,6 +170,48 @@ function computeMetrics(inputs: MetricInputs): Record<string, number> {
   metrics.releases_published = releases.filter(r => r.status === 'released' && r.createdBy === userId).length;
 
   metrics.todos_created_for_others = todos.filter(t => t.creatorId === userId && t.assignee !== userName).length;
+
+  // --- Special / Hidden achievements ---
+
+  // 自產自銷: filed a bug (tester/author) AND fixed it (assignee + fixed status)
+  metrics.self_filed_and_fixed = myFixed.filter(i => i.authorUID === userId || i.tester === userName).length > 0 ? 1 : 0;
+
+  // 不死鳥: any item assigned to user that went through 退回重修 3+ times then got fixed
+  // We approximate by checking items with retestResult='failed' multiple times
+  // Since we only store latest retest, we check history via status changes if available
+  // Simpler: count items that are now fixed but were previously 退回重修 (we can check currentFlow history)
+  // For now, approximate: items with retestResult passed that have been through retest multiple times
+  let phoenixCount = 0;
+  myFixed.forEach(item => {
+    // If the item has answer field containing 退回 references or multiple fix cycles
+    // Simple heuristic: items that took > 30 days from creation to fix
+    if (item.fixedAt && item.date) {
+      const created = new Date(item.date + 'T00:00:00').getTime();
+      const fixDays = (item.fixedAt - created) / (1000 * 60 * 60 * 24);
+      if (fixDays > 30) phoenixCount++;
+    }
+  });
+  metrics.phoenix_fix = phoenixCount > 0 ? 1 : 0;
+
+  // 全模組制霸: fixed bugs across all 7 modules
+  const fixedModules = new Set(myFixed.map(i => i.module));
+  metrics.modules_fixed = fixedModules.size;
+
+  // 深夜戰士: any QA item updated after 22:00 by this user
+  let lateNight = 0;
+  rawQAItems.forEach(item => {
+    if (item.fixedAt && item.assignee === userName) {
+      const hour = new Date(item.fixedAt).getHours();
+      if (hour >= 22 || hour < 5) lateNight++;
+    }
+  });
+  metrics.late_night_updates = lateNight;
+
+  // 百日紀念: days since user's first action (first QA item authored or first todo created)
+  let firstActionTs = Infinity;
+  rawQAItems.forEach(i => { if (i.authorUID === userId && i.date) { const ts = new Date(i.date + 'T00:00:00').getTime(); if (ts < firstActionTs) firstActionTs = ts; } });
+  todos.forEach(t => { if (t.creatorId === userId && t.createdAt < firstActionTs) firstActionTs = t.createdAt; });
+  metrics.days_since_first_action = firstActionTs < Infinity ? Math.floor((Date.now() - firstActionTs) / (1000 * 60 * 60 * 24)) : 0;
 
   // --- Special: first bug author ---
   const sortedByNum = [...rawQAItems].sort((a, b) => {

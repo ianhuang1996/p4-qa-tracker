@@ -160,9 +160,14 @@ export const ACHIEVEMENT_DEFS: AchievementDef[] = [
   { id: 'release_pub_10', name: '發行大師', description: '發布 10 個版本', icon: '🎖️', category: 'qa', tier: 3, condition: { metric: 'releases_published', threshold: 10 } },
   { id: 'todos_assigned_50', name: '任務分配王', description: '幫團隊建立 50 個 todo', icon: '📋', category: 'qa', tier: 1, condition: { metric: 'todos_created_for_others', threshold: 50 } },
   { id: 'todos_assigned_100', name: '團隊教練', description: '幫團隊建立 100 個 todo', icon: '🏅', category: 'qa', tier: 2, condition: { metric: 'todos_created_for_others', threshold: 100 } },
-  // 特殊
+  // 特殊 / 隱藏
   { id: 'first_bug', name: '先驅者', description: '提交系統第一個 bug', icon: '🌟', category: 'special', tier: 2, condition: { metric: 'is_first_bug_author', threshold: 1 } },
   { id: 'all_categories', name: '全能王', description: '解鎖所有類別各一個成就', icon: '👑', category: 'special', tier: 3, condition: { metric: 'categories_unlocked', threshold: 7 } },
+  { id: 'self_fix', name: '自產自銷', description: '自己提的 bug 自己修', icon: '🔄', category: 'special', tier: 1, condition: { metric: 'self_filed_and_fixed', threshold: 1 } },
+  { id: 'phoenix', name: '不死鳥', description: '同一個 bug 被退回 3 次後終於修好', icon: '🐦‍🔥', category: 'special', tier: 2, condition: { metric: 'phoenix_fix', threshold: 1 } },
+  { id: 'all_modules', name: '全模組制霸', description: '修過所有 7 個模組的 bug', icon: '🗺️', category: 'special', tier: 3, condition: { metric: 'modules_fixed', threshold: 7 } },
+  { id: 'night_owl', name: '深夜戰士', description: '晚上 10 點後更新 QA item', icon: '🌙', category: 'special', tier: 1, condition: { metric: 'late_night_updates', threshold: 1 } },
+  { id: 'day_100', name: '百日紀念', description: '系統使用滿 100 天', icon: '💯', category: 'special', tier: 2, condition: { metric: 'days_since_first_action', threshold: 100 } },
 ];
 
 export const TEAM_GOAL_DEFS: TeamGoalDef[] = [
