@@ -1,14 +1,17 @@
 import React from 'react';
 import { 
-  DndContext, 
-  closestCorners, 
-  KeyboardSensor, 
-  PointerSensor, 
-  useSensor, 
-  useSensors, 
+  DndContext,
+  closestCorners,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
   DragOverlay,
   defaultDropAnimationSideEffects,
-  DropAnimation
+  DropAnimation,
+  DragStartEvent,
+  DragOverEvent,
+  DragEndEvent
 } from '@dnd-kit/core';
 import { 
   arrayMove, 
@@ -173,13 +176,13 @@ export const QAItemKanban: React.FC<QAItemKanbanProps> = ({ items, onItemClick, 
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
   );
 
-  const handleDragStart = (event: any) => {
+  const handleDragStart = (event: DragStartEvent) => {
     const { active } = event;
     const item = items.find(i => i.id === active.id);
     if (item) setActiveItem(item);
   };
 
-  const handleDragOver = (event: any) => {
+  const handleDragOver = (event: DragOverEvent) => {
     const { active, over } = event;
     if (!over) return;
 
@@ -202,7 +205,7 @@ export const QAItemKanban: React.FC<QAItemKanbanProps> = ({ items, onItemClick, 
     }
   };
 
-  const handleDragEnd = (event: any) => {
+  const handleDragEnd = (_event: DragEndEvent) => {
     setActiveItem(null);
   };
 

@@ -9,7 +9,6 @@ import { useReleases } from '../hooks/useReleases';
 import { useAppContext } from '../contexts/AppContext';
 import { getTodayStr, toDateStr, formatTimestamp } from '../utils/qaUtils';
 import { generateDailyReport } from '../services/geminiService';
-import { normalizeDate } from '../utils/qaUtils';
 
 export const DailyReportEditor: React.FC = () => {
   const { user, isAuthReady } = useAppContext();

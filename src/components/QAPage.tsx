@@ -104,7 +104,6 @@ export const QAPage: React.FC<QAPageProps> = () => {
   const [editForm, setEditForm] = useState<QAItem | null>(null);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [isUploading, setIsUploading] = useState(false);
-  const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>(null);
   const [showSortMode, setShowSortMode] = useState(false);
 
@@ -390,8 +389,8 @@ export const QAPage: React.FC<QAPageProps> = () => {
           moduleFilters={moduleFilters} setModuleFilters={setModuleFilters}
           selectedVersion={selectedVersion} setSelectedVersion={setSelectedVersion}
           versions={versions} viewMode={viewMode} setViewMode={setViewMode}
-          isFilterOpen={isFilterOpen} setIsFilterOpen={setIsFilterOpen}
           dateRange={dateRange} setDateRange={setDateRange}
+          currentUserName={user?.displayName || ''}
         />
       </div>
 

@@ -8,7 +8,7 @@ const app = initializeApp(firebaseConfig);
 export const db = getFirestore(app, firebaseConfig.firestoreDatabaseId);
 export const auth = getAuth(app);
 
-let storageInstance: any = null;
+let storageInstance: ReturnType<typeof getStorage> | null = null;
 try {
   storageInstance = getStorage(app);
 } catch (error) {

@@ -189,10 +189,10 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ onNavigateToQA, onNa
               <AlertTriangle size={16} className={`shrink-0 ${alert.days <= 3 ? 'text-red-500 animate-pulse' : 'text-amber-500'}`} />
               <span className="text-sm font-bold">
                 {alert.days < 0
-                  ? `⚠️ ${alert.version} 已逾期 ${Math.abs(alert.days)} 天，剩 ${alert.unfixed} 個未修復`
+                  ? `${alert.version} 已逾期 ${Math.abs(alert.days)} 天，剩 ${alert.unfixed} 個未修復`
                   : alert.days === 0
-                    ? `⚠️ ${alert.version} 今天到期！剩 ${alert.unfixed} 個未修復`
-                    : `⚠️ ${alert.version} 還有 ${alert.days} 天，剩 ${alert.unfixed} 個未修復`
+                    ? `${alert.version} 今天到期！剩 ${alert.unfixed} 個未修復`
+                    : `${alert.version} 還有 ${alert.days} 天，剩 ${alert.unfixed} 個未修復`
                 }
               </span>
             </div>

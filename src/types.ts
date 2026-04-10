@@ -80,7 +80,6 @@ export interface AugmentedQAItem extends QAItem {
 }
 
 export type ViewMode = 'table' | 'kanban';
-export type QuickFilter = 'all' | 'my_tasks' | 'ready_for_test';
 export type AppPage = 'overview' | 'todo' | 'qa' | 'release' | 'wiki';
 
 export type WikiCategory = 'API' | '設計規範' | '產品規格' | '專案' | '一般';
@@ -126,8 +125,8 @@ export interface HistoryEntry {
   timestamp: number;
   changes: {
     field: string;
-    oldValue: any;
-    newValue: any;
+    oldValue: string | number | boolean | null;
+    newValue: string | number | boolean | null;
   }[];
 }
 

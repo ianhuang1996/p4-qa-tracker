@@ -59,9 +59,6 @@ import React from 'react';
 // 🏷️ 業務常數
 // ═══════════════════════════════════════════════════════════
 
-/** 向後兼容：舊的 COLORS 陣列（= CHART_COLORS） */
-export const COLORS = CHART_COLORS;
-
 export const PRIORITY_COLORS: Record<string, string> = {
   'P0': 'bg-red-500 text-white border-red-600',
   'P1': 'bg-orange-100 text-orange-800 border-orange-200',

@@ -85,7 +85,6 @@ export function useQAItems(user: FirebaseUser | null, isAuthReady: boolean) {
 
   useEffect(() => {
     if (isAuthReady && user) {
-      console.log('Updating user profile for:', user.uid);
       const userRef = doc(db, 'users', user.uid);
       setDoc(userRef, {
         uid: user.uid,

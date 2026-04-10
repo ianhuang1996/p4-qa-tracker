@@ -1,5 +1,5 @@
-import React from 'react';
-import { Search, Filter, ChevronDown, List, Columns, X } from 'lucide-react';
+import React, { useState } from 'react';
+import { Search, List, Columns, X, User } from 'lucide-react';
 import { QA_FLOWS, RDS, MODULES } from '../constants';
 import { ViewMode } from '../types';
 
@@ -19,11 +19,13 @@ interface FilterBarProps {
   versions: string[];
   viewMode: ViewMode;
   setViewMode: (v: ViewMode) => void;
-  isFilterOpen: boolean;
-  setIsFilterOpen: (o: boolean) => void;
   dateRange: { start: string; end: string };
   setDateRange: (range: { start: string; end: string }) => void;
+  currentUserName?: string;
 }
+
+const toggleItem = (arr: string[], item: string): string[] =>
+  arr.includes(item) ? arr.filter(i => i !== item) : [...arr, item];
 
 export const FilterBar: React.FC<FilterBarProps> = ({
   searchQuery, setSearchQuery,
@@ -34,143 +36,68 @@ export const FilterBar: React.FC<FilterBarProps> = ({
   selectedVersion, setSelectedVersion,
   versions,
   viewMode, setViewMode,
-  isFilterOpen, setIsFilterOpen,
-  dateRange, setDateRange
+  dateRange, setDateRange,
+  currentUserName,
 }) => {
   const priorities = ['全部', 'P0', 'P1', 'P2', 'P3', '-'];
-  const totalActiveFilters = statusFilters.length + assigneeFilters.length + moduleFilters.length;
+  const [showFilters, setShowFilters] = useState(false);
+  const totalActiveFilters = statusFilters.length + assigneeFilters.length + moduleFilters.length + (priorityFilter !== '全部' ? 1 : 0);
+
+  const isMyTasks = currentUserName && assigneeFilters.length === 1 && assigneeFilters[0] === currentUserName;
+
+  const handleMyTasks = () => {
+    if (isMyTasks) {
+      setAssigneeFilters([]);
+    } else if (currentUserName) {
+      setAssigneeFilters([currentUserName]);
+    }
+  };
+
+  const clearAll = () => {
+    setStatusFilters([]);
+    setAssigneeFilters([]);
+    setModuleFilters([]);
+    setPriorityFilter('全部');
+    setDateRange({ start: '', end: '' });
+    setSelectedVersion('all');
+  };
 
   return (
-    <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 mb-6 space-y-4">
-      <div className="flex flex-col md:flex-row gap-4">
+    <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 mb-6 space-y-3">
+      {/* Row 1: Search + quick actions */}
+      <div className="flex flex-col sm:flex-row gap-3">
         <div className="flex-1 relative">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <Search size={18} className="text-gray-400" />
+            <Search size={16} className="text-gray-400" />
           </div>
           <input
             type="text"
             placeholder="搜尋標題、敘述或編號..."
-            className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 sm:text-sm bg-white"
+            className="block w-full pl-9 pr-3 py-2 border border-gray-200 rounded-lg focus:ring-blue-500 focus:border-blue-500 text-sm bg-white"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
-        
+
         <div className="flex items-center gap-2 flex-wrap">
-          <div className="flex items-center gap-2 bg-gray-50 p-1 rounded-lg border border-gray-200">
-            <input 
-              type="date" 
-              className="bg-transparent text-xs border-none focus:ring-0 p-1"
-              value={dateRange.start}
-              onChange={(e) => setDateRange({ ...dateRange, start: e.target.value })}
-            />
-            <span className="text-gray-400 text-xs">~</span>
-            <input 
-              type="date" 
-              className="bg-transparent text-xs border-none focus:ring-0 p-1"
-              value={dateRange.end}
-              onChange={(e) => setDateRange({ ...dateRange, end: e.target.value })}
-            />
-          </div>
-
-          <select
-            className="block w-full sm:w-28 pl-3 pr-8 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-lg border bg-white"
-            value={priorityFilter}
-            onChange={(e) => setPriorityFilter(e.target.value)}
-          >
-            {priorities.map(p => <option key={p} value={p}>{p === '全部' ? '優先級' : (p === '-' ? '無優先級' : p)}</option>)}
-          </select>
-
-          {/* Combined Filter Popover */}
-          <div className="relative flex-1 sm:flex-none">
-            <button 
-              onClick={() => setIsFilterOpen(!isFilterOpen)}
-              className={`w-full px-3 py-2 border rounded-lg bg-white text-sm text-gray-700 hover:bg-gray-50 flex items-center justify-between gap-2 ${totalActiveFilters > 0 ? 'border-blue-500 ring-1 ring-blue-500' : 'border-gray-300'}`}
+          {/* My Tasks quick button */}
+          {currentUserName && (
+            <button
+              onClick={handleMyTasks}
+              className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold transition-colors border ${
+                isMyTasks
+                  ? 'bg-blue-600 text-white border-blue-600'
+                  : 'bg-white text-gray-600 border-gray-200 hover:border-blue-300 hover:text-blue-600'
+              }`}
             >
-              <Filter size={16} className={totalActiveFilters > 0 ? 'text-blue-600' : 'text-gray-400'} />
-              <span className="truncate">篩選 {totalActiveFilters > 0 ? `(${totalActiveFilters})` : ''}</span>
-              <ChevronDown size={14} className={`transition-transform ${isFilterOpen ? 'rotate-180' : ''}`} />
+              <User size={14} />
+              我的任務
             </button>
-            
-            {isFilterOpen && (
-              <>
-                <div className="fixed inset-0 z-10" onClick={() => setIsFilterOpen(false)}></div>
-                <div className="absolute z-20 top-full mt-1 w-72 bg-white border border-gray-200 rounded-xl shadow-xl p-4 right-0 sm:left-0 overflow-y-auto max-h-[80vh]">
-                  <div className="space-y-6">
-                    {/* Status */}
-                    <div>
-                      <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">狀態</h4>
-                      <div className="grid grid-cols-1 gap-1">
-                        {QA_FLOWS.map(s => (
-                          <label key={s} className="flex items-center gap-2 p-1.5 hover:bg-gray-50 rounded-md cursor-pointer text-sm">
-                            <input type="checkbox" checked={statusFilters.includes(s)} onChange={(e) => {
-                              if (e.target.checked) setStatusFilters([...statusFilters, s]);
-                              else setStatusFilters(statusFilters.filter(f => f !== s));
-                            }} className="rounded text-blue-600 focus:ring-blue-500" />
-                            {s}
-                          </label>
-                        ))}
-                      </div>
-                    </div>
+          )}
 
-                    {/* Assignee */}
-                    <div>
-                      <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">負責人</h4>
-                      <div className="grid grid-cols-1 gap-1">
-                        {RDS.map(a => (
-                          <label key={a} className="flex items-center gap-2 p-1.5 hover:bg-gray-50 rounded-md cursor-pointer text-sm">
-                            <input type="checkbox" checked={assigneeFilters.includes(a)} onChange={(e) => {
-                              if (e.target.checked) setAssigneeFilters([...assigneeFilters, a]);
-                              else setAssigneeFilters(assigneeFilters.filter(f => f !== a));
-                            }} className="rounded text-blue-600 focus:ring-blue-500" />
-                            {a}
-                          </label>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Module */}
-                    <div>
-                      <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">模組</h4>
-                      <div className="grid grid-cols-1 gap-1">
-                        {MODULES.map(m => (
-                          <label key={m} className="flex items-center gap-2 p-1.5 hover:bg-gray-50 rounded-md cursor-pointer text-sm">
-                            <input type="checkbox" checked={moduleFilters.includes(m)} onChange={(e) => {
-                              if (e.target.checked) setModuleFilters([...moduleFilters, m]);
-                              else setModuleFilters(moduleFilters.filter(f => f !== m));
-                            }} className="rounded text-blue-600 focus:ring-blue-500" />
-                            {m}
-                          </label>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div className="pt-2 border-t border-gray-100 flex justify-between items-center">
-                      <button 
-                        onClick={() => {
-                          setStatusFilters([]);
-                          setAssigneeFilters([]);
-                          setModuleFilters([]);
-                        }}
-                        className="text-xs text-red-500 hover:text-red-600 font-medium"
-                      >
-                        清除所有篩選
-                      </button>
-                      <button 
-                        onClick={() => setIsFilterOpen(false)}
-                        className="bg-blue-600 text-white px-3 py-1 rounded-md text-xs font-medium hover:bg-blue-700"
-                      >
-                        套用
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </>
-            )}
-          </div>
-          
+          {/* Version */}
           <select
-            className="block w-full sm:w-32 pl-3 pr-8 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-lg border bg-white"
+            className="px-3 py-2 text-xs border border-gray-200 rounded-lg bg-white focus:ring-blue-500 focus:border-blue-500"
             value={selectedVersion}
             onChange={(e) => setSelectedVersion(e.target.value)}
           >
@@ -178,69 +105,176 @@ export const FilterBar: React.FC<FilterBarProps> = ({
             {versions.map(v => <option key={v} value={v}>{v}</option>)}
           </select>
 
-          <div className="flex items-center bg-gray-100 p-1 rounded-lg border border-gray-200 w-full sm:w-auto justify-center">
-            <button 
+          {/* Date range */}
+          <div className="flex items-center gap-1 bg-gray-50 p-1 rounded-lg border border-gray-200">
+            <input
+              type="date"
+              className="bg-transparent text-xs border-none focus:ring-0 p-1 w-[110px]"
+              value={dateRange.start}
+              onChange={(e) => setDateRange({ ...dateRange, start: e.target.value })}
+            />
+            <span className="text-gray-400 text-xs">~</span>
+            <input
+              type="date"
+              className="bg-transparent text-xs border-none focus:ring-0 p-1 w-[110px]"
+              value={dateRange.end}
+              onChange={(e) => setDateRange({ ...dateRange, end: e.target.value })}
+            />
+          </div>
+
+          {/* Toggle filter pills visibility */}
+          <button
+            onClick={() => setShowFilters(!showFilters)}
+            className={`px-3 py-2 rounded-lg text-xs font-bold transition-colors border ${
+              totalActiveFilters > 0
+                ? 'bg-blue-50 text-blue-600 border-blue-200'
+                : 'bg-white text-gray-500 border-gray-200 hover:border-gray-300'
+            }`}
+          >
+            篩選{totalActiveFilters > 0 ? ` (${totalActiveFilters})` : ''}
+          </button>
+
+          {/* View mode */}
+          <div className="flex items-center bg-gray-100 p-1 rounded-lg border border-gray-200">
+            <button
               onClick={() => setViewMode('table')}
-              className={`flex-1 sm:flex-none p-1.5 rounded-md transition-all flex justify-center ${viewMode === 'table' ? 'bg-white shadow-sm text-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
+              className={`p-1.5 rounded-md transition-all ${viewMode === 'table' ? 'bg-white shadow-sm text-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
               title="表格模式"
             >
-              <List size={18} />
+              <List size={16} />
             </button>
-            <button 
+            <button
               onClick={() => setViewMode('kanban')}
-              className={`flex-1 sm:flex-none p-1.5 rounded-md transition-all flex justify-center ${viewMode === 'kanban' ? 'bg-white shadow-sm text-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
+              className={`p-1.5 rounded-md transition-all ${viewMode === 'kanban' ? 'bg-white shadow-sm text-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
               title="看板模式"
             >
-              <Columns size={18} />
+              <Columns size={16} />
             </button>
           </div>
         </div>
       </div>
-      {/* Active filter tags */}
-      {(totalActiveFilters > 0 || priorityFilter !== '全部' || dateRange.start || dateRange.end) && (
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="text-xs text-gray-400 font-medium">已篩選：</span>
+
+      {/* Row 2: Inline pill filters (collapsible) */}
+      {showFilters && (
+        <div className="space-y-2 pt-2 border-t border-gray-100">
+          {/* Priority pills */}
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider w-12 shrink-0">優先級</span>
+            {['P0', 'P1', 'P2', 'P3', '-'].map(p => (
+              <button
+                key={p}
+                onClick={() => setPriorityFilter(priorityFilter === p ? '全部' : p)}
+                className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-colors border ${
+                  priorityFilter === p
+                    ? 'bg-orange-600 text-white border-orange-600'
+                    : 'bg-gray-50 text-gray-600 border-gray-200 hover:border-orange-300'
+                }`}
+              >
+                {p === '-' ? '無' : p}
+              </button>
+            ))}
+          </div>
+
+          {/* Status pills */}
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider w-12 shrink-0">狀態</span>
+            {QA_FLOWS.map(s => (
+              <button
+                key={s}
+                onClick={() => setStatusFilters(toggleItem(statusFilters, s))}
+                className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-colors border ${
+                  statusFilters.includes(s)
+                    ? 'bg-blue-600 text-white border-blue-600'
+                    : 'bg-gray-50 text-gray-600 border-gray-200 hover:border-blue-300'
+                }`}
+              >
+                {s}
+              </button>
+            ))}
+          </div>
+
+          {/* Assignee pills */}
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider w-12 shrink-0">負責人</span>
+            {RDS.map(a => (
+              <button
+                key={a}
+                onClick={() => setAssigneeFilters(toggleItem(assigneeFilters, a))}
+                className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-colors border ${
+                  assigneeFilters.includes(a)
+                    ? 'bg-purple-600 text-white border-purple-600'
+                    : 'bg-gray-50 text-gray-600 border-gray-200 hover:border-purple-300'
+                }`}
+              >
+                {a}
+              </button>
+            ))}
+          </div>
+
+          {/* Module pills */}
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider w-12 shrink-0">模組</span>
+            {MODULES.map(m => (
+              <button
+                key={m}
+                onClick={() => setModuleFilters(toggleItem(moduleFilters, m))}
+                className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-colors border ${
+                  moduleFilters.includes(m)
+                    ? 'bg-green-600 text-white border-green-600'
+                    : 'bg-gray-50 text-gray-600 border-gray-200 hover:border-green-300'
+                }`}
+              >
+                {m}
+              </button>
+            ))}
+          </div>
+
+          {/* Clear all */}
+          {totalActiveFilters > 0 && (
+            <div className="pt-1">
+              <button onClick={clearAll} className="text-xs text-red-500 hover:text-red-600 font-bold">
+                清除全部篩選
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Active filter tags (shown when filters panel is closed) */}
+      {!showFilters && (totalActiveFilters > 0 || priorityFilter !== '全部' || dateRange.start || dateRange.end) && (
+        <div className="flex flex-wrap items-center gap-1.5 pt-2 border-t border-gray-100">
           {priorityFilter !== '全部' && (
-            <span className="inline-flex items-center gap-1 px-2 py-1 bg-blue-50 text-blue-700 text-xs font-bold rounded-lg border border-blue-200">
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-50 text-blue-700 text-[10px] font-bold rounded-lg border border-blue-200">
               {priorityFilter}
-              <button onClick={() => setPriorityFilter('全部')} className="hover:text-blue-900"><X size={12} /></button>
+              <button onClick={() => setPriorityFilter('全部')} className="hover:text-blue-900"><X size={10} /></button>
             </span>
           )}
           {statusFilters.map(s => (
-            <span key={s} className="inline-flex items-center gap-1 px-2 py-1 bg-blue-50 text-blue-700 text-xs font-bold rounded-lg border border-blue-200">
+            <span key={s} className="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-50 text-blue-700 text-[10px] font-bold rounded-lg border border-blue-200">
               {s}
-              <button onClick={() => setStatusFilters(statusFilters.filter(f => f !== s))} className="hover:text-blue-900"><X size={12} /></button>
+              <button onClick={() => setStatusFilters(statusFilters.filter(f => f !== s))} className="hover:text-blue-900"><X size={10} /></button>
             </span>
           ))}
           {assigneeFilters.map(a => (
-            <span key={a} className="inline-flex items-center gap-1 px-2 py-1 bg-purple-50 text-purple-700 text-xs font-bold rounded-lg border border-purple-200">
+            <span key={a} className="inline-flex items-center gap-1 px-2 py-0.5 bg-purple-50 text-purple-700 text-[10px] font-bold rounded-lg border border-purple-200">
               {a}
-              <button onClick={() => setAssigneeFilters(assigneeFilters.filter(f => f !== a))} className="hover:text-purple-900"><X size={12} /></button>
+              <button onClick={() => setAssigneeFilters(assigneeFilters.filter(f => f !== a))} className="hover:text-purple-900"><X size={10} /></button>
             </span>
           ))}
           {moduleFilters.map(m => (
-            <span key={m} className="inline-flex items-center gap-1 px-2 py-1 bg-green-50 text-green-700 text-xs font-bold rounded-lg border border-green-200">
+            <span key={m} className="inline-flex items-center gap-1 px-2 py-0.5 bg-green-50 text-green-700 text-[10px] font-bold rounded-lg border border-green-200">
               {m}
-              <button onClick={() => setModuleFilters(moduleFilters.filter(f => f !== m))} className="hover:text-green-900"><X size={12} /></button>
+              <button onClick={() => setModuleFilters(moduleFilters.filter(f => f !== m))} className="hover:text-green-900"><X size={10} /></button>
             </span>
           ))}
           {(dateRange.start || dateRange.end) && (
-            <span className="inline-flex items-center gap-1 px-2 py-1 bg-orange-50 text-orange-700 text-xs font-bold rounded-lg border border-orange-200">
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-orange-50 text-orange-700 text-[10px] font-bold rounded-lg border border-orange-200">
               {dateRange.start || '...'} ~ {dateRange.end || '...'}
-              <button onClick={() => setDateRange({ start: '', end: '' })} className="hover:text-orange-900"><X size={12} /></button>
+              <button onClick={() => setDateRange({ start: '', end: '' })} className="hover:text-orange-900"><X size={10} /></button>
             </span>
           )}
-          <button
-            onClick={() => {
-              setStatusFilters([]);
-              setAssigneeFilters([]);
-              setModuleFilters([]);
-              setPriorityFilter('全部');
-              setDateRange({ start: '', end: '' });
-            }}
-            className="text-xs text-red-500 hover:text-red-600 font-bold ml-2"
-          >
-            清除全部
+          <button onClick={clearAll} className="text-[10px] text-red-500 hover:text-red-600 font-bold ml-1">
+            清除
           </button>
         </div>
       )}
