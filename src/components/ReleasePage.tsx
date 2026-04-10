@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import {
   Plus, Rocket, Calendar, CheckSquare, Square, Check, Trash2, X,
-  ChevronRight, FileText, Link2, Play, Clock, Package, Sparkles, Loader2, Edit2
+  ChevronRight, FileText, Link2, Play, Clock, Package, Sparkles, Loader2, Edit2, Copy
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAppContext } from '../contexts/AppContext';
@@ -48,6 +48,35 @@ export const ReleasePage: React.FC = () => {
   const [generatingNotes, setGeneratingNotes] = useState(false);
 
   const augmentedData = useMemo(() => augmentQAItems(data), [data]);
+
+  const copyReleaseContent = (release: Release, items: AugmentedQAItem[]) => {
+    const grouped: Record<string, AugmentedQAItem[]> = {};
+    items.forEach(i => {
+      const mod = i.module || '其他';
+      if (!grouped[mod]) grouped[mod] = [];
+      grouped[mod].push(i);
+    });
+
+    const lines = [
+      `📦 OVideo ${release.version} 更版通知`,
+      `📅 ${release.scheduledDate}`,
+      '',
+      `共 ${items.length} 個項目：`,
+      '',
+      ...Object.entries(grouped).flatMap(([mod, modItems]) => [
+        `【${mod}】`,
+        ...modItems.map(i => `✅ ${i.id} — ${i.displayTitle}`),
+        '',
+      ]),
+    ];
+
+    if (release.releaseNotes) {
+      lines.push('── Release Note ──', '', release.releaseNotes);
+    }
+
+    navigator.clipboard.writeText(lines.join('\n'));
+    toast.success('更版內容已複製，可貼到 LINE 群組');
+  };
 
   const selectedRelease = releases.find(r => r.id === selectedReleaseId) || null;
   const linkedItems = useMemo(() => {
@@ -138,11 +167,20 @@ export const ReleasePage: React.FC = () => {
                 onClick={() => {
                   if (confirm(`確定要發布 ${selectedRelease.version} 嗎？所有關聯的 QA 項目將被標為已關閉。`)) {
                     executeRelease(selectedRelease);
+                    copyReleaseContent(selectedRelease, linkedItems);
                   }
                 }}
                 className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-xl text-sm font-bold transition-colors"
               >
                 <Rocket size={16} /> 正式發布
+              </button>
+            )}
+            {linkedItems.length > 0 && (
+              <button
+                onClick={() => copyReleaseContent(selectedRelease, linkedItems)}
+                className="flex items-center gap-2 bg-white hover:bg-gray-50 text-gray-700 px-4 py-2 rounded-xl text-sm font-bold border border-gray-200 transition-colors"
+              >
+                <Copy size={16} /> 複製更版內容
               </button>
             )}
           </div>

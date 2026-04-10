@@ -153,8 +153,8 @@ export function useQAItems(user: FirebaseUser | null, isAuthReady: boolean) {
       const recipientEmail = await getUserEmailById(notification.userId);
       if (recipientEmail) {
         const typeLabels: Record<string, string> = {
-          status_change: `狀態變更：${notification.oldValue} → ${notification.newValue}`,
-          assignment: `你被指派負責此項目`,
+          status_change: `${notification.fromUserName} 將狀態從 ${notification.oldValue} → ${notification.newValue}`,
+          assignment: `${notification.fromUserName} 將此項目指派給你`,
           comment: `${notification.fromUserName} 留言了`,
         };
         const message = typeLabels[notification.type] || '新通知';
