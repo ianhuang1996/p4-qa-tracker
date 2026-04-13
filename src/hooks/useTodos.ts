@@ -3,8 +3,9 @@ import { db } from '../firebase';
 import { collection, onSnapshot, doc, setDoc, deleteDoc, query, where, orderBy, addDoc } from 'firebase/firestore';
 import { User as FirebaseUser } from 'firebase/auth';
 import { toast } from 'sonner';
-import { TodoItem } from '../types';
+import { TodoItem, OperationType } from '../types';
 import { toDateStr } from '../utils/qaUtils';
+import { handleFirestoreError } from '../utils/firestoreUtils';
 
 export type DateMode = 'day' | 'week';
 
@@ -25,6 +26,7 @@ function getWeekRange(dateStr: string): { start: string; end: string } {
 export function useTodos(user: FirebaseUser | null, date: string, dateMode: DateMode) {
   const [todos, setTodos] = useState<TodoItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user) {
@@ -58,13 +60,13 @@ export function useTodos(user: FirebaseUser | null, date: string, dateMode: Date
         items.push({ id: doc.id, ...doc.data() } as TodoItem);
       });
       setTodos(items);
+      setError(null);
       setIsLoading(false);
-    }, (error) => {
-      console.error('Failed to fetch todos:', error);
-      // If index not ready, show helpful message
-      if (error.message?.includes('index')) {
+    }, (err) => {
+      if (err.message?.includes('index')) {
         toast.error('Firestore 索引尚未建立，請點擊 Console 中的連結建立索引');
       }
+      setError('待辦清單載入失敗');
       setIsLoading(false);
     });
 
@@ -87,7 +89,7 @@ export function useTodos(user: FirebaseUser | null, date: string, dateMode: Date
       });
     } catch (error) {
       toast.error('新增待辦失敗');
-      console.error(error);
+      handleFirestoreError(error, OperationType.WRITE, 'todos');
     }
   };
 
@@ -100,7 +102,7 @@ export function useTodos(user: FirebaseUser | null, date: string, dateMode: Date
       }, { merge: true });
     } catch (error) {
       toast.error('更新失敗');
-      console.error(error);
+      handleFirestoreError(error, OperationType.WRITE, `todos/${todoId}`);
     }
   };
 
@@ -115,7 +117,7 @@ export function useTodos(user: FirebaseUser | null, date: string, dateMode: Date
       toast.success('更新成功');
     } catch (error) {
       toast.error('更新失敗');
-      console.error(error);
+      handleFirestoreError(error, OperationType.WRITE, `todos/${todoId}`);
     }
   };
 
@@ -125,9 +127,9 @@ export function useTodos(user: FirebaseUser | null, date: string, dateMode: Date
       await deleteDoc(doc(db, 'todos', todoId));
     } catch (error) {
       toast.error('刪除失敗');
-      console.error(error);
+      handleFirestoreError(error, OperationType.DELETE, `todos/${todoId}`);
     }
   };
 
-  return { todos, isLoading, addTodo, toggleTodo, updateTodo, deleteTodo };
+  return { todos, isLoading, error, addTodo, toggleTodo, updateTodo, deleteTodo };
 }

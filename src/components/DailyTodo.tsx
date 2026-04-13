@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useRef, useEffect } from 'react';
+import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
 import {
   Plus, Trash2, ChevronLeft, ChevronRight, Circle, CheckCircle2,
   Link2, Flag, Calendar, Users, List, Columns, Edit2, Save
@@ -252,7 +252,7 @@ export const DailyTodo: React.FC<DailyTodoProps> = ({ user, qaItems: qaItemsProp
   const [viewMode, setViewMode] = useState<TodoViewMode>('list');
   const [filterAssignee, setFilterAssignee] = useState<string>('all');
 
-  const { todos, isLoading, addTodo, toggleTodo, deleteTodo, updateTodo } = useTodos(user, selectedDate, dateMode);
+  const { todos, isLoading, error: todosError, addTodo, toggleTodo, deleteTodo, updateTodo } = useTodos(user, selectedDate, dateMode);
 
   // Auto-complete: when linked QA item is fixed/closed, auto-complete the todo
   const autoCompletedRef = useRef<Set<string>>(new Set());
@@ -278,24 +278,24 @@ export const DailyTodo: React.FC<DailyTodoProps> = ({ user, qaItems: qaItemsProp
 
   const isAdmin = !!user.email && ADMIN_EMAILS.includes(user.email);
 
-  const canEdit = (todo: TodoItem) => {
+  const canEdit = useCallback((todo: TodoItem) => {
     return todo.creatorId === user.uid || isAdmin;
-  };
+  }, [user.uid, isAdmin]);
 
-  const shiftDate = (days: number) => {
+  const shiftDate = useCallback((days: number) => {
     const d = new Date(selectedDate + 'T00:00:00');
     d.setDate(d.getDate() + (dateMode === 'week' ? days * 7 : days));
     setSelectedDate(toDateStr(d));
-  };
+  }, [selectedDate, dateMode]);
 
-  const handleAdd = () => {
+  const handleAdd = useCallback(() => {
     if (!newText.trim()) return;
     addTodo(newText, newAssignee, selectedDate, newPriority, newLinkedQA || undefined);
     setNewText('');
     setNewPriority(undefined);
     setNewLinkedQA('');
     setTimeout(() => inputRef.current?.focus(), 0);
-  };
+  }, [newText, newAssignee, selectedDate, newPriority, newLinkedQA, addTodo]);
 
   // Filtered todos
   const filteredTodos = useMemo(() => {
@@ -489,7 +489,11 @@ export const DailyTodo: React.FC<DailyTodoProps> = ({ user, qaItems: qaItemsProp
       </div>
 
       {/* Content */}
-      {isLoading ? (
+      {todosError ? (
+        <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-sm font-bold">
+          ⚠ {todosError}
+        </div>
+      ) : isLoading ? (
         <div className="space-y-3 animate-pulse">
           {[1,2,3].map(i => (
             <div key={i} className="bg-white rounded-xl border border-gray-200 p-4 flex items-center gap-3">

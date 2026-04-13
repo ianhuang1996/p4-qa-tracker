@@ -3,7 +3,8 @@ import { db } from '../firebase';
 import { collection, onSnapshot, doc, setDoc, query, where, orderBy, limit as fbLimit } from 'firebase/firestore';
 import { User as FirebaseUser } from 'firebase/auth';
 import { toast } from 'sonner';
-import { DailyReport } from '../types';
+import { DailyReport, OperationType } from '../types';
+import { handleFirestoreError } from '../utils/firestoreUtils';
 
 export function useDailyReport(user: FirebaseUser | null, date: string) {
   const [report, setReport] = useState<DailyReport | null>(null);
@@ -62,7 +63,7 @@ export function useDailyReport(user: FirebaseUser | null, date: string) {
       toast.success('進度報告已儲存');
     } catch (error) {
       toast.error('儲存失敗');
-      console.error(error);
+      handleFirestoreError(error, OperationType.WRITE, `daily_reports/${docId}`);
     }
   };
 

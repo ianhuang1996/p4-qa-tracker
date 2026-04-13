@@ -8,7 +8,7 @@ import { useWikiPages } from '../hooks/useWikiPages';
 import { useAchievements, useAllDailyReports, useAchievementLogs, useUserTiers, getAvatarRing } from '../hooks/useAchievements';
 import { useAppContext } from '../contexts/AppContext';
 import { getTodayStr, getAvatarColor, augmentQAItems } from '../utils/qaUtils';
-import { STATUS_COLORS, PRIORITY_COLORS, ACHIEVEMENT_DEFS } from '../constants';
+import { STATUS_COLORS, PRIORITY_COLORS, ACHIEVEMENT_DEFS, STATUS } from '../constants';
 import { AugmentedQAItem } from '../types';
 import { WeeklyReport } from './WeeklyReport';
 import { DailyReportEditor } from './DailyReportEditor';
@@ -67,12 +67,12 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ onNavigateToQA, onNa
   const augmentedData = useMemo(() => augmentQAItems(data), [data]);
 
   const qaStats = useMemo(() => {
-    const active = augmentedData.filter(i => i.currentFlow !== '已關閉' && i.currentFlow !== '已修復');
+    const active = augmentedData.filter(i => i.currentFlow !== STATUS.closed && i.currentFlow !== STATUS.fixed);
     return {
       p0Count: active.filter(i => i.priority === 'P0').length,
       p1Count: active.filter(i => i.priority === 'P1').length,
-      readyForTest: augmentedData.filter(i => i.currentFlow === '已修正待測試').length,
-      inProgress: active.filter(i => i.currentFlow === '開發中').length,
+      readyForTest: augmentedData.filter(i => i.currentFlow === STATUS.readyToTest).length,
+      inProgress: active.filter(i => i.currentFlow === STATUS.inProgress).length,
       totalActive: active.length,
     };
   }, [augmentedData]);
@@ -81,7 +81,7 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ onNavigateToQA, onNa
   // Data from useQAItems is already sorted newest-first
   const recentItems = useMemo(() => {
     return augmentedData
-      .filter(i => i.currentFlow !== '已關閉')
+      .filter(i => i.currentFlow !== STATUS.closed)
       .slice(0, 5);
   }, [augmentedData]);
 
@@ -98,7 +98,7 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ onNavigateToQA, onNa
         const target = new Date(r.scheduledDate + 'T00:00:00');
         const days = Math.ceil((target.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
         const unfixed = augmentedData.filter(
-          i => r.linkedItemIds.includes(i.id) && i.currentFlow !== '已修復' && i.currentFlow !== '已關閉' && i.currentFlow !== '已修正待測試'
+          i => r.linkedItemIds.includes(i.id) && i.currentFlow !== STATUS.fixed && i.currentFlow !== STATUS.closed && i.currentFlow !== STATUS.readyToTest
         ).length;
         return { version: r.version, days, unfixed, total: r.linkedItemIds.length };
       })
@@ -252,7 +252,7 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ onNavigateToQA, onNa
                   <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[8px] text-white font-bold shrink-0 ${getAvatarColor(item.assignee)} ${getAvatarRing(tierByUserName[item.assignee])}`}>
                     {item.assignee.charAt(0)}
                   </div>
-                  <span className={`px-2 py-0.5 text-[9px] font-bold rounded-full border shrink-0 ${STATUS_COLORS[item.currentFlow || '待處理']}`}>
+                  <span className={`px-2 py-0.5 text-[9px] font-bold rounded-full border shrink-0 ${STATUS_COLORS[item.currentFlow || STATUS.pending]}`}>
                     {item.currentFlow}
                   </span>
                 </div>

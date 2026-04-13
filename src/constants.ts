@@ -47,6 +47,14 @@ export const RELEASE_STATUS_COLORS: Record<string, string> = {
   cancelled: 'bg-gray-100 text-gray-500 border-gray-200',
 };
 
+/** 版更狀態中文標籤 */
+export const RELEASE_STATUS_LABEL: Record<string, string> = {
+  planning:  '規劃中',
+  uat:       'UAT 測試',
+  released:  '已發布',
+  cancelled: '已取消',
+};
+
 /** 成就階級色（inline style 用） */
 export const ACHIEVEMENT_TIER_STYLES: Record<number, React.CSSProperties> = {
   1: { background: 'linear-gradient(135deg, #b45309, #92400e)' },  // Bronze
@@ -91,7 +99,19 @@ export const PRIORITY_COLORS: Record<string, string> = {
   'P3': 'bg-green-100 text-green-800 border-green-200',
 };
 
-export const QA_FLOWS = ['待處理', '開發中', '已修正待測試', '已修復', '退回重修', '已關閉'];
+/** QA 狀態具名常數 — 避免 magic strings */
+export const STATUS = {
+  pending:     '待處理',
+  inProgress:  '開發中',
+  readyToTest: '已修正待測試',
+  fixed:       '已修復',
+  returned:    '退回重修',
+  closed:      '已關閉',
+} as const;
+
+export type StatusValue = typeof STATUS[keyof typeof STATUS];
+
+export const QA_FLOWS: StatusValue[] = [STATUS.pending, STATUS.inProgress, STATUS.readyToTest, STATUS.fixed, STATUS.returned, STATUS.closed];
 export const PMS = ['Ian', 'Sienna'];
 export const RDS = ['Neo', 'Summer', '后玲', 'Popo', 'Unassigned'];
 
@@ -114,12 +134,12 @@ export const PRIORITY_ORDER: Record<string, number> = {
 };
 
 export const STATUS_COLORS: Record<string, string> = {
-  '已關閉': 'bg-gray-100 text-gray-600 border-gray-200',
-  '已修復': 'bg-green-100 text-green-700 border-green-200',
-  '已修正待測試': 'bg-teal-100 text-teal-700 border-teal-200',
-  '退回重修': 'bg-red-500 text-white border-red-600',
-  '開發中': 'bg-blue-100 text-blue-700 border-blue-200',
-  '待處理': 'bg-slate-100 text-slate-700 border-slate-200',
+  [STATUS.closed]:      'bg-gray-100 text-gray-600 border-gray-200',
+  [STATUS.fixed]:       'bg-green-100 text-green-700 border-green-200',
+  [STATUS.readyToTest]: 'bg-teal-100 text-teal-700 border-teal-200',
+  [STATUS.returned]:    'bg-red-500 text-white border-red-600',
+  [STATUS.inProgress]:  'bg-blue-100 text-blue-700 border-blue-200',
+  [STATUS.pending]:     'bg-slate-100 text-slate-700 border-slate-200',
 };
 
 // ===== Gamification =====

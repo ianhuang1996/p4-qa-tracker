@@ -51,11 +51,12 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({ onNavigate }) => {
 
     // QA items
     qaData.forEach(item => {
-      const title = item.title || item.description.substring(0, 50);
+      const desc = item.description || '';
+      const title = item.title || desc.substring(0, 50);
       if (
         item.id.toLowerCase().includes(q) ||
         title.toLowerCase().includes(q) ||
-        item.description.toLowerCase().includes(q)
+        desc.toLowerCase().includes(q)
       ) {
         items.push({
           type: 'qa',

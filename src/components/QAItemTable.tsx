@@ -3,7 +3,7 @@ import { Video, CheckCircle, XCircle, ArrowUp, ArrowDown, ArrowUpDown, MessageSq
 import { getOverdueBadge } from '../utils/badgeUtils';
 import { EmptyState } from './EmptyState';
 import { AugmentedQAItem } from '../types';
-import { PRIORITY_COLORS, STATUS_COLORS, RDS } from '../constants';
+import { PRIORITY_COLORS, STATUS_COLORS, RDS, STATUS } from '../constants';
 import { getDirectImageUrl, getAvatarColor } from '../utils/qaUtils';
 import { useUserTiers, getAvatarRing } from '../hooks/useAchievements';
 import { useAppContext } from '../contexts/AppContext';
@@ -39,7 +39,7 @@ export const QAItemTable = React.memo(function QAItemTable({
   const handleRetestSubmit = () => {
     if (!retestDialog || !user) return;
     const retest: RetestData = {
-      retestResult: retestDialog.status === '已修復' ? 'passed' : 'failed',
+      retestResult: retestDialog.status === STATUS.fixed ? 'passed' : 'failed',
       retestNote: retestNote.trim(),
       retestDate: Date.now(),
       retestBy: user.displayName || '',
@@ -209,7 +209,7 @@ export const QAItemTable = React.memo(function QAItemTable({
                   </div>
                 </td>
                 <td className="px-4 py-4 whitespace-nowrap">
-                  <span className={`px-2.5 py-1 text-[10px] font-bold rounded-full border ${STATUS_COLORS[item.currentFlow || '待處理']}`}>
+                  <span className={`px-2.5 py-1 text-[10px] font-bold rounded-full border ${STATUS_COLORS[item.currentFlow || STATUS.pending]}`}>
                     {item.currentFlow}
                   </span>
                 </td>
@@ -226,9 +226,9 @@ export const QAItemTable = React.memo(function QAItemTable({
                 </td>
                 <td className="px-4 py-4 whitespace-nowrap text-right text-sm font-medium">
                   <div className="flex items-center justify-end gap-1">
-                    {(item.currentFlow === '開發中' || item.currentFlow === '退回重修') && (
+                    {(item.currentFlow === STATUS.inProgress || item.currentFlow === STATUS.returned) && (
                       <button
-                        onClick={(e) => { e.stopPropagation(); onStatusChange(item, '已修正待測試'); }}
+                        onClick={(e) => { e.stopPropagation(); onStatusChange(item, STATUS.readyToTest); }}
                         className="p-1.5 bg-green-100 text-green-600 rounded-lg hover:bg-green-200"
                         title="標記為已修正待測試"
                         aria-label="標記為已修正待測試"
@@ -236,10 +236,10 @@ export const QAItemTable = React.memo(function QAItemTable({
                         <CheckCircle size={14} />
                       </button>
                     )}
-                    {item.currentFlow === '已修正待測試' && (
+                    {item.currentFlow === STATUS.readyToTest && (
                       <>
                         <button
-                          onClick={(e) => { e.stopPropagation(); setRetestDialog({ item, status: '已修復' }); }}
+                          onClick={(e) => { e.stopPropagation(); setRetestDialog({ item, status: STATUS.fixed }); }}
                           className="p-1.5 bg-green-100 text-green-600 rounded-lg hover:bg-green-200"
                           title="測試通過"
                           aria-label="標記為已修復"
@@ -247,7 +247,7 @@ export const QAItemTable = React.memo(function QAItemTable({
                           <CheckCircle size={14} />
                         </button>
                         <button
-                          onClick={(e) => { e.stopPropagation(); setRetestDialog({ item, status: '退回重修' }); }}
+                          onClick={(e) => { e.stopPropagation(); setRetestDialog({ item, status: STATUS.returned }); }}
                           className="p-1.5 bg-red-100 text-red-600 rounded-lg hover:bg-red-200"
                           title="退回重修"
                           aria-label="退回重修"
@@ -279,7 +279,7 @@ export const QAItemTable = React.memo(function QAItemTable({
             <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md pointer-events-auto" onClick={(e) => e.stopPropagation()}>
               <div className="p-5 border-b border-gray-100">
                 <h3 className="text-sm font-bold text-gray-900 flex items-center gap-2">
-                  {retestDialog.status === '已修復' ? (
+                  {retestDialog.status === STATUS.fixed ? (
                     <><CheckCircle size={16} className="text-green-500" /> 複測通過</>
                   ) : (
                     <><XCircle size={16} className="text-red-500" /> 退回重修</>
@@ -293,7 +293,7 @@ export const QAItemTable = React.memo(function QAItemTable({
                   value={retestNote}
                   onChange={(e) => setRetestNote(e.target.value)}
                   className="w-full p-3 border border-gray-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-500 min-h-[80px] resize-y"
-                  placeholder={retestDialog.status === '已修復' ? '驗證環境、測試步驟...' : '退回原因、殘留問題...'}
+                  placeholder={retestDialog.status === STATUS.fixed ? '驗證環境、測試步驟...' : '退回原因、殘留問題...'}
                   autoFocus
                 />
               </div>
@@ -307,7 +307,7 @@ export const QAItemTable = React.memo(function QAItemTable({
                 <button
                   onClick={handleRetestSubmit}
                   className={`px-4 py-2 text-sm font-bold text-white rounded-lg transition-colors ${
-                    retestDialog.status === '已修復' ? 'bg-green-600 hover:bg-green-700' : 'bg-red-600 hover:bg-red-700'
+                    retestDialog.status === STATUS.fixed ? 'bg-green-600 hover:bg-green-700' : 'bg-red-600 hover:bg-red-700'
                   }`}
                 >
                   確認送出

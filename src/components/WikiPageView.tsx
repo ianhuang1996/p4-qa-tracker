@@ -19,7 +19,7 @@ const CATEGORIES: { value: WikiCategory; label: string }[] = [
 
 export const WikiPageView: React.FC = () => {
   const { user } = useAppContext();
-  const { pages, isLoading, addPage, updatePage, deletePage } = useWikiPages(user);
+  const { pages, isLoading, error: wikiError, addPage, updatePage, deletePage } = useWikiPages(user);
 
   const [selectedPageId, setSelectedPageId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -179,7 +179,12 @@ export const WikiPageView: React.FC = () => {
               </div>
             </div>
           ))}
-          {filteredPages.length === 0 && !isLoading && (
+          {wikiError && (
+            <div className="px-3 py-2 rounded-lg bg-red-50 border border-red-200 text-red-700 text-xs font-bold">
+              ⚠ {wikiError}
+            </div>
+          )}
+          {filteredPages.length === 0 && !isLoading && !wikiError && (
             <EmptyState compact title="沒有找到頁面" />
           )}
         </div>

@@ -3,11 +3,13 @@ import { db } from '../firebase';
 import { collection, onSnapshot, doc, setDoc, deleteDoc, addDoc, query, orderBy } from 'firebase/firestore';
 import { User as FirebaseUser } from 'firebase/auth';
 import { toast } from 'sonner';
-import { WikiPage, WikiCategory } from '../types';
+import { WikiPage, WikiCategory, OperationType } from '../types';
+import { handleFirestoreError } from '../utils/firestoreUtils';
 
 export function useWikiPages(user: FirebaseUser | null) {
   const [pages, setPages] = useState<WikiPage[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user) { setIsLoading(false); return; }
@@ -17,9 +19,10 @@ export function useWikiPages(user: FirebaseUser | null) {
       const items: WikiPage[] = [];
       snapshot.forEach(d => items.push({ id: d.id, ...d.data() } as WikiPage));
       setPages(items);
+      setError(null);
       setIsLoading(false);
-    }, (error) => {
-      console.error('Failed to fetch wiki pages:', error);
+    }, () => {
+      setError('知識庫載入失敗');
       setIsLoading(false);
     });
     return () => unsubscribe();
@@ -43,8 +46,7 @@ export function useWikiPages(user: FirebaseUser | null) {
       return ref.id;
     } catch (error) {
       toast.error('建立失敗');
-      console.error(error);
-      return null;
+      handleFirestoreError(error, OperationType.WRITE, 'wiki_pages');
     }
   };
 
@@ -61,7 +63,7 @@ export function useWikiPages(user: FirebaseUser | null) {
       await setDoc(doc(db, 'wiki_pages', pageId), sanitized, { merge: true });
     } catch (error) {
       toast.error('儲存失敗');
-      console.error(error);
+      handleFirestoreError(error, OperationType.WRITE, `wiki_pages/${pageId}`);
     }
   };
 
@@ -72,9 +74,9 @@ export function useWikiPages(user: FirebaseUser | null) {
       toast.success('頁面已刪除');
     } catch (error) {
       toast.error('刪除失敗');
-      console.error(error);
+      handleFirestoreError(error, OperationType.DELETE, `wiki_pages/${pageId}`);
     }
   };
 
-  return { pages, isLoading, addPage, updatePage, deletePage };
+  return { pages, isLoading, error, addPage, updatePage, deletePage };
 }

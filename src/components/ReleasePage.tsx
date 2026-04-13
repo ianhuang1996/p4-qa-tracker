@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import {
   Plus, Rocket, CheckSquare, Square, Check, Trash2, X,
   ChevronRight, FileText, Link2, Play, Clock, Package, Sparkles, Loader2, Edit2, Copy, GripVertical
@@ -25,7 +25,7 @@ import { useAppContext } from '../contexts/AppContext';
 import { useReleases } from '../hooks/useReleases';
 import { useQAItems } from '../hooks/useQAItems';
 import { Release, AugmentedQAItem } from '../types';
-import { STATUS_COLORS, PRIORITY_COLORS, PRIORITY_ORDER, BTN } from '../constants';
+import { STATUS_COLORS, PRIORITY_COLORS, PRIORITY_ORDER, BTN, STATUS, RELEASE_STATUS_COLORS, RELEASE_STATUS_LABEL } from '../constants';
 import { formatTimestamp, getAvatarColor, getTodayStr, augmentQAItems } from '../utils/qaUtils';
 import { parseReleaseNotes, NoteSection } from '../utils/releaseUtils';
 import { useUserTiers, getAvatarRing } from '../hooks/useAchievements';
@@ -34,19 +34,6 @@ import { generateReleaseNotes } from '../services/geminiService';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 
-const STATUS_BADGE: Record<string, string> = {
-  planning: 'bg-blue-100 text-blue-700 border-blue-200',
-  uat: 'bg-orange-100 text-orange-700 border-orange-200',
-  released: 'bg-green-100 text-green-700 border-green-200',
-  cancelled: 'bg-gray-100 text-gray-500 border-gray-200',
-};
-
-const STATUS_LABEL: Record<string, string> = {
-  planning: '規劃中',
-  uat: 'UAT 測試',
-  released: '已發布',
-  cancelled: '已取消',
-};
 
 const MODULE_COLORS = [
   'bg-blue-50 text-blue-600 border-blue-200',
@@ -138,8 +125,8 @@ const SortableReleaseCard: React.FC<{ release: Release; itemCount: number; onCli
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1">
               <span className="font-bold text-gray-900">{release.version}</span>
-              <span className={`px-2 py-0.5 text-[10px] font-bold rounded-lg border ${STATUS_BADGE[release.status]}`}>
-                {STATUS_LABEL[release.status]}
+              <span className={`px-2 py-0.5 text-[10px] font-bold rounded-lg border ${RELEASE_STATUS_COLORS[release.status]}`}>
+                {RELEASE_STATUS_LABEL[release.status]}
               </span>
             </div>
             <p className="text-xs text-gray-500 truncate">{release.title} — {release.scheduledDate}</p>
@@ -165,7 +152,7 @@ const SortableReleaseCard: React.FC<{ release: Release; itemCount: number; onCli
 export const ReleasePage: React.FC = () => {
   const { user, isAuthReady } = useAppContext();
   const {
-    releases, isLoading, addRelease, updateRelease, deleteRelease,
+    releases, isLoading, error: releasesError, addRelease, updateRelease, deleteRelease,
     toggleChecklist, linkItems, unlinkItem, executeRelease, updateReleaseSortOrders,
   } = useReleases(user);
   const { data } = useQAItems(user, isAuthReady);
@@ -228,7 +215,7 @@ export const ReleasePage: React.FC = () => {
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   );
 
-  const handleReleaseDragEnd = (event: DragEndEvent) => {
+  const handleReleaseDragEnd = useCallback((event: DragEndEvent) => {
     const { active, over } = event;
     if (!over || active.id === over.id) return;
     const oldIdx = activeOrder.indexOf(active.id as string);
@@ -236,9 +223,9 @@ export const ReleasePage: React.FC = () => {
     const newOrder = arrayMove(activeOrder, oldIdx, newIdx);
     setActiveOrder(newOrder);
     updateReleaseSortOrders(newOrder.map((id, idx) => ({ id, sortOrder: idx })));
-  };
+  }, [activeOrder, updateReleaseSortOrders]);
 
-  const copyReleaseContent = (release: Release, _items: AugmentedQAItem[]) => {
+  const copyReleaseContent = useCallback((release: Release, _items: AugmentedQAItem[]) => {
     const date = release.scheduledDate.replace(/-/g, '/');
     const lines = [
       `標題：${release.version} — ${date}`,
@@ -248,7 +235,7 @@ export const ReleasePage: React.FC = () => {
     ];
     navigator.clipboard.writeText(lines.join('\n'));
     toast.success('更版內容已複製，可貼到 LINE 群組');
-  };
+  }, []);
 
   const selectedRelease = releases.find(r => r.id === selectedReleaseId) || null;
 
@@ -268,16 +255,16 @@ export const ReleasePage: React.FC = () => {
     if (!selectedRelease) return [];
     return augmentedData.filter(i =>
       !selectedRelease.linkedItemIds.includes(i.id) &&
-      i.currentFlow !== '已關閉' && i.currentFlow !== '已修復'
+      i.currentFlow !== STATUS.closed && i.currentFlow !== STATUS.fixed
     );
   }, [selectedRelease, augmentedData]);
 
-  const handleCreate = () => {
+  const handleCreate = useCallback(() => {
     if (!newVersion.trim()) return;
     addRelease(newVersion, newTitle || newVersion, newDate);
     setNewVersion(''); setNewTitle(''); setNewDate(getTodayStr());
     setShowCreateForm(false);
-  };
+  }, [newVersion, newTitle, newDate, addRelease]);
 
   if (!user) return null;
 
@@ -315,8 +302,8 @@ export const ReleasePage: React.FC = () => {
                   <Edit2 size={12} className="absolute -right-4 top-1/2 -translate-y-1/2 text-gray-300 group-hover/edit:text-blue-400 transition-colors" />
                 </span>
               ) : selectedRelease.version}
-              <span className={`px-3 py-1 text-xs font-bold rounded-lg border ${STATUS_BADGE[selectedRelease.status]}`}>
-                {STATUS_LABEL[selectedRelease.status]}
+              <span className={`px-3 py-1 text-xs font-bold rounded-lg border ${RELEASE_STATUS_COLORS[selectedRelease.status]}`}>
+                {RELEASE_STATUS_LABEL[selectedRelease.status]}
               </span>
             </h2>
             <div className="flex items-center gap-2 text-sm text-gray-500 mt-1">
@@ -398,7 +385,7 @@ export const ReleasePage: React.FC = () => {
         {/* Item fix progress */}
         {linkedItems.length > 0 && (() => {
           const fixedCount = linkedItems.filter(i =>
-            i.currentFlow === '已修復' || i.currentFlow === '已關閉' || i.currentFlow === '已修正待測試'
+            i.currentFlow === STATUS.fixed || i.currentFlow === STATUS.closed || i.currentFlow === STATUS.readyToTest
           ).length;
           return (
             <div className="mb-6 bg-white rounded-xl border border-gray-200 shadow-sm p-4">
@@ -445,7 +432,7 @@ export const ReleasePage: React.FC = () => {
                     <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[8px] text-white font-bold ${getAvatarColor(item.assignee)} ${getAvatarRing(tierByUserName[item.assignee])}`}>
                       {item.assignee.charAt(0)}
                     </div>
-                    <span className={`px-2 py-0.5 text-[9px] font-bold rounded-full border ${STATUS_COLORS[item.currentFlow || '待處理']}`}>
+                    <span className={`px-2 py-0.5 text-[9px] font-bold rounded-full border ${STATUS_COLORS[item.currentFlow || STATUS.pending]}`}>
                       {item.currentFlow}
                     </span>
                     {selectedRelease.status !== 'released' && (
@@ -641,7 +628,7 @@ export const ReleasePage: React.FC = () => {
                       <span className={`px-1.5 py-0.5 text-[9px] font-bold rounded border ${PRIORITY_COLORS[item.priority]}`}>{item.priority}</span>
                     )}
                     <span className="text-sm text-gray-900 flex-1 truncate">{item.displayTitle}</span>
-                    <span className={`px-2 py-0.5 text-[9px] font-bold rounded-full border ${STATUS_COLORS[item.currentFlow || '待處理']}`}>
+                    <span className={`px-2 py-0.5 text-[9px] font-bold rounded-full border ${STATUS_COLORS[item.currentFlow || STATUS.pending]}`}>
                       {item.currentFlow}
                     </span>
                   </button>
@@ -809,7 +796,13 @@ export const ReleasePage: React.FC = () => {
         </div>
       )}
 
-      {releases.length === 0 && !isLoading && (
+      {releasesError && (
+        <div className="flex items-center gap-3 px-4 py-3 rounded-2xl bg-red-50 border border-red-200 text-red-700 text-sm">
+          <span className="font-bold">⚠ {releasesError}</span>
+          <span className="text-xs text-red-500">請重新整理頁面</span>
+        </div>
+      )}
+      {releases.length === 0 && !isLoading && !releasesError && (
         <EmptyState title="還沒有任何版本" description="點擊「建立新版本」開始你的第一個版更" />
       )}
 

@@ -3,32 +3,10 @@ import { db, auth } from '../firebase';
 import { collection, onSnapshot, doc, setDoc, deleteDoc, writeBatch, addDoc, query, increment } from 'firebase/firestore';
 import { User as FirebaseUser } from 'firebase/auth';
 import { toast } from 'sonner';
-import { QAItem, OperationType, FirestoreErrorInfo } from '../types';
+import { QAItem, OperationType } from '../types';
 import { parseMentions } from '../utils/mentionUtils';
 import { createNotification, getUserIdByName } from '../services/notificationService';
-
-function handleFirestoreError(error: unknown, operationType: OperationType, path: string | null) {
-  const errInfo: FirestoreErrorInfo = {
-    error: error instanceof Error ? error.message : String(error),
-    authInfo: {
-      userId: auth.currentUser?.uid,
-      email: auth.currentUser?.email,
-      emailVerified: auth.currentUser?.emailVerified,
-      isAnonymous: auth.currentUser?.isAnonymous,
-      tenantId: auth.currentUser?.tenantId,
-      providerInfo: auth.currentUser?.providerData.map(provider => ({
-        providerId: provider.providerId,
-        displayName: provider.displayName,
-        email: provider.email,
-        photoUrl: provider.photoURL
-      })) || []
-    },
-    operationType,
-    path
-  }
-  console.error('Firestore Error: ', JSON.stringify(errInfo));
-  throw new Error(JSON.stringify(errInfo));
-}
+import { handleFirestoreError } from '../utils/firestoreUtils';
 
 export function useQAItems(user: FirebaseUser | null, isAuthReady: boolean) {
   const [data, setData] = useState<QAItem[]>([]);

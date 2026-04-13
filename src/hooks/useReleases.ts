@@ -3,7 +3,9 @@ import { db } from '../firebase';
 import { collection, onSnapshot, doc, setDoc, deleteDoc, addDoc, query, orderBy, writeBatch } from 'firebase/firestore';
 import { User as FirebaseUser } from 'firebase/auth';
 import { toast } from 'sonner';
-import { Release, ChecklistItem } from '../types';
+import { Release, ChecklistItem, OperationType } from '../types';
+import { handleFirestoreError } from '../utils/firestoreUtils';
+import { STATUS } from '../constants';
 
 const DEFAULT_CHECKLIST: ChecklistItem[] = [
   { id: '1', label: 'UAT 測試完成', checked: false },
@@ -15,6 +17,7 @@ const DEFAULT_CHECKLIST: ChecklistItem[] = [
 export function useReleases(user: FirebaseUser | null) {
   const [releases, setReleases] = useState<Release[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user) { setIsLoading(false); return; }
@@ -24,9 +27,10 @@ export function useReleases(user: FirebaseUser | null) {
       const items: Release[] = [];
       snapshot.forEach(d => items.push({ id: d.id, ...d.data() } as Release));
       setReleases(items);
+      setError(null);
       setIsLoading(false);
-    }, (error) => {
-      console.error('Failed to fetch releases:', error);
+    }, () => {
+      setError('版更資料載入失敗');
       setIsLoading(false);
     });
     return () => unsubscribe();
@@ -51,7 +55,7 @@ export function useReleases(user: FirebaseUser | null) {
       toast.success('版本已建立');
     } catch (error) {
       toast.error('建立版本失敗');
-      console.error(error);
+      handleFirestoreError(error, OperationType.WRITE, 'releases');
     }
   };
 
@@ -65,7 +69,7 @@ export function useReleases(user: FirebaseUser | null) {
       await setDoc(doc(db, 'releases', releaseId), sanitized, { merge: true });
     } catch (error) {
       toast.error('更新失敗');
-      console.error(error);
+      handleFirestoreError(error, OperationType.WRITE, `releases/${releaseId}`);
     }
   };
 
@@ -76,7 +80,7 @@ export function useReleases(user: FirebaseUser | null) {
       toast.success('版本已刪除');
     } catch (error) {
       toast.error('刪除失敗');
-      console.error(error);
+      handleFirestoreError(error, OperationType.DELETE, `releases/${releaseId}`);
     }
   };
 
@@ -103,7 +107,7 @@ export function useReleases(user: FirebaseUser | null) {
       for (const itemId of release.linkedItemIds) {
         try {
           const ref = doc(db, 'qa_items', itemId);
-          await setDoc(ref, { currentFlow: '已關閉', fixVersion: release.version }, { merge: true });
+          await setDoc(ref, { currentFlow: STATUS.closed, fixVersion: release.version }, { merge: true });
         } catch (err) {
           console.error(`Failed to update ${itemId}:`, err);
           failCount++;
@@ -119,7 +123,7 @@ export function useReleases(user: FirebaseUser | null) {
       }
     } catch (error) {
       toast.error('發布失敗');
-      console.error(error);
+      handleFirestoreError(error, OperationType.WRITE, `releases/${release.id}`);
     }
   };
 
@@ -131,9 +135,9 @@ export function useReleases(user: FirebaseUser | null) {
       }
     } catch (error) {
       toast.error('排序儲存失敗');
-      console.error(error);
+      handleFirestoreError(error, OperationType.WRITE, 'releases (sort)');
     }
   };
 
-  return { releases, isLoading, addRelease, updateRelease, deleteRelease, toggleChecklist, linkItems, unlinkItem, executeRelease, updateReleaseSortOrders };
+  return { releases, isLoading, error, addRelease, updateRelease, deleteRelease, toggleChecklist, linkItems, unlinkItem, executeRelease, updateReleaseSortOrders };
 }

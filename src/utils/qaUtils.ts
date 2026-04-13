@@ -119,7 +119,7 @@ import { QAItem, AugmentedQAItem } from '../types';
 export const augmentQAItems = (data: QAItem[]): AugmentedQAItem[] => {
   return data.map(item => {
     const desc = item.description || '';
-    let priority = item.priority;
+    let priority = item.priority || '-';
     let category = '';
     let cleanDesc = desc;
 
@@ -136,9 +136,20 @@ export const augmentQAItems = (data: QAItem[]): AugmentedQAItem[] => {
       }
     }
 
-    if (!priority) priority = '-';
-    const displayTitle = item.title || (cleanDesc.split('\n')[0].length > 30 ? cleanDesc.split('\n')[0].substring(0, 30) + '...' : cleanDesc.split('\n')[0]) || '未命名問題';
+    const firstLine = cleanDesc.split('\n')[0] || '';
+    const displayTitle = item.title || (firstLine.length > 30 ? firstLine.substring(0, 30) + '...' : firstLine) || '未命名問題';
 
-    return { ...item, priority, category, cleanDesc, displayTitle, date: normalizeDate(item.date), comments: item.comments || [] };
+    return {
+      ...item,
+      priority,
+      category,
+      cleanDesc,
+      displayTitle,
+      date: normalizeDate(item.date || ''),
+      module: item.module || '其他',
+      assignee: item.assignee || 'Unassigned',
+      currentFlow: item.currentFlow || '待處理',
+      comments: item.comments || [],
+    };
   });
 };

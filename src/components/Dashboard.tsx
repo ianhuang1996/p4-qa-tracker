@@ -4,7 +4,7 @@ import {
   PieChart, Pie, Cell
 } from 'recharts';
 import { AugmentedQAItem } from '../types';
-import { MEMBER_COLORS, MODULE_COLORS, SEMANTIC } from '../constants';
+import { MEMBER_COLORS, MODULE_COLORS, SEMANTIC, STATUS } from '../constants';
 
 interface DashboardProps {
   items: AugmentedQAItem[];
@@ -36,7 +36,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ items }) => {
         counts[date] = { date, fixed: 0, total: 0 };
       }
       counts[date].total += 1;
-      if (item.currentFlow === '已修復' || item.currentFlow === '已關閉') {
+      if (item.currentFlow === STATUS.fixed || item.currentFlow === STATUS.closed) {
         counts[date].fixed += 1;
       }
     });

@@ -1,8 +1,9 @@
 import React from 'react';
 import { AlertTriangle } from 'lucide-react';
 import { AugmentedQAItem } from '../types';
+import { STATUS } from '../constants';
 
-const CLOSED_STATUSES = ['已修復', '已關閉', '已修正待測試'];
+const CLOSED_STATUSES: string[] = [STATUS.fixed, STATUS.closed, STATUS.readyToTest];
 
 export function getOverdueBadge(item: AugmentedQAItem): React.ReactElement | null {
   if (CLOSED_STATUSES.includes(item.currentFlow)) return null;
