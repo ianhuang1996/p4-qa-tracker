@@ -1,29 +1,11 @@
 import { useState, useEffect } from 'react';
 import { db, auth } from '../firebase';
-import { collection, onSnapshot, doc, setDoc, deleteDoc, writeBatch, addDoc, query, where, getDocs, increment } from 'firebase/firestore';
+import { collection, onSnapshot, doc, setDoc, deleteDoc, writeBatch, addDoc, query, increment } from 'firebase/firestore';
 import { User as FirebaseUser } from 'firebase/auth';
 import { toast } from 'sonner';
-import { QAItem, OperationType, Notification } from '../types';
+import { QAItem, OperationType, FirestoreErrorInfo } from '../types';
 import { parseMentions } from '../utils/mentionUtils';
-
-interface FirestoreErrorInfo {
-  error: string;
-  operationType: OperationType;
-  path: string | null;
-  authInfo: {
-    userId: string | undefined;
-    email: string | null | undefined;
-    emailVerified: boolean | undefined;
-    isAnonymous: boolean | undefined;
-    tenantId: string | null | undefined;
-    providerInfo: {
-      providerId: string;
-      displayName: string | null;
-      email: string | null;
-      photoUrl: string | null;
-    }[];
-  }
-}
+import { createNotification, getUserIdByName } from '../services/notificationService';
 
 function handleFirestoreError(error: unknown, operationType: OperationType, path: string | null) {
   const errInfo: FirestoreErrorInfo = {
@@ -98,73 +80,6 @@ export function useQAItems(user: FirebaseUser | null, isAuthReady: boolean) {
     }
   }, [isAuthReady, user]);
 
-  const getUserIdByName = async (name: string): Promise<string | null> => {
-    if (!name || name === 'Unassigned') return null;
-    try {
-      const usersRef = collection(db, 'users');
-      const q = query(usersRef, where('displayName', '==', name));
-      const querySnapshot = await getDocs(q);
-      if (!querySnapshot.empty) {
-        return querySnapshot.docs[0].id;
-      }
-    } catch (error) {
-      console.error('Error finding user by name:', error);
-    }
-    return null;
-  };
-
-  const sendSlackNotification = async (email: string, message: string, itemId: string, itemTitle: string, type: string) => {
-    try {
-      await fetch('/api/slack/notify', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, message, itemId, itemTitle, type }),
-      });
-    } catch (error) {
-      // Slack is best-effort, don't block the main flow
-      console.error('Slack notification failed:', error);
-    }
-  };
-
-  const getUserEmailById = async (userId: string): Promise<string | null> => {
-    try {
-      const userDoc = await getDocs(query(collection(db, 'users'), where('uid', '==', userId)));
-      if (!userDoc.empty) {
-        return userDoc.docs[0].data().email || null;
-      }
-    } catch (error) {
-      console.error('Error getting user email:', error);
-    }
-    return null;
-  };
-
-  const createNotification = async (notification: Omit<Notification, 'id' | 'isRead' | 'createdAt'>) => {
-    if (notification.userId === user?.uid) return; // Don't notify self
-    try {
-      const notificationRef = collection(db, 'notifications');
-      await addDoc(notificationRef, {
-        ...notification,
-        id: Date.now().toString() + Math.random().toString(36).substring(2, 9),
-        isRead: false,
-        createdAt: Date.now()
-      });
-
-      // Also send Slack notification
-      const recipientEmail = await getUserEmailById(notification.userId);
-      if (recipientEmail) {
-        const typeLabels: Record<string, string> = {
-          status_change: `${notification.fromUserName} 將狀態從 ${notification.oldValue} → ${notification.newValue}`,
-          assignment: `${notification.fromUserName} 將此項目指派給你`,
-          comment: `${notification.fromUserName} 留言了`,
-        };
-        const message = typeLabels[notification.type] || '新通知';
-        sendSlackNotification(recipientEmail, message, notification.itemId, notification.itemTitle, notification.type);
-      }
-    } catch (error) {
-      console.error('Failed to create notification:', error);
-    }
-  };
-
   const updateItem = async (itemId: string, updates: Partial<QAItem>, oldItem?: QAItem, silent?: boolean) => {
     if (!user) return;
 
@@ -199,7 +114,7 @@ export function useQAItems(user: FirebaseUser | null, isAuthReady: boolean) {
             type: 'status_change',
             oldValue: oldItem.currentFlow,
             newValue: updates.currentFlow,
-          });
+          }, user);
         }
         // Also notify author if different
         if (oldItem.authorUID && oldItem.authorUID !== user.uid && oldItem.authorUID !== assigneeId) {
@@ -212,7 +127,7 @@ export function useQAItems(user: FirebaseUser | null, isAuthReady: boolean) {
             type: 'status_change',
             oldValue: oldItem.currentFlow,
             newValue: updates.currentFlow,
-          });
+          }, user);
         }
       }
 
@@ -228,7 +143,7 @@ export function useQAItems(user: FirebaseUser | null, isAuthReady: boolean) {
             itemTitle: oldItem.title || oldItem.description.substring(0, 30),
             type: 'assignment',
             newValue: updates.assignee,
-          });
+          }, user);
         }
       }
     } catch (error) {
@@ -297,7 +212,7 @@ export function useQAItems(user: FirebaseUser | null, isAuthReady: boolean) {
           itemTitle: item.title || item.description.substring(0, 30),
           type: 'comment',
           newValue: text.trim()
-        });
+        }, user);
       }
 
       // Notify @mentioned users
@@ -313,7 +228,7 @@ export function useQAItems(user: FirebaseUser | null, isAuthReady: boolean) {
             itemTitle: item?.title || item?.description.substring(0, 30) || itemId,
             type: 'comment',
             newValue: `提及了你: ${text.trim().substring(0, 50)}`
-          });
+          }, user);
         }
       }
     } catch (error) {

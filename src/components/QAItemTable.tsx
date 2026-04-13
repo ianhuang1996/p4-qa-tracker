@@ -1,5 +1,6 @@
 import React from 'react';
-import { Video, CheckCircle, XCircle, ArrowUp, ArrowDown, ArrowUpDown, MessageSquare, FileText, Rocket, AlertTriangle } from 'lucide-react';
+import { Video, CheckCircle, XCircle, ArrowUp, ArrowDown, ArrowUpDown, MessageSquare, FileText, Rocket } from 'lucide-react';
+import { getOverdueBadge } from '../utils/badgeUtils';
 import { EmptyState } from './EmptyState';
 import { AugmentedQAItem } from '../types';
 import { PRIORITY_COLORS, STATUS_COLORS, RDS } from '../constants';
@@ -26,9 +27,9 @@ interface QAItemTableProps {
   itemReleaseMap?: Record<string, string>;
 }
 
-export const QAItemTable: React.FC<QAItemTableProps> = ({
+export const QAItemTable = React.memo(function QAItemTable({
   items, onItemClick, onStatusChange, onAssigneeChange, selectedIds, setSelectedIds, sortConfig, onSort, itemReleaseMap = {}
-}) => {
+}: QAItemTableProps) {
   const [openAssigneeId, setOpenAssigneeId] = React.useState<string | null>(null);
   const [retestDialog, setRetestDialog] = React.useState<{ item: AugmentedQAItem; status: string } | null>(null);
   const [retestNote, setRetestNote] = React.useState('');
@@ -46,17 +47,6 @@ export const QAItemTable: React.FC<QAItemTableProps> = ({
     onStatusChange(retestDialog.item, retestDialog.status, retest);
     setRetestDialog(null);
     setRetestNote('');
-  };
-
-  const getOverdueBadge = (item: AugmentedQAItem) => {
-    const closedStatuses = ['已修復', '已關閉', '已修正待測試'];
-    if (closedStatuses.includes(item.currentFlow)) return null;
-    if (!item.date) return null;
-    const created = new Date(item.date + 'T00:00:00').getTime();
-    const days = Math.floor((Date.now() - created) / (1000 * 60 * 60 * 24));
-    if (days > 14) return <span className="flex items-center gap-0.5 px-1.5 py-0.5 bg-red-100 text-red-600 rounded text-[9px] font-bold border border-red-200 shrink-0" title={`建立已 ${days} 天`}><AlertTriangle size={9} />{days}天</span>;
-    if (days > 7) return <span className="flex items-center gap-0.5 px-1.5 py-0.5 bg-amber-100 text-amber-600 rounded text-[9px] font-bold border border-amber-200 shrink-0" title={`建立已 ${days} 天`}><AlertTriangle size={9} />{days}天</span>;
-    return null;
   };
 
   const toggleSelectAll = () => {
@@ -329,4 +319,4 @@ export const QAItemTable: React.FC<QAItemTableProps> = ({
       )}
     </div>
   );
-};
+});
