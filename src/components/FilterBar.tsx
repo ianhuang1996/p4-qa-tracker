@@ -106,17 +106,17 @@ export const FilterBar: React.FC<FilterBarProps> = ({
           </select>
 
           {/* Date range */}
-          <div className="flex items-center gap-1 bg-gray-50 p-1 rounded-lg border border-gray-200">
+          <div className="flex items-center gap-1">
             <input
               type="date"
-              className="bg-transparent text-xs border-none focus:ring-0 p-1 w-[110px]"
+              className="text-xs border border-gray-200 rounded-lg px-2 py-2 bg-white focus:ring-1 focus:ring-blue-500 focus:border-blue-500 w-[120px]"
               value={dateRange.start}
               onChange={(e) => setDateRange({ ...dateRange, start: e.target.value })}
             />
             <span className="text-gray-400 text-xs">~</span>
             <input
               type="date"
-              className="bg-transparent text-xs border-none focus:ring-0 p-1 w-[110px]"
+              className="text-xs border border-gray-200 rounded-lg px-2 py-2 bg-white focus:ring-1 focus:ring-blue-500 focus:border-blue-500 w-[120px]"
               value={dateRange.end}
               onChange={(e) => setDateRange({ ...dateRange, end: e.target.value })}
             />
@@ -166,8 +166,8 @@ export const FilterBar: React.FC<FilterBarProps> = ({
                 onClick={() => setPriorityFilter(priorityFilter === p ? '全部' : p)}
                 className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-colors border ${
                   priorityFilter === p
-                    ? 'bg-orange-600 text-white border-orange-600'
-                    : 'bg-gray-50 text-gray-600 border-gray-200 hover:border-orange-300'
+                    ? 'bg-blue-600 text-white border-blue-600'
+                    : 'bg-gray-50 text-gray-600 border-gray-200 hover:border-blue-300'
                 }`}
               >
                 {p === '-' ? '無' : p}
@@ -202,8 +202,8 @@ export const FilterBar: React.FC<FilterBarProps> = ({
                 onClick={() => setAssigneeFilters(toggleItem(assigneeFilters, a))}
                 className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-colors border ${
                   assigneeFilters.includes(a)
-                    ? 'bg-purple-600 text-white border-purple-600'
-                    : 'bg-gray-50 text-gray-600 border-gray-200 hover:border-purple-300'
+                    ? 'bg-blue-600 text-white border-blue-600'
+                    : 'bg-gray-50 text-gray-600 border-gray-200 hover:border-blue-300'
                 }`}
               >
                 {a}
@@ -220,8 +220,8 @@ export const FilterBar: React.FC<FilterBarProps> = ({
                 onClick={() => setModuleFilters(toggleItem(moduleFilters, m))}
                 className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-colors border ${
                   moduleFilters.includes(m)
-                    ? 'bg-green-600 text-white border-green-600'
-                    : 'bg-gray-50 text-gray-600 border-gray-200 hover:border-green-300'
+                    ? 'bg-blue-600 text-white border-blue-600'
+                    : 'bg-gray-50 text-gray-600 border-gray-200 hover:border-blue-300'
                 }`}
               >
                 {m}
@@ -256,21 +256,21 @@ export const FilterBar: React.FC<FilterBarProps> = ({
             </span>
           ))}
           {assigneeFilters.map(a => (
-            <span key={a} className="inline-flex items-center gap-1 px-2 py-0.5 bg-purple-50 text-purple-700 text-[10px] font-bold rounded-lg border border-purple-200">
+            <span key={a} className="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-50 text-blue-700 text-[10px] font-bold rounded-lg border border-blue-200">
               {a}
-              <button onClick={() => setAssigneeFilters(assigneeFilters.filter(f => f !== a))} className="hover:text-purple-900"><X size={10} /></button>
+              <button onClick={() => setAssigneeFilters(assigneeFilters.filter(f => f !== a))} className="hover:text-blue-900"><X size={10} /></button>
             </span>
           ))}
           {moduleFilters.map(m => (
-            <span key={m} className="inline-flex items-center gap-1 px-2 py-0.5 bg-green-50 text-green-700 text-[10px] font-bold rounded-lg border border-green-200">
+            <span key={m} className="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-50 text-blue-700 text-[10px] font-bold rounded-lg border border-blue-200">
               {m}
-              <button onClick={() => setModuleFilters(moduleFilters.filter(f => f !== m))} className="hover:text-green-900"><X size={10} /></button>
+              <button onClick={() => setModuleFilters(moduleFilters.filter(f => f !== m))} className="hover:text-blue-900"><X size={10} /></button>
             </span>
           ))}
           {(dateRange.start || dateRange.end) && (
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-orange-50 text-orange-700 text-[10px] font-bold rounded-lg border border-orange-200">
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-50 text-blue-700 text-[10px] font-bold rounded-lg border border-blue-200">
               {dateRange.start || '...'} ~ {dateRange.end || '...'}
-              <button onClick={() => setDateRange({ start: '', end: '' })} className="hover:text-orange-900"><X size={10} /></button>
+              <button onClick={() => setDateRange({ start: '', end: '' })} className="hover:text-blue-900"><X size={10} /></button>
             </span>
           )}
           <button onClick={clearAll} className="text-[10px] text-red-500 hover:text-red-600 font-bold ml-1">

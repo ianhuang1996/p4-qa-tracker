@@ -186,7 +186,7 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ onNavigateToQA, onNa
                     : 'bg-amber-50 border-amber-200 text-amber-700'
               }`}
             >
-              <AlertTriangle size={16} className={`shrink-0 ${alert.days <= 3 ? 'text-red-500 animate-pulse' : 'text-amber-500'}`} />
+              <AlertTriangle size={16} className={`shrink-0 ${alert.days <= 3 ? 'text-red-500' : 'text-amber-500'}`} />
               <span className="text-sm font-bold">
                 {alert.days < 0
                   ? `${alert.version} 已逾期 ${Math.abs(alert.days)} 天，剩 ${alert.unfixed} 個未修復`

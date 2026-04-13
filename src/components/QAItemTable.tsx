@@ -119,7 +119,7 @@ export const QAItemTable = React.memo(function QAItemTable({
             {items.map((item) => (
               <tr 
                 key={item.id} 
-                className={`hover:bg-blue-50/30 transition-colors cursor-pointer group ${selectedIds.includes(item.id) ? 'bg-blue-50/50' : ''}`}
+                className={`hover:bg-blue-50/50 transition-colors cursor-pointer group ${selectedIds.includes(item.id) ? 'bg-blue-50' : ''}`}
                 onClick={() => onItemClick(item)}
               >
                 <td className="px-4 py-4" onClick={(e) => e.stopPropagation()}>

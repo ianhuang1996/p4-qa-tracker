@@ -102,7 +102,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     <span className="shrink-0">{item.icon}</span>
                     {!collapsed && <span className="flex-1 text-left">{item.label}</span>}
                     {!collapsed && badge !== undefined && badge > 0 && (
-                      <span className="bg-gray-700 text-gray-300 text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[20px] text-center">{badge}</span>
+                      <span className="bg-red-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full min-w-[20px] text-center">{badge > 9 ? '9+' : badge}</span>
                     )}
                     {collapsed && badge !== undefined && badge > 0 && (
                       <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center">{badge > 9 ? '9+' : badge}</span>

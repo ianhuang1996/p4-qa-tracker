@@ -54,10 +54,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ items }) => {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
       <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-        <h3 className="text-lg font-bold text-gray-800 mb-6 flex items-center gap-2">
-          <span className="w-1 h-6 bg-blue-500 rounded-full"></span>
-          負責人分配
-        </h3>
+        <h3 className="text-lg font-bold text-gray-800 mb-6">負責人分配</h3>
         <div className="h-64">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={assigneeStats}>
@@ -79,10 +76,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ items }) => {
       </div>
 
       <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-        <h3 className="text-lg font-bold text-gray-800 mb-6 flex items-center gap-2">
-          <span className="w-1 h-6 bg-green-500 rounded-full"></span>
-          模組分佈
-        </h3>
+        <h3 className="text-lg font-bold text-gray-800 mb-6">模組分佈</h3>
         <div className="h-64">
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
@@ -108,10 +102,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ items }) => {
       </div>
 
       <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 lg:col-span-2">
-        <h3 className="text-lg font-bold text-gray-800 mb-6 flex items-center gap-2">
-          <span className="w-1 h-6 bg-purple-500 rounded-full"></span>
-          每日修復進度
-        </h3>
+        <h3 className="text-lg font-bold text-gray-800 mb-6">每日修復進度</h3>
         <div className="h-64">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={weeklyFixedStats}>
