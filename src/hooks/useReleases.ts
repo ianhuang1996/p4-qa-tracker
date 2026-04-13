@@ -98,17 +98,25 @@ export function useReleases(user: FirebaseUser | null) {
   const executeRelease = async (release: Release) => {
     if (!user || release.linkedItemIds.length === 0) return;
     try {
-      const batch = writeBatch(db);
-      // Update all linked QA items
-      release.linkedItemIds.forEach(itemId => {
-        const ref = doc(db, 'qa_items', itemId);
-        batch.update(ref, { currentFlow: '已關閉', fixVersion: release.version });
-      });
+      // Update QA items one by one (batch.update fails if any item has invalid fields in rules)
+      let failCount = 0;
+      for (const itemId of release.linkedItemIds) {
+        try {
+          const ref = doc(db, 'qa_items', itemId);
+          await setDoc(ref, { currentFlow: '已關閉', fixVersion: release.version }, { merge: true });
+        } catch (err) {
+          console.error(`Failed to update ${itemId}:`, err);
+          failCount++;
+        }
+      }
       // Update release status
       const releaseRef = doc(db, 'releases', release.id);
-      batch.update(releaseRef, { status: 'released', releasedAt: Date.now() });
-      await batch.commit();
-      toast.success(`${release.version} 已正式發布！`);
+      await setDoc(releaseRef, { status: 'released', releasedAt: Date.now() }, { merge: true });
+      if (failCount > 0) {
+        toast.success(`${release.version} 已發布！（${failCount} 個項目更新失敗，請手動檢查）`);
+      } else {
+        toast.success(`${release.version} 已正式發布！`);
+      }
     } catch (error) {
       toast.error('發布失敗');
       console.error(error);
