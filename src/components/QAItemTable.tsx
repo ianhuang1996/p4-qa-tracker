@@ -92,26 +92,26 @@ export const QAItemTable = React.memo(function QAItemTable({
                   編號 {renderSortIcon('id')}
                 </div>
               </th>
-              <th 
-                className="px-4 py-3 text-left text-[10px] font-bold text-gray-400 uppercase tracking-wider cursor-pointer group hover:text-blue-600 transition-colors"
+              <th
+                className="hidden md:table-cell px-4 py-3 text-left text-[10px] font-bold text-gray-400 uppercase tracking-wider cursor-pointer group hover:text-blue-600 transition-colors"
                 onClick={() => onSort('priority')}
               >
                 <div className="flex items-center gap-1">
                   優先級 {renderSortIcon('priority')}
                 </div>
               </th>
-              <th className="px-4 py-3 text-left text-[10px] font-bold text-gray-400 uppercase tracking-wider">模組</th>
+              <th className="hidden md:table-cell px-4 py-3 text-left text-[10px] font-bold text-gray-400 uppercase tracking-wider">模組</th>
               <th className="px-4 py-3 text-left text-[10px] font-bold text-gray-400 uppercase tracking-wider">標題</th>
-              <th className="px-4 py-3 text-left text-[10px] font-bold text-gray-400 uppercase tracking-wider">負責人</th>
-              <th 
-                className="px-4 py-3 text-left text-[10px] font-bold text-gray-400 uppercase tracking-wider cursor-pointer group hover:text-blue-600 transition-colors"
+              <th className="hidden md:table-cell px-4 py-3 text-left text-[10px] font-bold text-gray-400 uppercase tracking-wider">負責人</th>
+              <th
+                className="hidden sm:table-cell px-4 py-3 text-left text-[10px] font-bold text-gray-400 uppercase tracking-wider cursor-pointer group hover:text-blue-600 transition-colors"
                 onClick={() => onSort('currentFlow')}
               >
                 <div className="flex items-center gap-1">
                   狀態 {renderSortIcon('currentFlow')}
                 </div>
               </th>
-              <th className="px-4 py-3 text-left text-[10px] font-bold text-gray-400 uppercase tracking-wider">附件</th>
+              <th className="hidden md:table-cell px-4 py-3 text-left text-[10px] font-bold text-gray-400 uppercase tracking-wider">附件</th>
               <th className="px-4 py-3 text-right text-[10px] font-bold text-gray-400 uppercase tracking-wider">操作</th>
             </tr>
           </thead>
@@ -131,14 +131,14 @@ export const QAItemTable = React.memo(function QAItemTable({
                   />
                 </td>
                 <td className="px-4 py-4 whitespace-nowrap text-xs font-bold text-gray-400">{item.id}</td>
-                <td className="px-4 py-4 whitespace-nowrap">
+                <td className="hidden md:table-cell px-4 py-4 whitespace-nowrap">
                   {item.priority !== '-' && (
                     <span className={`px-2 py-0.5 text-[10px] font-bold rounded border ${PRIORITY_COLORS[item.priority]}`}>
                       {item.priority}
                     </span>
                   )}
                 </td>
-                <td className="px-4 py-4 whitespace-nowrap">
+                <td className="hidden md:table-cell px-4 py-4 whitespace-nowrap">
                   <span className="px-2 py-0.5 bg-gray-100 text-gray-600 text-[10px] font-bold rounded border border-gray-200 uppercase tracking-wider">
                     {item.module}
                   </span>
@@ -163,9 +163,9 @@ export const QAItemTable = React.memo(function QAItemTable({
                     {getOverdueBadge(item)}
                   </div>
                 </td>
-                <td className="px-4 py-4 whitespace-nowrap">
+                <td className="hidden md:table-cell px-4 py-4 whitespace-nowrap">
                   <div className="relative">
-                    <div 
+                    <div
                       className="flex items-center gap-2 cursor-pointer hover:bg-gray-50 p-1 rounded-lg transition-colors"
                       onClick={(e) => {
                         e.stopPropagation();
@@ -208,12 +208,12 @@ export const QAItemTable = React.memo(function QAItemTable({
                     )}
                   </div>
                 </td>
-                <td className="px-4 py-4 whitespace-nowrap">
+                <td className="hidden sm:table-cell px-4 py-4 whitespace-nowrap">
                   <span className={`px-2.5 py-1 text-[10px] font-bold rounded-full border ${STATUS_COLORS[item.currentFlow || STATUS.pending]}`}>
                     {item.currentFlow}
                   </span>
                 </td>
-                <td className="px-4 py-4 whitespace-nowrap">
+                <td className="hidden md:table-cell px-4 py-4 whitespace-nowrap">
                   <div className="flex items-center gap-2">
                     {(item.imageLink || (item.imageLinks && item.imageLinks.length > 0)) && (
                       <div className="w-8 h-8 rounded border border-gray-200 overflow-hidden bg-gray-50 flex-shrink-0">

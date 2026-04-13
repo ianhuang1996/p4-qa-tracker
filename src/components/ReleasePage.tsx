@@ -23,10 +23,10 @@ import {
 import { CSS } from '@dnd-kit/utilities';
 import { useAppContext } from '../contexts/AppContext';
 import { useReleases } from '../hooks/useReleases';
-import { useQAItems } from '../hooks/useQAItems';
+import { useAugmentedQAItems } from '../hooks/useAugmentedQAItems';
 import { Release, AugmentedQAItem } from '../types';
-import { STATUS_COLORS, PRIORITY_COLORS, PRIORITY_ORDER, BTN, STATUS, RELEASE_STATUS_COLORS, RELEASE_STATUS_LABEL } from '../constants';
-import { formatTimestamp, getAvatarColor, getTodayStr, augmentQAItems } from '../utils/qaUtils';
+import { STATUS_COLORS, PRIORITY_COLORS, PRIORITY_ORDER, BTN, STATUS, RELEASE_STATUS_COLORS, RELEASE_STATUS_LABEL, FEATURE_FLAGS } from '../constants';
+import { formatTimestamp, getAvatarColor, getTodayStr } from '../utils/qaUtils';
 import { parseReleaseNotes, NoteSection } from '../utils/releaseUtils';
 import { useUserTiers, getAvatarRing } from '../hooks/useAchievements';
 import { EmptyState } from './EmptyState';
@@ -150,12 +150,12 @@ const SortableReleaseCard: React.FC<{ release: Release; itemCount: number; onCli
 
 // ─── Main Component ─────────────────────────────────────────────
 export const ReleasePage: React.FC = () => {
-  const { user, isAuthReady } = useAppContext();
+  const { user, isAuthReady, isAdmin } = useAppContext();
   const {
     releases, isLoading, error: releasesError, addRelease, updateRelease, deleteRelease,
     toggleChecklist, linkItems, unlinkItem, executeRelease, updateReleaseSortOrders,
   } = useReleases(user);
-  const { data } = useQAItems(user, isAuthReady);
+  const { augmentedData } = useAugmentedQAItems(user, isAuthReady);
   const { tierByUserName } = useUserTiers(user);
 
   const [selectedReleaseId, setSelectedReleaseId] = useState<string | null>(null);
@@ -171,8 +171,6 @@ export const ReleasePage: React.FC = () => {
   const [editingReleasedAt, setEditingReleasedAt] = useState(false);
   const [releasedAtDraft, setReleasedAtDraft] = useState('');
   const [activeOrder, setActiveOrder] = useState<string[]>([]);
-
-  const augmentedData = useMemo(() => augmentQAItems(data), [data]);
 
   const activeReleases = useMemo(
     () => releases.filter(r => r.status !== 'released' && r.status !== 'cancelled'),
@@ -329,7 +327,7 @@ export const ReleasePage: React.FC = () => {
                 <Play size={16} /> 進入 UAT
               </button>
             )}
-            {(selectedRelease.status === 'planning' || selectedRelease.status === 'uat') && (
+            {(selectedRelease.status === 'planning' || selectedRelease.status === 'uat') && isAdmin && (
               <button
                 onClick={() => {
                   if (confirm(`確定要發布 ${selectedRelease.version} 嗎？所有關聯的 QA 項目將被標為已關閉。`)) {
@@ -457,21 +455,23 @@ export const ReleasePage: React.FC = () => {
                 </h3>
                 {!editingNotes && selectedRelease.status !== 'released' && (
                   <div className="flex items-center gap-3">
-                    <button
-                      onClick={async () => {
-                        if (linkedItems.length === 0) { toast.error('請先加入 QA 項目'); return; }
-                        setGeneratingNotes(true);
-                        const notes = await generateReleaseNotes(selectedRelease.version, linkedItems);
-                        setNoteDraft(notes);
-                        setEditingNotes(true);
-                        setGeneratingNotes(false);
-                      }}
-                      disabled={generatingNotes}
-                      className="text-xs font-bold text-purple-600 hover:text-purple-700 flex items-center gap-1 disabled:opacity-50"
-                    >
-                      {generatingNotes ? <Loader2 size={12} className="animate-spin" /> : <Sparkles size={12} />}
-                      AI 生成
-                    </button>
+                    {FEATURE_FLAGS.AI_FEATURES && (
+                      <button
+                        onClick={async () => {
+                          if (linkedItems.length === 0) { toast.error('請先加入 QA 項目'); return; }
+                          setGeneratingNotes(true);
+                          const notes = await generateReleaseNotes(selectedRelease.version, linkedItems);
+                          setNoteDraft(notes);
+                          setEditingNotes(true);
+                          setGeneratingNotes(false);
+                        }}
+                        disabled={generatingNotes}
+                        className="text-xs font-bold text-purple-600 hover:text-purple-700 flex items-center gap-1 disabled:opacity-50"
+                      >
+                        {generatingNotes ? <Loader2 size={12} className="animate-spin" /> : <Sparkles size={12} />}
+                        AI 生成
+                      </button>
+                    )}
                     <button
                       onClick={() => { setNoteDraft(selectedRelease.releaseNotes); setEditingNotes(true); }}
                       className="text-xs font-bold text-blue-600 hover:text-blue-700"

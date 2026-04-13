@@ -2,12 +2,12 @@ import React, { useMemo, useState } from 'react';
 import { CheckCircle2, Circle, Bug, ArrowRight, Flag, AlertTriangle } from 'lucide-react';
 import { User as FirebaseUser } from 'firebase/auth';
 import { useTodos } from '../hooks/useTodos';
-import { useQAItems } from '../hooks/useQAItems';
+import { useAugmentedQAItems } from '../hooks/useAugmentedQAItems';
 import { useReleases } from '../hooks/useReleases';
 import { useWikiPages } from '../hooks/useWikiPages';
 import { useAchievements, useAllDailyReports, useAchievementLogs, useUserTiers, getAvatarRing } from '../hooks/useAchievements';
 import { useAppContext } from '../contexts/AppContext';
-import { getTodayStr, getAvatarColor, augmentQAItems } from '../utils/qaUtils';
+import { getTodayStr, getAvatarColor } from '../utils/qaUtils';
 import { STATUS_COLORS, PRIORITY_COLORS, ACHIEVEMENT_DEFS, STATUS } from '../constants';
 import { AugmentedQAItem } from '../types';
 import { WeeklyReport } from './WeeklyReport';
@@ -41,7 +41,7 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ onNavigateToQA, onNa
   const { user, isAuthReady } = useAppContext();
   const today = getTodayStr();
   const { todos } = useTodos(user, today, 'day');
-  const { data } = useQAItems(user, isAuthReady);
+  const { data, augmentedData } = useAugmentedQAItems(user, isAuthReady);
   const { releases } = useReleases(user);
   const { pages: wikiPages } = useWikiPages(user);
   const allDailyReports = useAllDailyReports(user);
@@ -63,8 +63,6 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ onNavigateToQA, onNa
     const name = user.displayName || '';
     return todos.filter(t => t.assignee === name);
   }, [todos, user]);
-
-  const augmentedData = useMemo(() => augmentQAItems(data), [data]);
 
   const qaStats = useMemo(() => {
     const active = augmentedData.filter(i => i.currentFlow !== STATUS.closed && i.currentFlow !== STATUS.fixed);

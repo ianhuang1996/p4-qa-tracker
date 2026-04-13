@@ -23,7 +23,7 @@ import {
 import { CSS } from '@dnd-kit/utilities';
 import { Image as ImageIcon, Video, MessageSquare, FileText, Rocket } from 'lucide-react';
 import { AugmentedQAItem } from '../types';
-import { QA_FLOWS, PRIORITY_COLORS, STATUS_COLORS } from '../constants';
+import { QA_FLOWS, PRIORITY_COLORS, STATUS_COLORS, STATUS } from '../constants';
 import { getDirectImageUrl, getAvatarColor } from '../utils/qaUtils';
 import { EmptyState } from './EmptyState';
 
@@ -197,7 +197,7 @@ export const QAItemKanban: React.FC<QAItemKanbanProps> = ({ items, onItemClick, 
     // Check if dragging over a column or an item in a column
     let overStatus = over.data.current?.status;
     if (!overStatus && over.data.current?.item) {
-      overStatus = over.data.current.item.currentFlow || '待處理';
+      overStatus = over.data.current.item.currentFlow || STATUS.pending;
     }
 
     if (overStatus && activeItem.currentFlow !== overStatus) {
@@ -232,7 +232,7 @@ export const QAItemKanban: React.FC<QAItemKanbanProps> = ({ items, onItemClick, 
           <KanbanColumn 
             key={status} 
             status={status} 
-            items={items.filter(i => (i.currentFlow || '待處理') === status)} 
+            items={items.filter(i => (i.currentFlow || STATUS.pending) === status)} 
             onItemClick={onItemClick}
             onStatusChange={onStatusChange}
           />

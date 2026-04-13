@@ -3,10 +3,10 @@ import { Plus, Download, ArrowUpDown, Eye, EyeOff } from 'lucide-react';
 import { toast } from 'sonner';
 import { AnimatePresence } from 'motion/react';
 import { QAItem, AugmentedQAItem, ViewMode } from '../types';
-import { PRIORITY_ORDER, BTN } from '../constants';
-import { useQAItems } from '../hooks/useQAItems';
+import { PRIORITY_ORDER, BTN, STATUS } from '../constants';
+import { useAugmentedQAItems } from '../hooks/useAugmentedQAItems';
 import { useReleases } from '../hooks/useReleases';
-import { getTodayStr, augmentQAItems } from '../utils/qaUtils';
+import { getTodayStr } from '../utils/qaUtils';
 import { useAppContext } from '../contexts/AppContext';
 import { useQAFilters } from '../hooks/useQAFilters';
 import { z } from 'zod';
@@ -38,9 +38,9 @@ export const QAPage: React.FC<QAPageProps> = () => {
   const { user, isAuthReady, canSort, setCurrentPage, pendingItemId } = useAppContext();
 
   const {
-    data, isLoading, updateItem, addItem, deleteItem,
+    data, augmentedData, isLoading, updateItem, addItem, deleteItem,
     addComment, deleteComment, editComment, bulkUpdate, bulkDelete
-  } = useQAItems(user, isAuthReady);
+  } = useAugmentedQAItems(user, isAuthReady);
 
   const { releases, linkItems, unlinkItem } = useReleases(user);
   const activeRelease = useMemo(() => releases.find(r => r.status === 'planning' || r.status === 'uat') || null, [releases]);
@@ -95,8 +95,6 @@ export const QAPage: React.FC<QAPageProps> = () => {
   const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>(null);
   const [showSortMode, setShowSortMode] = useState(false);
 
-  const augmentedData = useMemo(() => augmentQAItems(data), [data]);
-
   // Map: version string → Set of linked item IDs (for version filtering)
   const releaseVersionItemMap = useMemo(() => {
     const map: Record<string, Set<string>> = {};
@@ -126,8 +124,8 @@ export const QAPage: React.FC<QAPageProps> = () => {
 
   const filteredData = useMemo(() => {
     let result = augmentedData.filter(item => {
-      if (hideClosed && item.currentFlow === '已關閉') return false;
-      const matchStatus = statusFilters.length === 0 || statusFilters.includes(item.currentFlow || '待處理');
+      if (hideClosed && item.currentFlow === STATUS.closed) return false;
+      const matchStatus = statusFilters.length === 0 || statusFilters.includes(item.currentFlow || STATUS.pending);
       const matchAssignee = assigneeFilters.length === 0 || assigneeFilters.includes(item.assignee);
       const matchModule = moduleFilters.length === 0 || moduleFilters.includes(item.module);
       const matchPriority = priorityFilter === '全部' || item.priority === priorityFilter;
@@ -174,12 +172,12 @@ export const QAPage: React.FC<QAPageProps> = () => {
   }, [releases]);
 
   const quickStats = useMemo(() => {
-    const totalActive = augmentedData.filter(i => i.currentFlow !== '已關閉' && i.currentFlow !== '已修復').length;
-    const criticalBugs = augmentedData.filter(i => (i.priority === 'P0' || i.priority === 'P1') && i.currentFlow !== '已關閉' && i.currentFlow !== '已修復').length;
-    const readyForTest = augmentedData.filter(i => i.currentFlow === '已修正待測試').length;
+    const totalActive = augmentedData.filter(i => i.currentFlow !== STATUS.closed && i.currentFlow !== STATUS.fixed).length;
+    const criticalBugs = augmentedData.filter(i => (i.priority === 'P0' || i.priority === 'P1') && i.currentFlow !== STATUS.closed && i.currentFlow !== STATUS.fixed).length;
+    const readyForTest = augmentedData.filter(i => i.currentFlow === STATUS.readyToTest).length;
     const myPending = augmentedData.filter(i =>
       i.assignee === user?.displayName &&
-      i.currentFlow !== '已關閉' && i.currentFlow !== '已修復'
+      i.currentFlow !== STATUS.closed && i.currentFlow !== STATUS.fixed
     ).length;
     return { totalActive, criticalBugs, readyForTest, myPending };
   }, [augmentedData, user]);
@@ -210,7 +208,7 @@ export const QAPage: React.FC<QAPageProps> = () => {
     const newItem = {
       id: uniqueId, title: '', priority: '-', date: getTodayStr(), module: '其他',
       tester: user?.displayName || 'Ian', description: '現況：\n\n預期結果：\n', imageLink: '', imageLinks: [],
-      videoLink: '', videoLinks: [], currentFlow: '待處理', assignee: 'Unassigned', answer: '',
+      videoLink: '', videoLinks: [], currentFlow: STATUS.pending, assignee: 'Unassigned', answer: '',
       version: selectedVersion !== 'all' ? selectedVersion : '', attachmentUrl: '', attachmentName: '', attachments: []
     };
     setEditForm(newItem);
@@ -226,7 +224,7 @@ export const QAPage: React.FC<QAPageProps> = () => {
         title: editForm.title || '', description: editForm.description || '',
         module: editForm.module || '', tester: editForm.tester || '',
         assignee: editForm.assignee || '', priority: editForm.priority || '-',
-        currentFlow: editForm.currentFlow || '待處理',
+        currentFlow: editForm.currentFlow || STATUS.pending,
       });
       if (isAdding) {
         const maxId = data.reduce((max, item) => {
@@ -388,7 +386,7 @@ export const QAPage: React.FC<QAPageProps> = () => {
             onStatusChange={(item, status, retest) => updateItem(item.id, {
               currentFlow: status,
               ...(retest ? { retestResult: retest.retestResult, retestNote: retest.retestNote, retestDate: retest.retestDate, retestBy: retest.retestBy } : {}),
-              ...(status === '已修復' ? { fixedAt: Date.now() } : {}),
+              ...(status === STATUS.fixed ? { fixedAt: Date.now() } : {}),
             }, item)}
             onAssigneeChange={(item, assignee) => updateItem(item.id, { assignee }, item)}
             selectedIds={selectedIds} setSelectedIds={setSelectedIds} sortConfig={sortConfig} onSort={handleSort}

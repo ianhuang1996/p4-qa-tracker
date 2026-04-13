@@ -14,11 +14,11 @@ interface BulkActionsProps {
   onBulkAddToSpecificRelease?: (releaseId: string) => void;
 }
 
-export const BulkActions: React.FC<BulkActionsProps> = ({
+export const BulkActions = React.memo(function BulkActions({
   selectedIds, onBulkUpdate, onBulkDelete, onClearSelection,
   activeReleaseVersion, onBulkAddToRelease, onBulkRemoveFromRelease,
   unreleasedReleases = [], onBulkAddToSpecificRelease
-}) => {
+}: BulkActionsProps) {
   if (selectedIds.length === 0) return null;
 
   return (
@@ -113,4 +113,4 @@ export const BulkActions: React.FC<BulkActionsProps> = ({
       </button>
     </div>
   );
-};
+});

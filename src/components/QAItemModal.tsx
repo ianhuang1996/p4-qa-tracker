@@ -259,7 +259,8 @@ export const QAItemModal: React.FC<QAItemModalProps> = ({
                 </button>
                 <button
                   onClick={onSave}
-                  className={BTN.primary}
+                  disabled={!editForm?.title?.trim()}
+                  className={`${BTN.primary} disabled:opacity-50 disabled:cursor-not-allowed`}
                 >
                   <Save size={18} /> 儲存變更
                 </button>

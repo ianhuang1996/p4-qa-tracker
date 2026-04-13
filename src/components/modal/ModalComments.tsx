@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { X, Share2, MessageSquare, Sparkles, Loader2, Trash2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { QAComment, AugmentedQAItem } from '../../types';
-import { RDS, PMS } from '../../constants';
+import { RDS, PMS, FEATURE_FLAGS } from '../../constants';
 import { summarizeDiscussion } from '../../services/geminiService';
 import { User as FirebaseUser } from 'firebase/auth';
 import { formatTimestamp } from '../../utils/qaUtils';
@@ -50,7 +50,7 @@ export const ModalComments: React.FC<ModalCommentsProps> = ({
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h3 className="text-sm font-bold text-gray-500 uppercase tracking-wider">討論留言</h3>
-        {comments.length > 3 && (
+        {FEATURE_FLAGS.AI_FEATURES && comments.length > 3 && (
           <button
             onClick={handleSummarize}
             disabled={isSummarizing}

@@ -212,6 +212,10 @@ export const ACHIEVEMENT_DEFS: AchievementDef[] = [
   { id: 'day_100', name: '百日紀念', description: '系統使用滿 100 天', icon: '💯', category: 'special', tier: 2, condition: { metric: 'days_since_first_action', threshold: 100 } },
 ];
 
+export const FEATURE_FLAGS = {
+  AI_FEATURES: !!import.meta.env.VITE_GEMINI_API_KEY,
+} as const;
+
 export const TEAM_GOAL_DEFS: TeamGoalDef[] = [
   { id: 'zero_p0', name: '零 P0 達成', icon: '🛡️', description: '版更時 0 個 P0 遺留', type: 'release' },
   { id: 'release_on_time', name: '版更準時', icon: '⏰', description: '在排定日期前完成所有 checklist', type: 'release' },

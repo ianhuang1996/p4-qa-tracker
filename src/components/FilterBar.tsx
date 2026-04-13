@@ -27,7 +27,7 @@ interface FilterBarProps {
 const toggleItem = (arr: string[], item: string): string[] =>
   arr.includes(item) ? arr.filter(i => i !== item) : [...arr, item];
 
-export const FilterBar: React.FC<FilterBarProps> = ({
+export const FilterBar = React.memo(function FilterBar({
   searchQuery, setSearchQuery,
   priorityFilter, setPriorityFilter,
   statusFilters, setStatusFilters,
@@ -38,7 +38,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
   viewMode, setViewMode,
   dateRange, setDateRange,
   currentUserName,
-}) => {
+}: FilterBarProps) {
   const priorities = ['全部', 'P0', 'P1', 'P2', 'P3', '-'];
   const [showFilters, setShowFilters] = useState(false);
   const totalActiveFilters = statusFilters.length + assigneeFilters.length + moduleFilters.length + (priorityFilter !== '全部' ? 1 : 0);
@@ -264,4 +264,4 @@ export const FilterBar: React.FC<FilterBarProps> = ({
       )}
     </div>
   );
-};
+});
