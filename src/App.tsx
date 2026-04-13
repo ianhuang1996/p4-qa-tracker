@@ -152,7 +152,7 @@ function AppLayout() {
       {showNotifications && (
         <>
           <div className="fixed inset-0 z-40" onClick={() => setShowNotifications(false)} />
-          <div className="fixed top-4 right-4 z-50 w-96 max-h-[80vh] bg-white border border-gray-200 rounded-2xl shadow-2xl overflow-hidden">
+          <div className="fixed top-4 right-4 z-50 w-96 max-h-[80vh] bg-white border border-gray-200 rounded-2xl shadow-2xl overflow-hidden flex flex-col">
             <NotificationCenter
               user={user}
               onItemClick={(itemId) => {

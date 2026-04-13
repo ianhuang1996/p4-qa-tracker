@@ -133,7 +133,7 @@ const getModuleColor = (mod: string): string => {
 };
 
 // ─── Sortable Release Card ──────────────────────────────────────
-const SortableReleaseCard: React.FC<{ release: Release; onClick: () => void }> = ({ release, onClick }) => {
+const SortableReleaseCard: React.FC<{ release: Release; itemCount: number; onClick: () => void }> = ({ release, itemCount, onClick }) => {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: release.id });
   const checkDone = release.checklist.filter(c => c.checked).length;
 
@@ -169,7 +169,7 @@ const SortableReleaseCard: React.FC<{ release: Release; onClick: () => void }> =
             <p className="text-xs text-gray-500 truncate">{release.title} — {release.scheduledDate}</p>
           </div>
           <div className="text-right shrink-0 space-y-1">
-            <p className="text-xs text-gray-500">{release.linkedItemIds.length} 個項目</p>
+            <p className="text-xs text-gray-500">{itemCount} 個項目</p>
             <p className="text-xs text-gray-400">檢查 {checkDone}/{release.checklist.length}</p>
             <div className="w-20 bg-gray-200 rounded-full h-1">
               <div
@@ -704,6 +704,7 @@ export const ReleasePage: React.FC = () => {
                   <SortableReleaseCard
                     key={release.id}
                     release={release}
+                    itemCount={augmentedData.filter(i => release.linkedItemIds.includes(i.id)).length}
                     onClick={() => setSelectedReleaseId(release.id)}
                   />
                 ))}
