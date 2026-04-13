@@ -109,7 +109,7 @@ service cloud.firestore {
     match /qa_items/{itemId} {
       allow read: if isAuthenticated();
       allow create: if isAuthenticated() && isValidQAItem(request.resource.data);
-      allow update: if isAuthenticated() && isValidQAItem(request.resource.data);
+      allow update: if isAuthenticated();
       allow delete: if isAuthenticated();
 
       match /history/{historyId} {

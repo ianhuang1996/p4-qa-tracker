@@ -116,6 +116,7 @@ export interface Release {
   createdBy: string;
   createdByName: string;
   createdAt: number;
+  sortOrder?: number;
 }
 
 export interface HistoryEntry {

@@ -123,5 +123,17 @@ export function useReleases(user: FirebaseUser | null) {
     }
   };
 
-  return { releases, isLoading, addRelease, updateRelease, deleteRelease, toggleChecklist, linkItems, unlinkItem, executeRelease };
+  const updateReleaseSortOrders = async (updates: { id: string; sortOrder: number }[]) => {
+    if (!user) return;
+    try {
+      for (const { id, sortOrder } of updates) {
+        await setDoc(doc(db, 'releases', id), { sortOrder }, { merge: true });
+      }
+    } catch (error) {
+      toast.error('排序儲存失敗');
+      console.error(error);
+    }
+  };
+
+  return { releases, isLoading, addRelease, updateRelease, deleteRelease, toggleChecklist, linkItems, unlinkItem, executeRelease, updateReleaseSortOrders };
 }
