@@ -4,6 +4,7 @@ import { useAppContext } from '../contexts/AppContext';
 import { useWikiPages } from '../hooks/useWikiPages';
 import { WikiPage, WikiCategory } from '../types';
 import { EmptyState } from './EmptyState';
+import { BTN } from '../constants';
 import { formatTimestamp, getAvatarColor } from '../utils/qaUtils';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -345,7 +346,7 @@ export const WikiPageView: React.FC = () => {
             </div>
             <div className="flex justify-end gap-3 pt-2">
               <button onClick={() => setShowCreateForm(false)} className="text-sm text-gray-500 px-4 py-2">取消</button>
-              <button onClick={handleCreate} disabled={!newTitle.trim()} className="bg-blue-600 text-white px-6 py-2 rounded-xl text-sm font-bold hover:bg-blue-700 disabled:opacity-40">
+              <button onClick={handleCreate} disabled={!newTitle.trim()} className={`${BTN.primary} disabled:opacity-40`}>
                 建立
               </button>
             </div>

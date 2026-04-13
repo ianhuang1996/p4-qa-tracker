@@ -25,7 +25,7 @@ import { useAppContext } from '../contexts/AppContext';
 import { useReleases } from '../hooks/useReleases';
 import { useQAItems } from '../hooks/useQAItems';
 import { Release, AugmentedQAItem } from '../types';
-import { STATUS_COLORS, PRIORITY_COLORS, PRIORITY_ORDER } from '../constants';
+import { STATUS_COLORS, PRIORITY_COLORS, PRIORITY_ORDER, BTN } from '../constants';
 import { formatTimestamp, getAvatarColor, getTodayStr, augmentQAItems } from '../utils/qaUtils';
 import { parseReleaseNotes, NoteSection } from '../utils/releaseUtils';
 import { useUserTiers, getAvatarRing } from '../hooks/useAchievements';
@@ -350,7 +350,7 @@ export const ReleasePage: React.FC = () => {
                     copyReleaseContent(selectedRelease, linkedItems);
                   }
                 }}
-                className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-xl text-sm font-bold transition-colors"
+                className={BTN.create}
               >
                 <Rocket size={16} /> 正式發布
               </button>
@@ -358,7 +358,7 @@ export const ReleasePage: React.FC = () => {
             {linkedItems.length > 0 && (
               <button
                 onClick={() => copyReleaseContent(selectedRelease, linkedItems)}
-                className="flex items-center gap-2 bg-white hover:bg-gray-50 text-gray-700 px-4 py-2 rounded-xl text-sm font-bold border border-gray-200 transition-colors"
+                className={BTN.secondary}
               >
                 <Copy size={16} /> 複製更版內容
               </button>
@@ -661,7 +661,7 @@ export const ReleasePage: React.FC = () => {
         <div />
         <button
           onClick={() => setShowCreateForm(true)}
-          className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2.5 rounded-xl transition-all shadow-md text-sm font-bold"
+          className={BTN.create}
         >
           <Plus size={18} /> 建立新版本
         </button>
@@ -856,7 +856,7 @@ export const ReleasePage: React.FC = () => {
               <button
                 onClick={handleCreate}
                 disabled={!newVersion.trim()}
-                className="bg-blue-600 text-white px-6 py-2 rounded-xl text-sm font-bold hover:bg-blue-700 disabled:opacity-40"
+                className={`${BTN.primary} disabled:opacity-40`}
               >
                 建立
               </button>

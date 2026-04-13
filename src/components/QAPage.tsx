@@ -3,7 +3,7 @@ import { Plus, Download, ArrowUpDown, Eye, EyeOff } from 'lucide-react';
 import { toast } from 'sonner';
 import { AnimatePresence } from 'motion/react';
 import { QAItem, AugmentedQAItem, ViewMode } from '../types';
-import { PRIORITY_ORDER } from '../constants';
+import { PRIORITY_ORDER, BTN } from '../constants';
 import { useQAItems } from '../hooks/useQAItems';
 import { useReleases } from '../hooks/useReleases';
 import { getTodayStr, augmentQAItems } from '../utils/qaUtils';
@@ -327,15 +327,15 @@ export const QAPage: React.FC<QAPageProps> = () => {
     <>
       {/* Header actions */}
       <div className="flex items-center gap-3 mb-8">
-        <button onClick={handleAddNew} className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2.5 rounded-xl transition-all shadow-md text-sm font-bold">
+        <button onClick={handleAddNew} className={BTN.create}>
           <Plus size={18} /> <span className="hidden sm:inline">新增問題</span>
         </button>
         {canSort && (
-          <button onClick={() => setShowSortMode(true)} className="flex items-center gap-2 bg-white hover:bg-gray-50 text-gray-700 px-3 py-2.5 rounded-xl transition-all border border-gray-200 shadow-sm text-sm font-bold" aria-label="排序管理">
+          <button onClick={() => setShowSortMode(true)} className={BTN.secondary} aria-label="排序管理">
             <ArrowUpDown size={18} /> <span className="hidden sm:inline">排序</span>
           </button>
         )}
-        <button onClick={handleExport} className="flex items-center gap-2 bg-white hover:bg-gray-50 text-gray-700 px-3 py-2.5 rounded-xl transition-all border border-gray-200 shadow-sm text-sm font-bold" aria-label="匯出 CSV">
+        <button onClick={handleExport} className={BTN.secondary} aria-label="匯出 CSV">
           <Download size={18} /> <span className="hidden sm:inline">匯出</span>
         </button>
         <button

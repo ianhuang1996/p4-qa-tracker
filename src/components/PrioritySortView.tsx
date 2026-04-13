@@ -18,7 +18,7 @@ import {
 import { CSS } from '@dnd-kit/utilities';
 import { GripVertical, X } from 'lucide-react';
 import { AugmentedQAItem } from '../types';
-import { PRIORITY_COLORS, PRIORITY_ORDER } from '../constants';
+import { PRIORITY_COLORS, PRIORITY_ORDER, BTN } from '../constants';
 import { getAvatarColor } from '../utils/qaUtils';
 
 interface PrioritySortViewProps {
@@ -156,7 +156,7 @@ export const PrioritySortView: React.FC<PrioritySortViewProps> = ({ items, onSav
             {hasChanges && (
               <button
                 onClick={handleSave}
-                className="bg-blue-600 text-white px-5 py-2 rounded-xl text-sm font-bold hover:bg-blue-700 transition-colors shadow-lg shadow-blue-200"
+                className={BTN.primary}
               >
                 儲存排序
               </button>

@@ -1,5 +1,6 @@
 import React from 'react';
 import { AlertTriangle, RefreshCw } from 'lucide-react';
+import { BTN } from '../constants';
 
 interface Props {
   children: React.ReactNode;
@@ -40,7 +41,7 @@ export class ErrorBoundary extends React.Component<Props, State> {
               this.setState({ hasError: false, error: null });
               window.location.reload();
             }}
-            className="flex items-center gap-2 bg-blue-600 text-white px-6 py-2.5 rounded-xl text-sm font-bold hover:bg-blue-700 transition-colors"
+            className={BTN.primary}
           >
             <RefreshCw size={16} /> 重新整理
           </button>

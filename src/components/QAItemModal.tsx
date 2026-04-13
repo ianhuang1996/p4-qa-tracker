@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { X, Edit2, Trash2, Save, Info, AlertTriangle, MessageSquare, History } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { QAItem, QAComment, AugmentedQAItem, HistoryEntry } from '../types';
-import { STATUS_COLORS } from '../constants';
+import { STATUS_COLORS, BTN } from '../constants';
 import { getVideoEmbedUrl } from '../utils/qaUtils';
 import { db } from '../firebase';
 import { collection, query, orderBy, onSnapshot } from 'firebase/firestore';
@@ -259,7 +259,7 @@ export const QAItemModal: React.FC<QAItemModalProps> = ({
                 </button>
                 <button
                   onClick={onSave}
-                  className="bg-blue-600 text-white px-8 py-2 rounded-xl text-sm font-bold hover:bg-blue-700 transition-colors shadow-lg shadow-blue-200 flex items-center gap-2"
+                  className={BTN.primary}
                 >
                   <Save size={18} /> 儲存變更
                 </button>

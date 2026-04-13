@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Search, List, Columns, X, User } from 'lucide-react';
-import { QA_FLOWS, RDS, MODULES } from '../constants';
+import { QA_FLOWS, RDS, MODULES, FILTER_PILL, ACTIVE_TAG } from '../constants';
 import { ViewMode } from '../types';
 
 interface FilterBarProps {
@@ -164,11 +164,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
               <button
                 key={p}
                 onClick={() => setPriorityFilter(priorityFilter === p ? '全部' : p)}
-                className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-colors border ${
-                  priorityFilter === p
-                    ? 'bg-blue-600 text-white border-blue-600'
-                    : 'bg-gray-50 text-gray-600 border-gray-200 hover:border-blue-300'
-                }`}
+                className={`${FILTER_PILL.base} ${priorityFilter === p ? FILTER_PILL.active : FILTER_PILL.inactive}`}
               >
                 {p === '-' ? '無' : p}
               </button>
@@ -182,11 +178,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
               <button
                 key={s}
                 onClick={() => setStatusFilters(toggleItem(statusFilters, s))}
-                className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-colors border ${
-                  statusFilters.includes(s)
-                    ? 'bg-blue-600 text-white border-blue-600'
-                    : 'bg-gray-50 text-gray-600 border-gray-200 hover:border-blue-300'
-                }`}
+                className={`${FILTER_PILL.base} ${statusFilters.includes(s) ? FILTER_PILL.active : FILTER_PILL.inactive}`}
               >
                 {s}
               </button>
@@ -200,11 +192,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
               <button
                 key={a}
                 onClick={() => setAssigneeFilters(toggleItem(assigneeFilters, a))}
-                className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-colors border ${
-                  assigneeFilters.includes(a)
-                    ? 'bg-blue-600 text-white border-blue-600'
-                    : 'bg-gray-50 text-gray-600 border-gray-200 hover:border-blue-300'
-                }`}
+                className={`${FILTER_PILL.base} ${assigneeFilters.includes(a) ? FILTER_PILL.active : FILTER_PILL.inactive}`}
               >
                 {a}
               </button>
@@ -218,11 +206,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
               <button
                 key={m}
                 onClick={() => setModuleFilters(toggleItem(moduleFilters, m))}
-                className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-colors border ${
-                  moduleFilters.includes(m)
-                    ? 'bg-blue-600 text-white border-blue-600'
-                    : 'bg-gray-50 text-gray-600 border-gray-200 hover:border-blue-300'
-                }`}
+                className={`${FILTER_PILL.base} ${moduleFilters.includes(m) ? FILTER_PILL.active : FILTER_PILL.inactive}`}
               >
                 {m}
               </button>
@@ -244,31 +228,31 @@ export const FilterBar: React.FC<FilterBarProps> = ({
       {!showFilters && (totalActiveFilters > 0 || priorityFilter !== '全部' || dateRange.start || dateRange.end) && (
         <div className="flex flex-wrap items-center gap-1.5 pt-2 border-t border-gray-100">
           {priorityFilter !== '全部' && (
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-50 text-blue-700 text-[10px] font-bold rounded-lg border border-blue-200">
+            <span className={ACTIVE_TAG}>
               {priorityFilter}
               <button onClick={() => setPriorityFilter('全部')} className="hover:text-blue-900"><X size={10} /></button>
             </span>
           )}
           {statusFilters.map(s => (
-            <span key={s} className="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-50 text-blue-700 text-[10px] font-bold rounded-lg border border-blue-200">
+            <span key={s} className={ACTIVE_TAG}>
               {s}
               <button onClick={() => setStatusFilters(statusFilters.filter(f => f !== s))} className="hover:text-blue-900"><X size={10} /></button>
             </span>
           ))}
           {assigneeFilters.map(a => (
-            <span key={a} className="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-50 text-blue-700 text-[10px] font-bold rounded-lg border border-blue-200">
+            <span key={a} className={ACTIVE_TAG}>
               {a}
               <button onClick={() => setAssigneeFilters(assigneeFilters.filter(f => f !== a))} className="hover:text-blue-900"><X size={10} /></button>
             </span>
           ))}
           {moduleFilters.map(m => (
-            <span key={m} className="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-50 text-blue-700 text-[10px] font-bold rounded-lg border border-blue-200">
+            <span key={m} className={ACTIVE_TAG}>
               {m}
               <button onClick={() => setModuleFilters(moduleFilters.filter(f => f !== m))} className="hover:text-blue-900"><X size={10} /></button>
             </span>
           ))}
           {(dateRange.start || dateRange.end) && (
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-50 text-blue-700 text-[10px] font-bold rounded-lg border border-blue-200">
+            <span className={ACTIVE_TAG}>
               {dateRange.start || '...'} ~ {dateRange.end || '...'}
               <button onClick={() => setDateRange({ start: '', end: '' })} className="hover:text-blue-900"><X size={10} /></button>
             </span>

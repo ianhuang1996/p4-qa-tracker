@@ -56,6 +56,31 @@ export const ACHIEVEMENT_TIER_STYLES: Record<number, React.CSSProperties> = {
 import React from 'react';
 
 // ═══════════════════════════════════════════════════════════
+// 🧩 UI Design Tokens — Single Source of Truth for repeated patterns
+// ═══════════════════════════════════════════════════════════
+
+/** 按鈕樣式 tokens */
+export const BTN = {
+  create:     'flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2.5 rounded-xl transition-all shadow-md text-sm font-bold',
+  primary:    'flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-xl text-sm font-bold transition-colors shadow-lg shadow-blue-200',
+  secondary:  'flex items-center gap-2 bg-white hover:bg-gray-50 text-gray-700 px-3 py-2.5 rounded-xl transition-all border border-gray-200 shadow-sm text-sm font-bold',
+  danger:     'flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-xl text-sm font-bold transition-colors shadow-lg shadow-red-200',
+  ghost:      'text-sm font-bold text-gray-500 hover:text-gray-700 transition-colors px-3 py-2',
+  icon:       'p-1.5 rounded-lg transition-colors text-gray-400 hover:text-blue-600 hover:bg-blue-50',
+  iconDanger: 'p-1.5 rounded-lg transition-colors text-gray-400 hover:text-red-500 hover:bg-red-50',
+} as const;
+
+/** 篩選 pill tokens（狀態、優先級、負責人、模組等） */
+export const FILTER_PILL = {
+  base:     'px-2.5 py-1 rounded-lg text-[11px] font-bold border transition-colors',
+  active:   'bg-blue-600 text-white border-blue-600',
+  inactive: 'bg-gray-50 text-gray-600 border-gray-200 hover:border-blue-300',
+} as const;
+
+/** 已套用篩選標籤 token */
+export const ACTIVE_TAG = 'inline-flex items-center gap-1 px-2 py-0.5 bg-blue-50 text-blue-700 text-[10px] font-bold rounded-lg border border-blue-200' as const;
+
+// ═══════════════════════════════════════════════════════════
 // 🏷️ 業務常數
 // ═══════════════════════════════════════════════════════════
 
