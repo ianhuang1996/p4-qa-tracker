@@ -46,7 +46,12 @@ export function usePet(user: FirebaseUser | null) {
 
   const handleName = async (name: string) => {
     if (!user || !name.trim()) return;
-    await namePet(user.uid, name);
+    try {
+      await namePet(user.uid, name);
+      toast.success('取名成功！');
+    } catch {
+      toast.error('取名失敗，請重試');
+    }
   };
 
   return { pet, isLoading, happiness, isHappy, handleFeed, handleHatch, handleAbandon, handleName };

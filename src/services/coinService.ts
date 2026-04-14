@@ -1,5 +1,5 @@
 import { db } from '../firebase';
-import { doc, setDoc, addDoc, collection, increment, getDoc, runTransaction, query, where, getDocs } from 'firebase/firestore';
+import { doc, setDoc, addDoc, collection, increment, getDoc, updateDoc, runTransaction, query, where, getDocs } from 'firebase/firestore';
 import { User as FirebaseUser } from 'firebase/auth';
 import { CoinReason, Pet, PetRarity } from '../types';
 import { COIN_REWARDS, getLevel, getStage, PETS_BY_RARITY, getEggPrice, FEED_COST } from '../constants/petConstants';
@@ -103,7 +103,7 @@ export async function abandonPet(userId: string): Promise<void> {
 // ─── Name Pet ────────────────────────────────────────────────────
 export async function namePet(userId: string, name: string): Promise<void> {
   const userRef = doc(db, 'users', userId);
-  await setDoc(userRef, { 'pet.name': name.trim() }, { merge: true });
+  await updateDoc(userRef, { 'pet.name': name.trim() });
 }
 
 // ─── One-time Launch Bonus ───────────────────────────────────────
