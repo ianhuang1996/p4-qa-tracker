@@ -41,7 +41,7 @@ const NAV_GROUPS: NavGroup[] = [
     ],
   },
   {
-    label: '遊戲化',
+    label: '寵物',
     items: [
       { page: 'pet', label: '我的寵物', icon: <span className="text-base leading-none">🐾</span> },
       { page: 'shop', label: '寵物商店', icon: <ShoppingBag size={20} /> },
