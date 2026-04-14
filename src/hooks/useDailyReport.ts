@@ -5,6 +5,7 @@ import { User as FirebaseUser } from 'firebase/auth';
 import { toast } from 'sonner';
 import { DailyReport, OperationType } from '../types';
 import { handleFirestoreError } from '../utils/firestoreUtils';
+import { awardCoins } from '../services/coinService';
 
 export function useDailyReport(user: FirebaseUser | null, date: string) {
   const [report, setReport] = useState<DailyReport | null>(null);
@@ -50,6 +51,7 @@ export function useDailyReport(user: FirebaseUser | null, date: string) {
   const saveReport = async (completed: string, inProgress: string, risks: string) => {
     if (!user) return;
     const docId = `${user.uid}_${date}`;
+    const isNew = !report;
     try {
       await setDoc(doc(db, 'daily_reports', docId), {
         date,
@@ -61,6 +63,7 @@ export function useDailyReport(user: FirebaseUser | null, date: string) {
         updatedAt: Date.now(),
       });
       toast.success('進度報告已儲存');
+      if (isNew) awardCoins(user.uid, 'daily_report', date).catch(console.error);
     } catch (error) {
       toast.error('儲存失敗');
       handleFirestoreError(error, OperationType.WRITE, `daily_reports/${docId}`);

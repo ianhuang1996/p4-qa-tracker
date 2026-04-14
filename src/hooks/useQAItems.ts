@@ -7,6 +7,8 @@ import { QAItem, OperationType } from '../types';
 import { parseMentions } from '../utils/mentionUtils';
 import { createNotification, getUserIdByName } from '../services/notificationService';
 import { handleFirestoreError } from '../utils/firestoreUtils';
+import { awardCoins } from '../services/coinService';
+import { STATUS } from '../constants';
 
 export function useQAItems(user: FirebaseUser | null, isAuthReady: boolean) {
   const [data, setData] = useState<QAItem[]>([]);
@@ -78,6 +80,22 @@ export function useQAItems(user: FirebaseUser | null, isAuthReady: boolean) {
 
       if (!silent) toast.success('更新成功');
 
+      // ── Coin awards ───────────────────────────────────────────
+      // RD marks as ready-to-test → fix coins based on priority
+      if (updates.currentFlow === STATUS.readyToTest && oldItem) {
+        const priority = oldItem.priority || '-';
+        if (priority === 'P0') awardCoins(user.uid, 'fix_p0', oldItem.id).catch(console.error);
+        else if (priority === 'P1') awardCoins(user.uid, 'fix_p1', oldItem.id).catch(console.error);
+        else if (priority === 'P2' || priority === 'P3') awardCoins(user.uid, 'fix_p2_p3', oldItem.id).catch(console.error);
+      }
+      // PM retest result
+      if (updates.retestResult === 'passed') {
+        awardCoins(user.uid, 'retest_pass', itemId).catch(console.error);
+      } else if (updates.retestResult === 'failed') {
+        awardCoins(user.uid, 'retest_fail', itemId).catch(console.error);
+      }
+      // ─────────────────────────────────────────────────────────
+
       // Auto-notify on status change
       if (oldItem && updates.currentFlow && updates.currentFlow !== oldItem.currentFlow) {
         // Notify assignee about status change
@@ -142,8 +160,8 @@ export function useQAItems(user: FirebaseUser | null, isAuthReady: boolean) {
         createdAt: Date.now()
       };
       await setDoc(docRef, itemToSave);
-      
       toast.success('新增成功');
+      awardCoins(user.uid, 'file_bug', item.id).catch(console.error);
     } catch (error) {
       toast.error('新增失敗');
       handleFirestoreError(error, OperationType.WRITE, path);

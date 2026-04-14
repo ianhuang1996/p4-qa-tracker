@@ -5,6 +5,7 @@ import { User as FirebaseUser } from 'firebase/auth';
 import { toast } from 'sonner';
 import { Release, ChecklistItem, OperationType } from '../types';
 import { handleFirestoreError } from '../utils/firestoreUtils';
+import { awardCoins } from '../services/coinService';
 import { STATUS } from '../constants';
 
 const DEFAULT_CHECKLIST: ChecklistItem[] = [
@@ -146,6 +147,7 @@ export function useReleases(user: FirebaseUser | null) {
       } else {
         toast.success(`${release.version} 已正式發布！`);
       }
+      awardCoins(user.uid, 'release_publish', release.version).catch(console.error);
     } catch (error) {
       toast.error('發布失敗');
       handleFirestoreError(error, OperationType.WRITE, `releases/${release.id}`);

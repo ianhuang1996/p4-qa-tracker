@@ -17,6 +17,8 @@ const QAPage = lazy(() => import('./components/QAPage').then(m => ({ default: m.
 const ReleasePage = lazy(() => import('./components/ReleasePage').then(m => ({ default: m.ReleasePage })));
 const WikiPageView = lazy(() => import('./components/WikiPageView').then(m => ({ default: m.WikiPageView })));
 const DailyTodo = lazy(() => import('./components/DailyTodo').then(m => ({ default: m.DailyTodo })));
+const PetPage = lazy(() => import('./components/PetPage').then(m => ({ default: m.PetPage })));
+const ShopPage = lazy(() => import('./components/ShopPage').then(m => ({ default: m.ShopPage })));
 
 function LoadingSkeleton() {
   return (
@@ -115,10 +117,10 @@ function AppLayout() {
             <header className="flex items-center justify-between gap-6 pl-12 lg:pl-0 mb-8">
               <div>
                 <h1 className="text-2xl md:text-3xl font-black text-gray-900 tracking-tight">
-                  {{ todo: '每日待辦', qa: 'QA 追蹤', release: '版更管理', wiki: '知識庫' }[currentPage] || ''}
+                  {{ todo: '每日待辦', qa: 'QA 追蹤', release: '版更管理', wiki: '知識庫', pet: '我的寵物', shop: '寵物商店' }[currentPage] || ''}
                 </h1>
                 <p className="text-gray-500 mt-1 font-medium text-sm">
-                  {{ todo: '管理團隊每日工作項目', qa: '數據分析與任務管理儀表板', release: '版本排程、發布與歷史紀錄', wiki: '團隊產品知識與文件管理' }[currentPage] || ''}
+                  {{ todo: '管理團隊每日工作項目', qa: '數據分析與任務管理儀表板', release: '版本排程、發布與歷史紀錄', wiki: '團隊產品知識與文件管理', pet: '養育你的專屬寵物', shop: '用金幣購買寵物蛋' }[currentPage] || ''}
                 </p>
               </div>
             </header>
@@ -139,6 +141,10 @@ function AppLayout() {
                   <ReleasePage />
                 ) : currentPage === 'wiki' ? (
                   <WikiPageView />
+                ) : currentPage === 'pet' ? (
+                  <PetPage user={user} onNavigateToShop={() => setCurrentPage('shop')} />
+                ) : currentPage === 'shop' ? (
+                  <ShopPage user={user} onNavigateToPet={() => setCurrentPage('pet')} />
                 ) : (
                   <QAPage />
                 )}

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { LayoutDashboard, CheckSquare, Bug, Rocket, BookOpen, ChevronLeft, ChevronRight, Menu, X, LogOut, Moon, Sun, Bell } from 'lucide-react';
+import { LayoutDashboard, CheckSquare, Bug, Rocket, BookOpen, ChevronLeft, ChevronRight, Menu, X, LogOut, Moon, Sun, Bell, ShoppingBag } from 'lucide-react';
 import { User as FirebaseUser } from 'firebase/auth';
 import { AppPage } from '../types';
 import { getAvatarColor } from '../utils/qaUtils';
@@ -38,6 +38,13 @@ const NAV_GROUPS: NavGroup[] = [
     items: [
       { page: 'release', label: '版更管理', icon: <Rocket size={20} /> },
       { page: 'wiki', label: '知識庫', icon: <BookOpen size={20} /> },
+    ],
+  },
+  {
+    label: '遊戲化',
+    items: [
+      { page: 'pet', label: '我的寵物', icon: <span className="text-base leading-none">🐾</span> },
+      { page: 'shop', label: '寵物商店', icon: <ShoppingBag size={20} /> },
     ],
   },
 ];

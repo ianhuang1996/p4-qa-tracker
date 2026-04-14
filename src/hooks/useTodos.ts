@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 import { TodoItem, OperationType } from '../types';
 import { toDateStr } from '../utils/qaUtils';
 import { handleFirestoreError } from '../utils/firestoreUtils';
+import { awardCoins } from '../services/coinService';
 
 export type DateMode = 'day' | 'week';
 
@@ -87,6 +88,7 @@ export function useTodos(user: FirebaseUser | null, date: string, dateMode: Date
         linkedQAItemId: linkedQAItemId || null,
         createdAt: Date.now(),
       });
+      awardCoins(user.uid, 'create_todo', text.trim().substring(0, 30)).catch(console.error);
     } catch (error) {
       toast.error('新增待辦失敗');
       handleFirestoreError(error, OperationType.WRITE, 'todos');
@@ -100,6 +102,14 @@ export function useTodos(user: FirebaseUser | null, date: string, dateMode: Date
         completed,
         completedAt: completed ? Date.now() : null,
       }, { merge: true });
+      // Award todo_clear if ALL of current user's todos are now done
+      if (completed) {
+        const myTodos = todos.filter(t => t.assignee === (user.displayName || ''));
+        const allDoneAfter = myTodos.every(t => t.id === todoId || t.completed);
+        if (allDoneAfter && myTodos.length > 0) {
+          awardCoins(user.uid, 'todo_clear').catch(console.error);
+        }
+      }
     } catch (error) {
       toast.error('更新失敗');
       handleFirestoreError(error, OperationType.WRITE, `todos/${todoId}`);

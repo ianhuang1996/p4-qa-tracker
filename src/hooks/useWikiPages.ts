@@ -5,6 +5,7 @@ import { User as FirebaseUser } from 'firebase/auth';
 import { toast } from 'sonner';
 import { WikiPage, WikiCategory, OperationType } from '../types';
 import { handleFirestoreError } from '../utils/firestoreUtils';
+import { awardCoins } from '../services/coinService';
 
 export function useWikiPages(user: FirebaseUser | null) {
   const [pages, setPages] = useState<WikiPage[]>([]);
@@ -43,6 +44,7 @@ export function useWikiPages(user: FirebaseUser | null) {
         updatedByName: user.displayName || '匿名',
       });
       toast.success('頁面已建立');
+      awardCoins(user.uid, 'create_wiki', title).catch(console.error);
       return ref.id;
     } catch (error) {
       toast.error('建立失敗');

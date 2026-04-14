@@ -80,7 +80,55 @@ export interface AugmentedQAItem extends QAItem {
 }
 
 export type ViewMode = 'table' | 'kanban';
-export type AppPage = 'overview' | 'todo' | 'qa' | 'release' | 'wiki';
+export type AppPage = 'overview' | 'todo' | 'qa' | 'release' | 'wiki' | 'pet' | 'shop';
+
+// ===== Pet System =====
+export type PetRarity = 'common' | 'rare' | 'legendary';
+export type PetStage = 'baby' | 'adult' | 'awakened';
+export type PetBuffType =
+  | 'encouragement' | 'item_highlight' | 'retest_badge' | 'streak_badge' | 'todo_celebrate' | 'my_tasks_highlight'
+  | 'overdue_alert' | 'item_pin' | 'team_notify' | 'weekly_compare' | 'wiki_stale' | 'release_countdown'
+  | 'p0_banner' | 'release_confetti' | 'phoenix_bonus';
+
+export type PetTypeId =
+  | 'bugsy' | 'patches' | 'clicky' | 'sheldon' | 'hoppy' | 'leapy'
+  | 'sherlock' | 'zap' | 'squawk' | 'foxy' | 'hoot' | 'pingu'
+  | 'draco' | 'prism' | 'blaze';
+
+export interface PetDef {
+  id: PetTypeId;
+  name: string;
+  emoji: string;
+  rarity: PetRarity;
+  buff: PetBuffType;
+  buffDesc: string;
+}
+
+export interface Pet {
+  typeId: PetTypeId;
+  name: string;           // user-given name
+  xp: number;
+  level: number;          // 1–10
+  stage: PetStage;
+  lastFed: number;        // timestamp
+  hatchedAt: number;
+  eggRarity: PetRarity;
+}
+
+export type CoinReason =
+  | 'fix_p0' | 'fix_p1' | 'fix_p2_p3' | 'ready_to_test'
+  | 'retest_pass' | 'retest_fail'
+  | 'file_bug' | 'daily_report' | 'todo_clear' | 'create_wiki' | 'create_todo'
+  | 'release_publish' | 'release_zero_p0' | 'streak_bonus' | 'achievement_unlock'
+  | 'phoenix_bonus' | 'history_retroactive';
+
+export interface CoinTransaction {
+  id: string;
+  amount: number;
+  reason: CoinReason;
+  timestamp: number;
+  note?: string;
+}
 
 export type WikiCategory = 'API' | '設計規範' | '產品規格' | '專案' | '一般';
 
