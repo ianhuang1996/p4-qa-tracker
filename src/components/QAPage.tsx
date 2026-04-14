@@ -42,7 +42,7 @@ export const QAPage: React.FC<QAPageProps> = () => {
     addComment, deleteComment, editComment, bulkUpdate, bulkDelete
   } = useAugmentedQAItems(user, isAuthReady);
 
-  const { releases, linkItems, unlinkItem } = useReleases(user);
+  const { releases, linkItems, unlinkItem, unlinkItems } = useReleases(user);
   const activeRelease = useMemo(() => releases.find(r => r.status === 'planning' || r.status === 'uat') || null, [releases]);
   const unreleasedReleases = useMemo(() => releases.filter(r => r.status === 'planning' || r.status === 'uat'), [releases]);
   // Map: itemId → version string (for badge display)
@@ -402,18 +402,17 @@ export const QAPage: React.FC<QAPageProps> = () => {
         onClearSelection={() => setSelectedIds([])}
         activeReleaseVersion={activeRelease?.version}
         onBulkAddToRelease={activeRelease ? () => {
-          linkItems(activeRelease.id, activeRelease.linkedItemIds, selectedIds);
+          linkItems(activeRelease.id, selectedIds);
           setSelectedIds([]);
         } : undefined}
         onBulkRemoveFromRelease={activeRelease ? () => {
-          const remaining = activeRelease.linkedItemIds.filter(id => !selectedIds.includes(id));
-          activeRelease && linkItems(activeRelease.id, [], remaining);
+          unlinkItems(activeRelease.id, selectedIds);
           setSelectedIds([]);
         } : undefined}
         unreleasedReleases={unreleasedReleases.map(r => ({ id: r.id, version: r.version }))}
         onBulkAddToSpecificRelease={(releaseId) => {
-          const rel = unreleasedReleases.find(r => r.id === releaseId);
-          if (rel) { linkItems(rel.id, rel.linkedItemIds, selectedIds); setSelectedIds([]); }
+          linkItems(releaseId, selectedIds);
+          setSelectedIds([]);
         }}
       />
 
@@ -434,19 +433,17 @@ export const QAPage: React.FC<QAPageProps> = () => {
             isInActiveRelease={activeRelease ? activeRelease.linkedItemIds.includes(selectedItem.id) : false}
             onToggleRelease={activeRelease ? (add) => {
               if (add) {
-                linkItems(activeRelease.id, activeRelease.linkedItemIds, [selectedItem.id]);
+                linkItems(activeRelease.id, [selectedItem.id]);
               } else {
-                unlinkItem(activeRelease.id, activeRelease.linkedItemIds, selectedItem.id);
+                unlinkItem(activeRelease.id, selectedItem.id);
               }
             } : undefined}
             unreleasedReleases={unreleasedReleases.map(r => ({ id: r.id, version: r.version, linkedItemIds: r.linkedItemIds }))}
             onLinkToRelease={(releaseId) => {
-              const rel = unreleasedReleases.find(r => r.id === releaseId);
-              if (rel) linkItems(rel.id, rel.linkedItemIds, [selectedItem.id]);
+              linkItems(releaseId, [selectedItem.id]);
             }}
             onUnlinkFromRelease={(releaseId) => {
-              const rel = unreleasedReleases.find(r => r.id === releaseId);
-              if (rel) unlinkItem(rel.id, rel.linkedItemIds, selectedItem.id);
+              unlinkItem(releaseId, selectedItem.id);
             }}
           />
         )}

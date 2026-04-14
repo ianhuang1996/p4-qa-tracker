@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { db } from '../firebase';
-import { collection, onSnapshot, doc, setDoc, deleteDoc, addDoc, query, orderBy, writeBatch } from 'firebase/firestore';
+import { collection, onSnapshot, doc, setDoc, deleteDoc, addDoc, query, orderBy, arrayUnion, arrayRemove } from 'firebase/firestore';
 import { User as FirebaseUser } from 'firebase/auth';
 import { toast } from 'sonner';
 import { Release, ChecklistItem, OperationType } from '../types';
@@ -89,14 +89,39 @@ export function useReleases(user: FirebaseUser | null) {
     await updateRelease(releaseId, { checklist: updated });
   };
 
-  const linkItems = async (releaseId: string, currentIds: string[], newIds: string[]) => {
-    const merged = [...new Set([...currentIds, ...newIds])];
-    await updateRelease(releaseId, { linkedItemIds: merged });
-    toast.success(`已加入 ${newIds.length} 個項目`);
+  const linkItems = async (releaseId: string, newIds: string[]) => {
+    if (!user || newIds.length === 0) return;
+    try {
+      await setDoc(doc(db, 'releases', releaseId), {
+        linkedItemIds: arrayUnion(...newIds)
+      }, { merge: true });
+      toast.success(`已加入 ${newIds.length} 個項目`);
+    } catch (error) {
+      toast.error('加入失敗');
+      handleFirestoreError(error, OperationType.WRITE, `releases/${releaseId}`);
+    }
   };
 
-  const unlinkItem = async (releaseId: string, currentIds: string[], removeId: string) => {
-    await updateRelease(releaseId, { linkedItemIds: currentIds.filter(id => id !== removeId) });
+  const unlinkItem = async (releaseId: string, removeId: string) => {
+    if (!user) return;
+    try {
+      await setDoc(doc(db, 'releases', releaseId), {
+        linkedItemIds: arrayRemove(removeId)
+      }, { merge: true });
+    } catch (error) {
+      handleFirestoreError(error, OperationType.WRITE, `releases/${releaseId}`);
+    }
+  };
+
+  const unlinkItems = async (releaseId: string, removeIds: string[]) => {
+    if (!user || removeIds.length === 0) return;
+    try {
+      await setDoc(doc(db, 'releases', releaseId), {
+        linkedItemIds: arrayRemove(...removeIds)
+      }, { merge: true });
+    } catch (error) {
+      handleFirestoreError(error, OperationType.WRITE, `releases/${releaseId}`);
+    }
   };
 
   const executeRelease = async (release: Release) => {
@@ -139,5 +164,5 @@ export function useReleases(user: FirebaseUser | null) {
     }
   };
 
-  return { releases, isLoading, error, addRelease, updateRelease, deleteRelease, toggleChecklist, linkItems, unlinkItem, executeRelease, updateReleaseSortOrders };
+  return { releases, isLoading, error, addRelease, updateRelease, deleteRelease, toggleChecklist, linkItems, unlinkItem, unlinkItems, executeRelease, updateReleaseSortOrders };
 }

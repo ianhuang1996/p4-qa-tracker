@@ -435,7 +435,7 @@ export const ReleasePage: React.FC = () => {
                     </span>
                     {selectedRelease.status !== 'released' && (
                       <button
-                        onClick={() => unlinkItem(selectedRelease.id, selectedRelease.linkedItemIds, item.id)}
+                        onClick={() => unlinkItem(selectedRelease.id, item.id)}
                         className="p-1 text-gray-300 hover:text-red-500"
                         aria-label="移除"
                       >
@@ -620,7 +620,7 @@ export const ReleasePage: React.FC = () => {
                 ) : availableItems.map(item => (
                   <button
                     key={item.id}
-                    onClick={() => linkItems(selectedRelease.id, selectedRelease.linkedItemIds, [item.id])}
+                    onClick={() => linkItems(selectedRelease.id, [item.id])}
                     className="w-full flex items-center gap-3 px-4 py-3 hover:bg-blue-50 rounded-xl text-left transition-colors"
                   >
                     <span className="text-xs font-bold text-gray-400 w-10">{item.id}</span>
