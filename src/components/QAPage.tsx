@@ -49,7 +49,7 @@ export const QAPage: React.FC<QAPageProps> = () => {
   const itemReleaseMap = useMemo(() => {
     const map: Record<string, string> = {};
     unreleasedReleases.forEach(r => {
-      r.linkedItemIds.forEach(id => { map[id] = r.version; });
+      r.linkedItemIds.forEach(id => { if (!map[id]) map[id] = r.version; });
     });
     return map;
   }, [unreleasedReleases]);
