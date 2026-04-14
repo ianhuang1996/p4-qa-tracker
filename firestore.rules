@@ -137,6 +137,11 @@ service cloud.firestore {
 
     match /users/{userId} {
       allow read, write: if isAuthenticated();
+
+      match /coinTransactions/{txId} {
+        allow read: if isOwner(userId);
+        allow create: if isOwner(userId);
+      }
     }
 
     match /daily_reports/{reportId} {
