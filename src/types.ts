@@ -80,7 +80,32 @@ export interface AugmentedQAItem extends QAItem {
 }
 
 export type ViewMode = 'table' | 'kanban';
-export type AppPage = 'overview' | 'todo' | 'qa' | 'release' | 'wiki' | 'pet';
+export type AppPage = 'overview' | 'todo' | 'qa' | 'release' | 'wiki' | 'pet' | 'meetings';
+
+// ===== Meeting Notes =====
+export type MeetingType = 'client' | 'internal';
+
+export interface MeetingActionItem {
+  id: string;
+  text: string;
+  assignee: string;
+  linkedTodoId?: string;
+  done: boolean;
+}
+
+export interface MeetingNote {
+  id: string;
+  title: string;
+  date: string;           // YYYY-MM-DD
+  type: MeetingType;
+  attendees: string[];
+  notes: string;          // free-form text / Markdown
+  actionItems: MeetingActionItem[];
+  createdBy: string;
+  createdByName: string;
+  createdAt: number;
+  updatedAt: number;
+}
 
 // ===== Pet System =====
 export type PetRarity = 'common' | 'rare' | 'legendary';
