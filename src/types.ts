@@ -80,7 +80,7 @@ export interface AugmentedQAItem extends QAItem {
 }
 
 export type ViewMode = 'table' | 'kanban';
-export type AppPage = 'overview' | 'todo' | 'qa' | 'release' | 'wiki' | 'pet' | 'shop';
+export type AppPage = 'overview' | 'todo' | 'qa' | 'release' | 'wiki' | 'pet';
 
 // ===== Pet System =====
 export type PetRarity = 'common' | 'rare' | 'legendary';
