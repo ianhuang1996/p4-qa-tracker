@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { ShoppingBag, Coins } from 'lucide-react';
 import { User as FirebaseUser } from 'firebase/auth';
+import { toast } from 'sonner';
 import { useCoins } from '../hooks/useCoins';
 import { usePet } from '../hooks/usePet';
 import { EGG_DEFS, PETS_BY_RARITY, PET_DEFS, RARITY_LABEL, RARITY_COLOR } from '../constants/petConstants';
@@ -24,11 +25,17 @@ export const ShopPage: React.FC<ShopPageProps> = ({ user, onNavigateToPet }) => 
     }
     setHatchingRarity(rarity);
     setRevealed(null);
-    const newPet = await handleHatch(rarity);
-    setHatchingRarity(null);
-    if (newPet) {
-      const def = PET_DEFS[newPet.typeId];
-      setRevealed({ emoji: def.emoji, name: def.name, rarity });
+    try {
+      const newPet = await handleHatch(rarity);
+      if (newPet) {
+        const def = PET_DEFS[newPet.typeId];
+        setRevealed({ emoji: def.emoji, name: def.name, rarity });
+      }
+    } catch (err) {
+      console.error('Hatch failed:', err);
+      toast.error('孵化失敗，請重試');
+    } finally {
+      setHatchingRarity(null);
     }
   };
 
@@ -90,6 +97,27 @@ export const ShopPage: React.FC<ShopPageProps> = ({ user, onNavigateToPet }) => 
           </p>
         )}
       </section>
+
+      {/* Hatching loading overlay */}
+      {hatchingRarity !== null && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
+          <div className="bg-white rounded-3xl p-8 flex flex-col items-center gap-4 max-w-xs w-full shadow-2xl">
+            <span className="text-7xl animate-bounce">
+              {EGG_DEFS.find(e => e.rarity === hatchingRarity)?.emoji ?? '🥚'}
+            </span>
+            <p className="text-lg font-bold text-gray-700">孵化中…</p>
+            <div className="flex gap-1">
+              {[0, 1, 2].map(i => (
+                <span
+                  key={i}
+                  className="w-2 h-2 bg-blue-400 rounded-full animate-bounce"
+                  style={{ animationDelay: `${i * 0.15}s` }}
+                />
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Hatch reveal overlay */}
       {revealed && (
