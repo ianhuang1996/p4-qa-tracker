@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Save, Trash2, ArrowLeft, CheckSquare2, Square, Users, Calendar } from 'lucide-react';
+import { Plus, Save, Trash2, ArrowLeft, CheckSquare2, Square, Users, Calendar, Sparkles, Loader2 } from 'lucide-react';
 import { User as FirebaseUser } from 'firebase/auth';
 import { toast } from 'sonner';
 import { useMeetingNotes } from '../hooks/useMeetingNotes';
 import { MeetingNote, MeetingType } from '../types';
 import { MEMBER_COLORS } from '../constants';
+import { summarizeMeeting, MeetingSummary } from '../services/geminiService';
 
 interface MeetingNotesPageProps {
   user: FirebaseUser;
@@ -38,6 +39,8 @@ export const MeetingNotesPage: React.FC<MeetingNotesPageProps> = ({ user }) => {
   const [newActionAssignee, setNewActionAssignee] = useState(
     user.displayName?.split(' ')[0] || TEAM_MEMBERS[0]
   );
+  const [aiSummary, setAiSummary] = useState<MeetingSummary | null>(null);
+  const [aiLoading, setAiLoading] = useState(false);
 
   const selected = meetings.find(m => m.id === selectedId) ?? null;
 
@@ -57,6 +60,7 @@ export const MeetingNotesPage: React.FC<MeetingNotesPageProps> = ({ user }) => {
     setDraft({ title: m.title, date: m.date, type: m.type, attendees: m.attendees, notes: m.notes });
     setIsDirty(false);
     setConfirmDelete(false);
+    setAiSummary(null);
     setMobileShowDetail(true);
   };
 
@@ -90,6 +94,20 @@ export const MeetingNotesPage: React.FC<MeetingNotesPageProps> = ({ user }) => {
   const updateDraft = (updates: Partial<DraftFields>) => {
     setDraft(prev => prev ? { ...prev, ...updates } : null);
     setIsDirty(true);
+  };
+
+  const handleAISummary = async () => {
+    if (!selected || !draft) return;
+    setAiLoading(true);
+    setAiSummary(null);
+    try {
+      const result = await summarizeMeeting(draft.title, draft.type, draft.attendees, draft.notes);
+      setAiSummary(result);
+    } catch {
+      toast.error('AI 摘要失敗，請確認 Gemini API Key');
+    } finally {
+      setAiLoading(false);
+    }
   };
 
   const toggleAttendee = (member: string) => {
@@ -249,6 +267,62 @@ export const MeetingNotesPage: React.FC<MeetingNotesPageProps> = ({ user }) => {
           placeholder="記錄討論重點、決議事項…"
           className="w-full min-h-[160px] text-sm text-gray-700 bg-transparent border-0 outline-none resize-none placeholder:text-gray-300"
         />
+      </div>
+
+      {/* AI Summary */}
+      <div className="px-5 pt-4 pb-4 border-b border-gray-100">
+        <div className="flex items-center justify-between mb-2">
+          <p className="text-xs font-bold text-gray-400 uppercase tracking-wider">✨ AI 摘要</p>
+          <button
+            onClick={handleAISummary}
+            disabled={aiLoading || !draft?.notes?.trim()}
+            className="flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-lg bg-gradient-to-r from-violet-500 to-blue-500 text-white hover:opacity-90 active:scale-95 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            {aiLoading ? <Loader2 size={12} className="animate-spin" /> : <Sparkles size={12} />}
+            {aiLoading ? '生成中…' : '產生摘要'}
+          </button>
+        </div>
+
+        {aiSummary && (
+          <div className="space-y-3">
+            {aiSummary.keyPoints.length > 0 && (
+              <div className="bg-violet-50 border border-violet-100 rounded-xl p-3 space-y-1">
+                <p className="text-[10px] font-bold text-violet-500 uppercase tracking-wider mb-1.5">會議重點</p>
+                {aiSummary.keyPoints.map((pt, i) => (
+                  <p key={i} className="text-sm text-gray-700 flex gap-2">
+                    <span className="text-violet-400 shrink-0">·</span>{pt}
+                  </p>
+                ))}
+              </div>
+            )}
+            {aiSummary.suggestedActions.length > 0 && (
+              <div className="bg-blue-50 border border-blue-100 rounded-xl p-3 space-y-1.5">
+                <p className="text-[10px] font-bold text-blue-500 uppercase tracking-wider mb-1.5">建議行動項目</p>
+                {aiSummary.suggestedActions.map((action, i) => (
+                  <div key={i} className="flex items-center gap-2">
+                    <p className="flex-1 text-sm text-gray-700">{action}</p>
+                    <button
+                      onClick={() => {
+                        setNewActionText(action);
+                        setAiSummary(prev => prev
+                          ? { ...prev, suggestedActions: prev.suggestedActions.filter((_, idx) => idx !== i) }
+                          : null
+                        );
+                      }}
+                      className="text-[10px] font-bold text-blue-600 hover:text-blue-800 whitespace-nowrap shrink-0 bg-white border border-blue-200 px-2 py-0.5 rounded-lg"
+                    >
+                      採用
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {!aiSummary && !aiLoading && (
+          <p className="text-xs text-gray-400">在會議紀錄填寫內容後，點擊「產生摘要」讓 AI 整理重點。</p>
+        )}
       </div>
 
       {/* Action Items */}

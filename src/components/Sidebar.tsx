@@ -37,8 +37,8 @@ const NAV_GROUPS: NavGroup[] = [
     label: '管理',
     items: [
       { page: 'release', label: '版更管理', icon: <Rocket size={20} /> },
-      { page: 'wiki', label: '知識庫', icon: <BookOpen size={20} /> },
       { page: 'meetings', label: '會議紀錄', icon: <NotebookPen size={20} /> },
+      { page: 'wiki', label: '知識庫', icon: <BookOpen size={20} /> },
     ],
   },
   {

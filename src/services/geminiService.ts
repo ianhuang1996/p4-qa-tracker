@@ -82,6 +82,50 @@ ${itemList}
   }
 };
 
+export interface MeetingSummary {
+  keyPoints: string[];
+  suggestedActions: string[];
+}
+
+export const summarizeMeeting = async (
+  title: string,
+  type: string,
+  attendees: string[],
+  notes: string,
+): Promise<MeetingSummary> => {
+  const prompt = `你是一個會議助理，請根據以下會議資訊，用繁體中文產生摘要。
+
+會議標題：${title || '（未命名）'}
+會議類型：${type === 'client' ? '客戶會議' : '組內討論'}
+出席者：${attendees.length > 0 ? attendees.join('、') : '未填寫'}
+
+會議紀錄：
+${notes.trim() || '（無紀錄內容）'}
+
+請嚴格回傳以下 JSON 格式，不要加任何其他文字：
+{
+  "keyPoints": ["重點1", "重點2"],
+  "suggestedActions": ["行動項目1", "行動項目2"]
+}
+
+規則：
+- keyPoints：3～5 條條列式重點摘要
+- suggestedActions：從紀錄中提取需要跟進的行動，若無則回傳空陣列
+- 若紀錄內容太少，keyPoints 填一條說明即可`;
+
+  try {
+    const response = await ai.models.generateContent({
+      model: 'gemini-2.0-flash',
+      contents: prompt,
+      config: { responseMimeType: 'application/json' },
+    });
+    return JSON.parse(response.text ?? '{"keyPoints":[],"suggestedActions":[]}') as MeetingSummary;
+  } catch (error) {
+    console.error('Gemini Meeting Summary Error:', error);
+    throw error;
+  }
+};
+
 interface DailyReportInput {
   date: string;
   completedTodos: string[];
