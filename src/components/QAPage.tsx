@@ -166,9 +166,11 @@ export const QAPage: React.FC<QAPageProps> = () => {
     return result;
   }, [statusFilters, assigneeFilters, moduleFilters, priorityFilter, searchQuery, augmentedData, selectedVersion, releaseVersionItemMap, dateRange, sortConfig, hideClosed]);
 
-  // Release versions for filter dropdown (all releases, newest first)
+  // Release versions for filter dropdown (sorted by scheduledDate desc)
   const versions = useMemo(() => {
-    return releases.map(r => r.version);
+    return [...releases]
+      .sort((a, b) => (b.scheduledDate ?? '').localeCompare(a.scheduledDate ?? ''))
+      .map(r => r.version);
   }, [releases]);
 
   const quickStats = useMemo(() => {
