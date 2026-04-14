@@ -275,6 +275,16 @@ export const ModalEditForm: React.FC<ModalEditFormProps> = ({
                 }
               }
             }}
+            onBlur={(e) => {
+              const val = e.target.value.trim();
+              if (val) {
+                setEditForm(prev => {
+                  if (!prev) return null;
+                  return { ...prev, videoLinks: [...(prev.videoLinks || []), val] };
+                });
+                e.target.value = '';
+              }
+            }}
           />
         </div>
       </div>

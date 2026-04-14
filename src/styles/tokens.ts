@@ -32,7 +32,8 @@ export const TEXT = {
   sectionTitle: 'text-sm font-bold text-gray-900',
   cardLabel: 'text-[10px] font-bold text-gray-400 uppercase tracking-widest',
   body: 'text-sm text-gray-700',
-  caption: 'text-[10px] text-gray-400',
+  caption: 'text-[10px] text-gray-400',    // Metadata, timestamps, sub-labels
+  micro: 'text-[9px] text-gray-400',       // Badge text, avatar initials labels
   badge: 'text-[10px] font-bold',
 } as const;
 

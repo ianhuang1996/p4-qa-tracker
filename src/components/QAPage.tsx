@@ -344,6 +344,7 @@ export const QAPage: React.FC<QAPageProps> = () => {
             hideClosed ? 'bg-white hover:bg-gray-50 text-gray-700 border-gray-200' : 'bg-blue-50 text-blue-700 border-blue-200'
           }`}
           title={hideClosed ? '顯示已關閉' : '隱藏已關閉'}
+          aria-label={hideClosed ? '顯示已關閉項目' : '隱藏已關閉項目'}
         >
           {hideClosed ? <EyeOff size={18} /> : <Eye size={18} />}
           <span className="hidden sm:inline">{hideClosed ? '已隱藏關閉' : '顯示全部'}</span>
@@ -352,7 +353,7 @@ export const QAPage: React.FC<QAPageProps> = () => {
 
       <NextReleaseBlock releases={releases} allItems={augmentedData} onNavigateToRelease={() => setCurrentPage('release')} />
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mt-8">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-8">
         {[
           { label: '未結案問題', value: quickStats.totalActive },
           { label: 'P0/P1 嚴重', value: quickStats.criticalBugs },

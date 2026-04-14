@@ -567,7 +567,7 @@ export const ReleasePage: React.FC = () => {
                       >
                         <Check size={12} />
                       </button>
-                      <button onClick={() => setEditingReleasedAt(false)} className="text-gray-400 hover:text-gray-600 p-1">
+                      <button onClick={() => setEditingReleasedAt(false)} className="text-gray-400 hover:text-gray-600 p-1" aria-label="取消">
                         <X size={12} />
                       </button>
                     </div>
@@ -584,6 +584,7 @@ export const ReleasePage: React.FC = () => {
                           setEditingReleasedAt(true);
                         }}
                         className="text-gray-300 hover:text-blue-500 opacity-0 group-hover/date:opacity-100 transition-opacity p-0.5"
+                        aria-label="編輯發布時間"
                       >
                         <Edit2 size={10} />
                       </button>
@@ -610,7 +611,7 @@ export const ReleasePage: React.FC = () => {
             <div className="fixed inset-x-4 top-[10%] z-50 max-w-lg mx-auto bg-white rounded-2xl shadow-2xl overflow-hidden max-h-[70vh] flex flex-col">
               <div className="p-4 border-b border-gray-100 flex items-center justify-between">
                 <h3 className="text-sm font-bold">選擇 QA 項目加入</h3>
-                <button onClick={() => setShowLinkPicker(false)} className="p-1 text-gray-400 hover:text-gray-600">
+                <button onClick={() => setShowLinkPicker(false)} className="p-1 text-gray-400 hover:text-gray-600" aria-label="關閉">
                   <X size={18} />
                 </button>
               </div>

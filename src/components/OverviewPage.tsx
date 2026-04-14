@@ -139,19 +139,19 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ onNavigateToQA, onNa
         <div className="flex items-center gap-1 bg-gray-100 p-1 rounded-lg border border-gray-200">
           <button
             onClick={() => setActiveTab('today')}
-            className={`px-4 py-1.5 rounded-md text-xs font-bold transition-colors ${activeTab === 'today' ? 'bg-white shadow-sm text-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
+            className={`px-4 py-1.5 rounded-md text-xs font-bold transition-colors ${activeTab === 'today' ? 'bg-white dark:bg-gray-600 shadow-sm text-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
           >
             今日
           </button>
           <button
             onClick={() => setActiveTab('report')}
-            className={`px-4 py-1.5 rounded-md text-xs font-bold transition-colors ${activeTab === 'report' ? 'bg-white shadow-sm text-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
+            className={`px-4 py-1.5 rounded-md text-xs font-bold transition-colors ${activeTab === 'report' ? 'bg-white dark:bg-gray-600 shadow-sm text-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
           >
             週報
           </button>
           <button
             onClick={() => setActiveTab('achievement')}
-            className={`px-4 py-1.5 rounded-md text-xs font-bold transition-colors ${activeTab === 'achievement' ? 'bg-white shadow-sm text-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
+            className={`px-4 py-1.5 rounded-md text-xs font-bold transition-colors ${activeTab === 'achievement' ? 'bg-white dark:bg-gray-600 shadow-sm text-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
           >
             成就
           </button>
@@ -159,7 +159,7 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ onNavigateToQA, onNa
       </div>
 
       {/* Quick Stats Row — clickable */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         <button onClick={onNavigateToTodo} className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 text-left hover:border-blue-200 hover:shadow-md transition-all">
           <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">我的待辦</p>
           <p className="text-2xl font-black text-gray-900">{myPendingTodos.length}</p>

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Search, X, Bug, CheckSquare, BookOpen, FileText, NotebookPen } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { FadeIn } from './ui/FadeIn';
 import { useAppContext } from '../contexts/AppContext';
 import { useQAItems } from '../hooks/useQAItems';
 import { useWikiPages } from '../hooks/useWikiPages';
@@ -171,24 +172,25 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({ onNavigate }) => {
               <div className="p-8 text-center text-sm text-gray-400">找不到「{query}」的結果</div>
             )}
             {results.map((item, idx) => (
-              <button
-                key={`${item.type}-${item.id}-${idx}`}
-                onClick={() => {
-                  if (item.type === 'qa') {
-                    navigateToQAItem(item.id);
-                  } else {
-                    onNavigate(item.page);
-                  }
-                  setIsOpen(false);
-                }}
-                className={`w-full flex items-center gap-3 px-5 py-3 hover:bg-blue-50 transition-colors text-left border-b border-gray-50 last:border-0 ${idx === selectedIdx ? 'bg-blue-50' : ''}`}
-              >
-                {typeIcon(item.type)}
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm text-gray-900 truncate">{item.title}</p>
-                  <p className="text-[10px] text-gray-400">{item.subtitle}</p>
-                </div>
-              </button>
+              <FadeIn key={`${item.type}-${item.id}-${idx}`} slideY={4} duration={0.12} delay={idx * 0.03}>
+                <button
+                  onClick={() => {
+                    if (item.type === 'qa') {
+                      navigateToQAItem(item.id);
+                    } else {
+                      onNavigate(item.page);
+                    }
+                    setIsOpen(false);
+                  }}
+                  className={`w-full flex items-center gap-3 px-5 py-3 hover:bg-blue-50 transition-colors text-left border-b border-gray-50 last:border-0 ${idx === selectedIdx ? 'bg-blue-50' : ''}`}
+                >
+                  {typeIcon(item.type)}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm text-gray-900 truncate">{item.title}</p>
+                    <p className="text-[10px] text-gray-400">{item.subtitle}</p>
+                  </div>
+                </button>
+              </FadeIn>
             ))}
             {!query.trim() && (
               <div className="p-6 text-center text-xs text-gray-400">

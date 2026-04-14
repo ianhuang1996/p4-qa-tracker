@@ -206,6 +206,7 @@ export const MeetingNotesPage: React.FC<MeetingNotesPageProps> = ({ user }) => {
               onClick={() => setConfirmDelete(true)}
               className="p-1.5 text-gray-400 hover:text-red-500 transition-colors"
               title="刪除"
+              aria-label="刪除會議"
             >
               <Trash2 size={16} />
             </button>

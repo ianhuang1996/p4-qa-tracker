@@ -1,16 +1,18 @@
 import React, { useMemo } from 'react';
-import { 
+import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
   PieChart, Pie, Cell
 } from 'recharts';
 import { AugmentedQAItem } from '../types';
 import { MEMBER_COLORS, MODULE_COLORS, SEMANTIC, STATUS } from '../constants';
+import { useAppContext } from '../contexts/AppContext';
 
 interface DashboardProps {
   items: AugmentedQAItem[];
 }
 
 export const Dashboard: React.FC<DashboardProps> = ({ items }) => {
+  const { isDarkMode } = useAppContext();
   const assigneeStats = useMemo(() => {
     const counts: Record<string, number> = {};
     items.forEach(item => {
@@ -58,12 +60,18 @@ export const Dashboard: React.FC<DashboardProps> = ({ items }) => {
         <div className="h-64">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={assigneeStats}>
-              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f3f4f6" />
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={isDarkMode ? '#374151' : '#f3f4f6'} />
               <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#6b7280', fontSize: 12}} />
               <YAxis axisLine={false} tickLine={false} tick={{fill: '#6b7280', fontSize: 12}} />
-              <Tooltip 
-                contentStyle={{borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)'}}
-                cursor={{fill: '#f9fafb'}}
+              <Tooltip
+                contentStyle={{
+                  borderRadius: '12px',
+                  border: 'none',
+                  boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)',
+                  backgroundColor: isDarkMode ? '#1f2937' : '#ffffff',
+                  color: isDarkMode ? '#f9fafb' : '#111827',
+                }}
+                cursor={{fill: isDarkMode ? '#374151' : '#f9fafb'}}
               />
               <Bar dataKey="count" name="問題數" radius={[4, 4, 0, 0]}>
                 {assigneeStats.map((entry, index) => (
@@ -95,7 +103,13 @@ export const Dashboard: React.FC<DashboardProps> = ({ items }) => {
                   <Cell key={`cell-${index}`} fill={MODULE_COLORS[entry.name]?.hex || SEMANTIC.neutral.hex} />
                 ))}
               </Pie>
-              <Tooltip contentStyle={{borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)'}} />
+              <Tooltip contentStyle={{
+                borderRadius: '12px',
+                border: 'none',
+                boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)',
+                backgroundColor: isDarkMode ? '#1f2937' : '#ffffff',
+                color: isDarkMode ? '#f9fafb' : '#111827',
+              }} />
             </PieChart>
           </ResponsiveContainer>
         </div>
@@ -106,12 +120,18 @@ export const Dashboard: React.FC<DashboardProps> = ({ items }) => {
         <div className="h-64">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={weeklyFixedStats}>
-              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f3f4f6" />
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={isDarkMode ? '#374151' : '#f3f4f6'} />
               <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{fill: '#6b7280', fontSize: 12}} />
               <YAxis axisLine={false} tickLine={false} tick={{fill: '#6b7280', fontSize: 12}} />
-              <Tooltip 
-                contentStyle={{borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)'}}
-                cursor={{fill: '#f9fafb'}}
+              <Tooltip
+                contentStyle={{
+                  borderRadius: '12px',
+                  border: 'none',
+                  boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)',
+                  backgroundColor: isDarkMode ? '#1f2937' : '#ffffff',
+                  color: isDarkMode ? '#f9fafb' : '#111827',
+                }}
+                cursor={{fill: isDarkMode ? '#374151' : '#f9fafb'}}
               />
               <Legend verticalAlign="top" align="right" height={36} iconType="circle" />
               <Bar dataKey="total" name="總問題數" fill="#e5e7eb" radius={[4, 4, 0, 0]} />

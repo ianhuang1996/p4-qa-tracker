@@ -352,13 +352,13 @@ export const DailyTodo: React.FC<DailyTodoProps> = ({ user, qaItems: qaItemsProp
           <div className="flex items-center gap-1 bg-gray-100 p-1 rounded-lg border border-gray-200">
             <button
               onClick={() => setDateMode('day')}
-              className={`px-3 py-1.5 rounded-md text-xs font-bold transition-colors ${dateMode === 'day' ? 'bg-white shadow-sm text-blue-600' : 'text-gray-500'}`}
+              className={`px-3 py-1.5 rounded-md text-xs font-bold transition-colors ${dateMode === 'day' ? 'bg-white dark:bg-gray-600 shadow-sm text-blue-600' : 'text-gray-500'}`}
             >
               日
             </button>
             <button
               onClick={() => setDateMode('week')}
-              className={`px-3 py-1.5 rounded-md text-xs font-bold transition-colors ${dateMode === 'week' ? 'bg-white shadow-sm text-blue-600' : 'text-gray-500'}`}
+              className={`px-3 py-1.5 rounded-md text-xs font-bold transition-colors ${dateMode === 'week' ? 'bg-white dark:bg-gray-600 shadow-sm text-blue-600' : 'text-gray-500'}`}
             >
               週
             </button>
@@ -397,22 +397,22 @@ export const DailyTodo: React.FC<DailyTodoProps> = ({ user, qaItems: qaItemsProp
           <div className="flex items-center gap-1 bg-gray-100 p-1 rounded-lg border border-gray-200">
             <button
               onClick={() => setViewMode('list')}
-              className={`p-1.5 rounded-md transition-colors ${viewMode === 'list' ? 'bg-white shadow-sm text-blue-600' : 'text-gray-500'}`}
-              title="列表"
+              className={`p-1.5 rounded-md transition-colors ${viewMode === 'list' ? 'bg-white dark:bg-gray-600 shadow-sm text-blue-600' : 'text-gray-500'}`}
+              title="列表" aria-label="列表模式"
             >
               <List size={14} />
             </button>
             <button
               onClick={() => setViewMode('by-person')}
-              className={`p-1.5 rounded-md transition-colors ${viewMode === 'by-person' ? 'bg-white shadow-sm text-blue-600' : 'text-gray-500'}`}
-              title="按負責人"
+              className={`p-1.5 rounded-md transition-colors ${viewMode === 'by-person' ? 'bg-white dark:bg-gray-600 shadow-sm text-blue-600' : 'text-gray-500'}`}
+              title="按負責人" aria-label="按負責人分組"
             >
               <Users size={14} />
             </button>
             <button
               onClick={() => setViewMode('by-status')}
-              className={`p-1.5 rounded-md transition-colors ${viewMode === 'by-status' ? 'bg-white shadow-sm text-blue-600' : 'text-gray-500'}`}
-              title="按狀態"
+              className={`p-1.5 rounded-md transition-colors ${viewMode === 'by-status' ? 'bg-white dark:bg-gray-600 shadow-sm text-blue-600' : 'text-gray-500'}`}
+              title="按狀態" aria-label="按狀態分組"
             >
               <Columns size={14} />
             </button>

@@ -79,7 +79,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ user, on
             </button>
           )}
           {onClose && (
-            <button onClick={onClose} className="text-gray-400 hover:text-gray-600 p-1">
+            <button onClick={onClose} className="text-gray-400 hover:text-gray-600 p-1" aria-label="關閉通知">
               <X size={16} />
             </button>
           )}
@@ -146,6 +146,7 @@ export const NotificationCenter: React.FC<NotificationCenterProps> = ({ user, on
                   <button
                     onClick={(e) => { e.stopPropagation(); deleteNotification(notif.id); }}
                     className="p-1 text-gray-300 hover:text-red-500 transition-all shrink-0 sm:opacity-0 sm:group-hover:opacity-100"
+                    aria-label="刪除通知"
                   >
                     <Trash2 size={12} />
                   </button>

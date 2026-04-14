@@ -77,11 +77,12 @@ export const QAItemTable = React.memo(function QAItemTable({
           <thead className="bg-gray-50">
             <tr>
               <th className="px-4 py-3 text-left">
-                <input 
-                  type="checkbox" 
+                <input
+                  type="checkbox"
                   checked={items.length > 0 && selectedIds.length === items.length}
                   onChange={toggleSelectAll}
                   className="rounded text-blue-600 focus:ring-blue-500"
+                  aria-label="全選"
                 />
               </th>
               <th 
@@ -165,18 +166,19 @@ export const QAItemTable = React.memo(function QAItemTable({
                 </td>
                 <td className="hidden md:table-cell px-4 py-4 whitespace-nowrap">
                   <div className="relative">
-                    <div
-                      className="flex items-center gap-2 cursor-pointer hover:bg-gray-50 p-1 rounded-lg transition-colors"
+                    <button
+                      className="flex items-center gap-2 hover:bg-gray-50 p-1 rounded-lg transition-colors"
                       onClick={(e) => {
                         e.stopPropagation();
                         setOpenAssigneeId(openAssigneeId === item.id ? null : item.id);
                       }}
+                      aria-label={`變更負責人：${item.assignee}`}
                     >
                       <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] text-white font-bold ${getAvatarColor(item.assignee)} ${getAvatarRing(tierByUserName[item.assignee])}`}>
                         {item.assignee.charAt(0)}
                       </div>
                       <span className="text-xs text-gray-600 font-medium">{item.assignee}</span>
-                    </div>
+                    </button>
 
                     {openAssigneeId === item.id && (
                       <>
