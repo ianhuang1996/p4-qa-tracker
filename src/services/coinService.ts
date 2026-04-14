@@ -1,10 +1,22 @@
 import { db } from '../firebase';
-import { doc, setDoc, addDoc, collection, increment, getDoc, query, where, getDocs, orderBy, limit } from 'firebase/firestore';
+import { doc, setDoc, addDoc, collection, increment, getDoc, runTransaction, query, where, getDocs } from 'firebase/firestore';
 import { User as FirebaseUser } from 'firebase/auth';
-import { CoinReason, Pet } from '../types';
-import { COIN_REWARDS, getLevel, getStage, PETS_BY_RARITY } from '../constants/petConstants';
+import { CoinReason, Pet, PetRarity } from '../types';
+import { COIN_REWARDS, getLevel, getStage, PETS_BY_RARITY, getEggPrice, FEED_COST } from '../constants/petConstants';
 
-// ─── Award Coins (atomic) ────────────────────────────────────────
+// ─── Internal: fire-and-forget transaction log ───────────────────
+function logTx(userId: string, amount: number, reason: string, note?: string | null) {
+  addDoc(collection(db, 'users', userId, 'coinTransactions'), {
+    amount,
+    reason,
+    note: note ?? null,
+    timestamp: Date.now(),
+  }).catch(() => {});
+}
+
+// ─── Award Coins ─────────────────────────────────────────────────
+// Atomically increments coins + pet XP in one transaction so
+// an in-flight pet abandon can never cause a split-brain update.
 export async function awardCoins(
   userId: string,
   reason: CoinReason,
@@ -15,58 +27,34 @@ export async function awardCoins(
   if (amount <= 0) return;
 
   const userRef = doc(db, 'users', userId);
-  // Atomic increment — no race condition
-  await setDoc(userRef, { coins: increment(amount) }, { merge: true });
 
-  // Also give pet XP equal to coins earned
-  await setDoc(userRef, { 'pet.xp': increment(amount) }, { merge: true });
+  await runTransaction(db, async (tx) => {
+    const snap = await tx.get(userRef);
+    const petData = snap.data()?.pet as Pet | undefined;
 
-  // Recalculate and store level/stage synchronously after XP update
-  const snap = await getDoc(userRef);
-  const petData = snap.data()?.pet as Pet | undefined;
-  if (petData) {
-    const newXp = (petData.xp ?? 0) + amount;
-    const newLevel = getLevel(newXp);
-    const newStage = getStage(newLevel);
-    if (newLevel !== petData.level || newStage !== petData.stage) {
-      await setDoc(userRef, { 'pet.level': newLevel, 'pet.stage': newStage }, { merge: true });
+    const updates: Record<string, unknown> = { coins: increment(amount) };
+    if (petData) {
+      const newXp = (petData.xp ?? 0) + amount;
+      const newLevel = getLevel(newXp);
+      const newStage = getStage(newLevel);
+      updates['pet.xp'] = increment(amount);
+      if (newLevel !== petData.level) updates['pet.level'] = newLevel;
+      if (newStage !== petData.stage) updates['pet.stage'] = newStage;
     }
-  }
-
-  // Log transaction
-  await addDoc(collection(db, 'users', userId, 'coinTransactions'), {
-    amount,
-    reason,
-    note: note ?? null,
-    timestamp: Date.now(),
+    tx.set(userRef, updates, { merge: true });
   });
+
+  logTx(userId, amount, reason, note);
 }
 
-// ─── Spend Coins ────────────────────────────────────────────────
-export async function spendCoins(userId: string, amount: number, reason: string): Promise<boolean> {
-  const userRef = doc(db, 'users', userId);
-  const snap = await getDoc(userRef);
-  const current = snap.data()?.coins ?? 0;
-  if (current < amount) return false;
-
-  await setDoc(userRef, { coins: increment(-amount) }, { merge: true });
-  await addDoc(collection(db, 'users', userId, 'coinTransactions'), {
-    amount: -amount,
-    reason,
-    timestamp: Date.now(),
-  });
-  return true;
-}
-
-// ─── Hatch Egg ──────────────────────────────────────────────────
-export async function hatchEgg(user: FirebaseUser, rarity: 'common' | 'rare' | 'legendary'): Promise<Pet | null> {
-  const success = await spendCoins(user.uid, { common: 100, rare: 300, legendary: 800 }[rarity], `hatch_${rarity}_egg`);
-  if (!success) return null;
-
+// ─── Hatch Egg ───────────────────────────────────────────────────
+// Single transaction: check balance + write pet atomically.
+// No window between coin deduction and pet creation.
+export async function hatchEgg(user: FirebaseUser, rarity: PetRarity): Promise<Pet | null> {
+  const cost = getEggPrice(rarity);
   const pool = PETS_BY_RARITY[rarity];
   const typeId = pool[Math.floor(Math.random() * pool.length)] as Pet['typeId'];
-
-  const pet: Omit<Pet, 'name'> & { name: string } = {
+  const pet: Pet = {
     typeId,
     name: '',
     xp: 0,
@@ -78,80 +66,75 @@ export async function hatchEgg(user: FirebaseUser, rarity: 'common' | 'rare' | '
   };
 
   const userRef = doc(db, 'users', user.uid);
-  await setDoc(userRef, { pet }, { merge: true });
+  const success = await runTransaction(db, async (tx) => {
+    const snap = await tx.get(userRef);
+    const current = snap.data()?.coins ?? 0;
+    if (current < cost) return false;
+    tx.set(userRef, { coins: increment(-cost), pet }, { merge: true });
+    return true;
+  });
+
+  if (!success) return null;
+  logTx(user.uid, -cost, `hatch_${rarity}_egg`);
   return pet;
 }
 
-// ─── Feed Pet ───────────────────────────────────────────────────
+// ─── Feed Pet ────────────────────────────────────────────────────
+// Single transaction: check balance + update lastFed atomically.
 export async function feedPet(user: FirebaseUser): Promise<boolean> {
-  const success = await spendCoins(user.uid, 20, 'feed_pet');
-  if (!success) return false;
-
   const userRef = doc(db, 'users', user.uid);
-  await setDoc(userRef, { 'pet.lastFed': Date.now() }, { merge: true });
-  return true;
+  const success = await runTransaction(db, async (tx) => {
+    const snap = await tx.get(userRef);
+    const current = snap.data()?.coins ?? 0;
+    if (current < FEED_COST) return false;
+    tx.set(userRef, { coins: increment(-FEED_COST), 'pet.lastFed': Date.now() }, { merge: true });
+    return true;
+  });
+  if (success) logTx(user.uid, -FEED_COST, 'feed_pet');
+  return success;
 }
 
-// ─── Abandon Pet ────────────────────────────────────────────────
+// ─── Abandon Pet ─────────────────────────────────────────────────
 export async function abandonPet(userId: string): Promise<void> {
   const userRef = doc(db, 'users', userId);
   await setDoc(userRef, { pet: null }, { merge: true });
 }
 
-// ─── Name Pet ───────────────────────────────────────────────────
+// ─── Name Pet ────────────────────────────────────────────────────
 export async function namePet(userId: string, name: string): Promise<void> {
   const userRef = doc(db, 'users', userId);
   await setDoc(userRef, { 'pet.name': name.trim() }, { merge: true });
 }
 
+// ─── One-time Launch Bonus ───────────────────────────────────────
+export async function applyLaunchBonus(userId: string): Promise<void> {
+  const userRef = doc(db, 'users', userId);
+  const snap = await getDoc(userRef);
+  if (snap.data()?.launchBonusApplied) return;
+  await setDoc(userRef, { coins: increment(800), launchBonusApplied: true }, { merge: true });
+}
+
 // ─── History Retroactive Scan ────────────────────────────────────
-// Scans historical records and awards 2x coins once per user.
 export async function awardHistoryCoins(user: FirebaseUser): Promise<number> {
   const userRef = doc(db, 'users', user.uid);
   const snap = await getDoc(userRef);
-  if (snap.data()?.historyCoinAwarded) return 0; // already done
+  if (snap.data()?.historyCoinAwarded) return 0;
 
-  let total = 0;
+  const [reportsSnap, qaSnap, releasesSnap] = await Promise.all([
+    getDocs(query(collection(db, 'daily_reports'), where('userId', '==', user.uid))),
+    getDocs(query(collection(db, 'qa_items'), where('authorUID', '==', user.uid))),
+    getDocs(query(collection(db, 'releases'), where('createdBy', '==', user.uid), where('status', '==', 'released'))),
+  ]);
 
-  // Count daily reports (userId field)
-  const reportsQuery = query(
-    collection(db, 'daily_reports'),
-    where('userId', '==', user.uid),
-  );
-  const reportsSnap = await getDocs(reportsQuery);
-  const reportCoins = reportsSnap.size * COIN_REWARDS.daily_report * 2;
-  total += reportCoins;
+  const total =
+    reportsSnap.size * COIN_REWARDS.daily_report * 2 +
+    qaSnap.size * COIN_REWARDS.file_bug * 2 +
+    releasesSnap.size * COIN_REWARDS.release_publish * 2;
 
-  // Count QA items filed (authorUID field)
-  const qaQuery = query(
-    collection(db, 'qa_items'),
-    where('authorUID', '==', user.uid),
-  );
-  const qaSnap = await getDocs(qaQuery);
-  const bugCoins = qaSnap.size * COIN_REWARDS.file_bug * 2;
-  total += bugCoins;
-
-  // Count releases published (createdBy == uid, status == released)
-  const releasesQuery = query(
-    collection(db, 'releases'),
-    where('createdBy', '==', user.uid),
-    where('status', '==', 'released'),
-  );
-  const releasesSnap = await getDocs(releasesQuery);
-  const releaseCoins = releasesSnap.size * COIN_REWARDS.release_publish * 2;
-  total += releaseCoins;
-
+  await setDoc(userRef, { coins: increment(total), historyCoinAwarded: true }, { merge: true });
   if (total > 0) {
-    await setDoc(userRef, { coins: increment(total), historyCoinAwarded: true }, { merge: true });
-    await addDoc(collection(db, 'users', user.uid, 'coinTransactions'), {
-      amount: total,
-      reason: 'history_retroactive' as CoinReason,
-      note: `歷史回溯：${reportsSnap.size} 篇日報 + ${qaSnap.size} 個 Bug + ${releasesSnap.size} 次版更 (2x)`,
-      timestamp: Date.now(),
-    });
-  } else {
-    // Mark as done even if no coins
-    await setDoc(userRef, { historyCoinAwarded: true }, { merge: true });
+    logTx(user.uid, total, 'history_retroactive',
+      `歷史回溯：${reportsSnap.size} 篇日報 + ${qaSnap.size} 個 Bug + ${releasesSnap.size} 次版更 (2x)`);
   }
 
   return total;

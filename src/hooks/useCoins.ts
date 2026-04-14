@@ -3,7 +3,7 @@ import { db } from '../firebase';
 import { doc, onSnapshot, collection, query, orderBy, limit } from 'firebase/firestore';
 import { User as FirebaseUser } from 'firebase/auth';
 import { CoinTransaction } from '../types';
-import { awardHistoryCoins } from '../services/coinService';
+import { awardHistoryCoins, applyLaunchBonus } from '../services/coinService';
 
 export function useCoins(user: FirebaseUser | null) {
   const [coins, setCoins] = useState(0);
@@ -35,11 +35,14 @@ export function useCoins(user: FirebaseUser | null) {
     return () => unsubscribe();
   }, [user]);
 
-  // One-time history retroactive award
+  // One-time history retroactive award + launch bonus (sequential to avoid concurrent double-award)
   useEffect(() => {
     if (!user || historyChecked) return;
     setHistoryChecked(true);
-    awardHistoryCoins(user).catch(console.error);
+    (async () => {
+      try { await awardHistoryCoins(user); } catch (e) { console.error(e); }
+      try { await applyLaunchBonus(user.uid); } catch (e) { console.error(e); }
+    })();
   }, [user, historyChecked]);
 
   return { coins, transactions };

@@ -105,6 +105,10 @@ export function getHappiness(lastFed: number): number {
 
 export const FEED_COST = 20; // coins per feeding
 
+export function getEggPrice(rarity: PetRarity): number {
+  return EGG_DEFS.find(e => e.rarity === rarity)?.price ?? 0;
+}
+
 // ─── Stage Labels ───────────────────────────────────────────────
 export const STAGE_LABEL: Record<PetStage, string> = {
   baby:     '幼體',
@@ -122,6 +126,31 @@ export const RARITY_COLOR: Record<PetRarity, string> = {
   common:    'text-gray-600 bg-gray-100 border-gray-300',
   rare:      'text-blue-600 bg-blue-50 border-blue-200',
   legendary: 'text-yellow-600 bg-yellow-50 border-yellow-300',
+};
+
+// ─── Transaction Reason Labels ──────────────────────────────────
+export const REASON_LABEL: Record<string, string> = {
+  fix_p0:              '修復 P0 Bug',
+  fix_p1:              '修復 P1 Bug',
+  fix_p2_p3:           '修復 P2/P3 Bug',
+  ready_to_test:       '標記待測試',
+  retest_pass:         'Retest 通過',
+  retest_fail:         'Retest 退回（發現問題）',
+  file_bug:            '回報 Bug',
+  daily_report:        '撰寫日報',
+  todo_clear:          '完成所有待辦',
+  create_wiki:         '建立 Wiki 頁面',
+  create_todo:         '新增待辦事項',
+  release_publish:     '正式發布版更',
+  release_zero_p0:     '零 P0 發布獎勵',
+  streak_bonus:        '連續打卡獎勵',
+  achievement_unlock:  '解鎖成就',
+  phoenix_bonus:       '鳳凰加成（退回後修復）',
+  history_retroactive: '歷史紀錄回溯獎勵',
+  hatch_common_egg:    '孵化普通蛋',
+  hatch_rare_egg:      '孵化稀有蛋',
+  hatch_legendary_egg: '孵化傳說蛋',
+  feed_pet:            '餵食寵物',
 };
 
 // ─── Encouragement Messages (for Bugsy buff) ────────────────────

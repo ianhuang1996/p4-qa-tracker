@@ -4,7 +4,8 @@ import { User as FirebaseUser } from 'firebase/auth';
 import { toast } from 'sonner';
 import { useCoins } from '../hooks/useCoins';
 import { usePet } from '../hooks/usePet';
-import { EGG_DEFS, PETS_BY_RARITY, PET_DEFS, RARITY_LABEL, RARITY_COLOR } from '../constants/petConstants';
+import { EGG_DEFS, PETS_BY_RARITY, PET_DEFS, RARITY_LABEL, RARITY_COLOR, REASON_LABEL } from '../constants/petConstants';
+import { PetGuide } from './PetGuide';
 import type { PetRarity } from '../types';
 
 interface ShopPageProps {
@@ -85,7 +86,9 @@ export const ShopPage: React.FC<ShopPageProps> = ({ user, onNavigateToPet }) => 
                       : 'bg-gray-200 text-gray-400 cursor-not-allowed'
                   }`}
                 >
-                  {hatchingRarity === egg.rarity ? '孵化中…' : canAfford ? '購買孵化' : '金幣不足'}
+                  {hatchingRarity !== null
+                    ? (hatchingRarity === egg.rarity ? '孵化中…' : '請等待孵化完成')
+                    : (canAfford ? '購買孵化' : '金幣不足')}
                 </button>
               </div>
             );
@@ -145,6 +148,9 @@ export const ShopPage: React.FC<ShopPageProps> = ({ user, onNavigateToPet }) => 
         </div>
       )}
 
+      {/* Tutorial */}
+      <PetGuide />
+
       {/* Recent transactions */}
       <section>
         <h2 className="text-lg font-bold text-gray-800 mb-3 flex items-center gap-2">
@@ -158,8 +164,8 @@ export const ShopPage: React.FC<ShopPageProps> = ({ user, onNavigateToPet }) => 
             {transactions.map(tx => (
               <div key={tx.id} className="flex items-center justify-between px-4 py-3">
                 <div>
-                  <p className="text-sm font-medium text-gray-700">{tx.note || tx.reason}</p>
-                  <p className="text-xs text-gray-400">{new Date(tx.timestamp).toLocaleString('zh-TW')}</p>
+                  <p className="text-sm font-medium text-gray-700">{tx.note || REASON_LABEL[tx.reason] || tx.reason}</p>
+                  <p className="text-xs text-gray-400">{new Date(tx.timestamp).toLocaleString('zh-TW', { dateStyle: 'short', timeStyle: 'short' })}</p>
                 </div>
                 <span className={`text-sm font-bold ${tx.amount >= 0 ? 'text-green-600' : 'text-red-500'}`}>
                   {tx.amount >= 0 ? '+' : ''}{tx.amount} 🪙

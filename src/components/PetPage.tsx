@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Heart, Star, Zap, AlertCircle } from 'lucide-react';
+import { Heart, Star, Zap, AlertCircle, Pencil } from 'lucide-react';
 import { User as FirebaseUser } from 'firebase/auth';
 import { usePet } from '../hooks/usePet';
 import { useCoins } from '../hooks/useCoins';
@@ -100,11 +100,12 @@ export const PetPage: React.FC<PetPageProps> = ({ user, onNavigateToShop }) => {
           <div className="text-center">
             <button
               onClick={() => { setNameInput(pet.name || ''); setNamingMode(true); }}
-              className="group"
+              className="group flex items-center justify-center gap-1.5"
             >
               <h2 className="text-xl font-black text-gray-800 group-hover:text-blue-600 transition-colors">
-                {pet.name || <span className="text-gray-400 italic">（點擊取名）</span>}
+                {pet.name || <span className="text-base font-medium text-blue-400 underline underline-offset-2 decoration-dashed">點擊取名</span>}
               </h2>
+              <Pencil size={13} className={`transition-colors ${pet.name ? 'text-gray-300 group-hover:text-blue-400' : 'text-blue-400'}`} />
             </button>
             <div className="flex items-center justify-center gap-2 mt-1">
               <span className={`text-xs font-bold px-2 py-0.5 rounded-full border ${RARITY_COLOR[pet.eggRarity]}`}>
@@ -163,7 +164,7 @@ export const PetPage: React.FC<PetPageProps> = ({ user, onNavigateToShop }) => {
                 : 'bg-gray-100 text-gray-400 cursor-not-allowed'
             }`}
           >
-            🍖 餵食 ({FEED_COST}🪙)
+            {coins >= FEED_COST ? `🍖 餵食 (${FEED_COST}🪙)` : '金幣不足，無法餵食'}
           </button>
           <button
             onClick={() => setConfirmAbandon(true)}
