@@ -60,7 +60,7 @@ export const MeetingNotesPage: React.FC<MeetingNotesPageProps> = ({ user }) => {
     setDraft({ title: m.title, date: m.date, type: m.type, attendees: m.attendees, notes: m.notes });
     setIsDirty(false);
     setConfirmDelete(false);
-    setAiSummary(null);
+    setAiSummary(m.aiSummary ?? null);
     setMobileShowDetail(true);
   };
 
@@ -103,6 +103,7 @@ export const MeetingNotesPage: React.FC<MeetingNotesPageProps> = ({ user }) => {
     try {
       const result = await summarizeMeeting(draft.title, draft.type, draft.attendees, draft.notes);
       setAiSummary(result);
+      updateMeeting(selectedId, { aiSummary: result }).catch(console.error);
     } catch {
       toast.error('AI 摘要失敗，請確認 Gemini API Key');
     } finally {

@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 import { MeetingNote, MeetingActionItem, OperationType } from '../types';
 import { handleFirestoreError } from '../utils/firestoreUtils';
 import { getTodayStr } from '../utils/qaUtils';
+import { awardCoins } from '../services/coinService';
 
 function genId(): string {
   return Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
@@ -47,6 +48,7 @@ export function useMeetingNotes(user: FirebaseUser | null) {
         createdAt: Date.now(),
         updatedAt: Date.now(),
       });
+      awardCoins(user.uid, 'create_meeting').catch(console.error);
       return ref.id;
     } catch (error) {
       toast.error('建立失敗');
@@ -86,10 +88,14 @@ export function useMeetingNotes(user: FirebaseUser | null) {
   const toggleActionItem = async (meetingId: string, itemId: string) => {
     const meeting = meetings.find(m => m.id === meetingId);
     if (!meeting) return;
+    const togglingOn = !meeting.actionItems.find(ai => ai.id === itemId)?.done;
     const updated = meeting.actionItems.map(ai =>
       ai.id === itemId ? { ...ai, done: !ai.done } : ai
     );
     await updateMeeting(meetingId, { actionItems: updated });
+    if (user && togglingOn && updated.length > 0 && updated.every(ai => ai.done)) {
+      awardCoins(user.uid, 'meeting_action_done').catch(console.error);
+    }
   };
 
   const convertToTodo = async (meetingId: string, itemId: string) => {

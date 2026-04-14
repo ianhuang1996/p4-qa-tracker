@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { Search, X, Bug, CheckSquare, BookOpen, FileText } from 'lucide-react';
+import { Search, X, Bug, CheckSquare, BookOpen, FileText, NotebookPen } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useAppContext } from '../contexts/AppContext';
 import { useQAItems } from '../hooks/useQAItems';
 import { useWikiPages } from '../hooks/useWikiPages';
 import { useTodos } from '../hooks/useTodos';
+import { useMeetingNotes } from '../hooks/useMeetingNotes';
 import { normalizeDate, getTodayStr } from '../utils/qaUtils';
 import { STATUS_COLORS, PRIORITY_COLORS } from '../constants';
 import { AppPage } from '../types';
@@ -18,6 +19,7 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({ onNavigate }) => {
   const { data: qaData } = useQAItems(user, isAuthReady);
   const { pages: wikiPages } = useWikiPages(user);
   const { todos } = useTodos(user, getTodayStr(), 'day');
+  const { meetings } = useMeetingNotes(user);
 
   const [isOpen, setIsOpen] = useState(false);
   const [query, setQuery] = useState('');
@@ -47,7 +49,7 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({ onNavigate }) => {
   const results = useMemo(() => {
     if (!query.trim()) return [];
     const q = query.toLowerCase();
-    const items: { type: 'qa' | 'todo' | 'wiki'; id: string; title: string; subtitle: string; page: AppPage }[] = [];
+    const items: { type: 'qa' | 'todo' | 'wiki' | 'meeting'; id: string; title: string; subtitle: string; page: AppPage }[] = [];
 
     // QA items
     qaData.forEach(item => {
@@ -97,14 +99,33 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({ onNavigate }) => {
       }
     });
 
-    return items.slice(0, 10);
-  }, [query, qaData, wikiPages, todos]);
+    // Meeting notes
+    meetings.forEach(m => {
+      if (
+        m.title.toLowerCase().includes(q) ||
+        m.notes.toLowerCase().includes(q) ||
+        m.actionItems.some(ai => ai.text.toLowerCase().includes(q))
+      ) {
+        const typeLabel = m.type === 'client' ? '客戶會議' : '組內討論';
+        items.push({
+          type: 'meeting',
+          id: m.id,
+          title: m.title || '（未命名）',
+          subtitle: `${m.date} · ${typeLabel}`,
+          page: 'meetings',
+        });
+      }
+    });
+
+    return items.slice(0, 12);
+  }, [query, qaData, wikiPages, todos, meetings]);
 
   const typeIcon = (type: string) => {
     switch (type) {
       case 'qa': return <Bug size={14} className="text-red-500" />;
       case 'wiki': return <BookOpen size={14} className="text-purple-500" />;
       case 'todo': return <CheckSquare size={14} className="text-blue-500" />;
+      case 'meeting': return <NotebookPen size={14} className="text-teal-500" />;
       default: return <FileText size={14} />;
     }
   };
@@ -137,7 +158,7 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({ onNavigate }) => {
                   setIsOpen(false);
                 }
               }}
-              placeholder="搜尋 QA 項目、知識庫、待辦..."
+              placeholder="搜尋 QA 項目、知識庫、待辦、會議紀錄..."
               className="flex-1 text-sm border-none outline-none bg-transparent placeholder:text-gray-400"
             />
             <kbd className="hidden sm:inline text-[10px] text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded border border-gray-200 font-mono">ESC</kbd>

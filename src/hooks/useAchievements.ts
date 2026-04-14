@@ -2,7 +2,7 @@ import { useMemo, useState, useEffect, useRef } from 'react';
 import { User as FirebaseUser } from 'firebase/auth';
 import { db } from '../firebase';
 import { collection, onSnapshot, query, where, orderBy, limit as fbLimit, addDoc, getDocs } from 'firebase/firestore';
-import { QAItem, AugmentedQAItem, TodoItem, WikiPage, Release, DailyReport, TeamGoalProgress, AchievementLog } from '../types';
+import { QAItem, AugmentedQAItem, TodoItem, WikiPage, Release, DailyReport, TeamGoalProgress, AchievementLog, MeetingNote } from '../types';
 import { ACHIEVEMENT_DEFS, TEAM_GOAL_DEFS, HOLIDAYS_2026, PMS, RDS, MODULES } from '../constants';
 import { augmentQAItems } from '../utils/qaUtils';
 import { toast } from 'sonner';
@@ -43,6 +43,7 @@ interface MetricInputs {
   wikiPages: WikiPage[];
   releases: Release[];
   dailyReports: DailyReport[];
+  meetings: MeetingNote[];
   userName: string;
   userId: string;
 }
@@ -232,6 +233,12 @@ function computeMetrics(inputs: MetricInputs): Record<string, number> {
   });
   metrics.categories_unlocked = unlockedCategories.size;
 
+  // --- Meeting metrics ---
+  metrics.meetings_created = inputs.meetings.filter(m => m.createdBy === userId).length;
+  metrics.actions_converted = inputs.meetings
+    .filter(m => m.createdBy === userId)
+    .reduce((sum, m) => sum + m.actionItems.filter(ai => !!ai.linkedTodoId).length, 0);
+
   return metrics;
 }
 
@@ -244,9 +251,10 @@ interface UseAchievementsParams {
   wikiPages: WikiPage[];
   releases: Release[];
   dailyReports: DailyReport[];
+  meetings: MeetingNote[];
 }
 
-export function useAchievements({ user, qaItems, todos, wikiPages, releases, dailyReports }: UseAchievementsParams) {
+export function useAchievements({ user, qaItems, todos, wikiPages, releases, dailyReports, meetings }: UseAchievementsParams) {
   const augmented = useMemo(() => augmentQAItems(qaItems), [qaItems]);
 
   const metrics = useMemo(() => {
@@ -258,10 +266,11 @@ export function useAchievements({ user, qaItems, todos, wikiPages, releases, dai
       wikiPages,
       releases,
       dailyReports,
+      meetings,
       userName: user.displayName || '',
       userId: user.uid,
     });
-  }, [user, augmented, qaItems, todos, wikiPages, releases, dailyReports]);
+  }, [user, augmented, qaItems, todos, wikiPages, releases, dailyReports, meetings]);
 
   const unlockedAchievements = useMemo(() => {
     return ACHIEVEMENT_DEFS.filter(def => {

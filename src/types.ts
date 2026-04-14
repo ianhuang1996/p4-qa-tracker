@@ -101,6 +101,7 @@ export interface MeetingNote {
   attendees: string[];
   notes: string;          // free-form text / Markdown
   actionItems: MeetingActionItem[];
+  aiSummary?: { keyPoints: string[]; suggestedActions: string[] };
   createdBy: string;
   createdByName: string;
   createdAt: number;
@@ -145,7 +146,8 @@ export type CoinReason =
   | 'retest_pass' | 'retest_fail'
   | 'file_bug' | 'daily_report' | 'todo_clear' | 'create_wiki' | 'create_todo'
   | 'release_publish' | 'release_zero_p0' | 'streak_bonus' | 'achievement_unlock'
-  | 'phoenix_bonus' | 'history_retroactive';
+  | 'phoenix_bonus' | 'history_retroactive'
+  | 'create_meeting' | 'meeting_action_done';
 
 export interface CoinTransaction {
   id: string;

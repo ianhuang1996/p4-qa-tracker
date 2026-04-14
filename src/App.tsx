@@ -5,6 +5,7 @@ import { AppProvider, useAppContext } from './contexts/AppContext';
 import { useNotifications } from './hooks/useNotifications';
 import { useQAItems } from './hooks/useQAItems';
 import { useTodos } from './hooks/useTodos';
+import { useMeetingNotes } from './hooks/useMeetingNotes';
 import { getTodayStr } from './utils/qaUtils';
 import { Sidebar } from './components/Sidebar';
 import { NotificationCenter } from './components/NotificationCenter';
@@ -81,13 +82,16 @@ function AppLayout() {
   const { unreadCount } = useNotifications(user);
   const { data: qaData } = useQAItems(user, isAuthReady);
   const { todos } = useTodos(user, getTodayStr(), 'day');
+  const { meetings } = useMeetingNotes(user);
   const [showNotifications, setShowNotifications] = useState(false);
 
   const sidebarBadges = useMemo(() => {
     const qaActive = qaData.filter(i => i.currentFlow !== '已關閉' && i.currentFlow !== '已修復').length;
     const todoPending = todos.filter(t => !t.completed && t.assignee === (user?.displayName || '')).length;
-    return { qa: qaActive || undefined, todo: todoPending || undefined };
-  }, [qaData, todos, user]);
+    const meetingsPending = meetings.reduce((sum, m) =>
+      sum + m.actionItems.filter(ai => !ai.done && !ai.linkedTodoId).length, 0);
+    return { qa: qaActive || undefined, todo: todoPending || undefined, meetings: meetingsPending || undefined };
+  }, [qaData, todos, meetings, user]);
 
   if (!isAuthReady) return <LoadingSkeleton />;
   if (!user) return <LoginScreen />;
@@ -132,6 +136,7 @@ function AppLayout() {
               <OverviewPage
                 onNavigateToQA={() => setCurrentPage('qa')}
                 onNavigateToTodo={() => setCurrentPage('todo')}
+                onNavigateToMeetings={() => setCurrentPage('meetings')}
               />
             ) : (
               <Suspense fallback={<div className="flex items-center justify-center py-32"><Loader2 className="w-6 h-6 animate-spin text-blue-500" /></div>}>

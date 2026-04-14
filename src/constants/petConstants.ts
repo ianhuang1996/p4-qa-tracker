@@ -63,6 +63,8 @@ export const COIN_REWARDS: Record<CoinReason, number> = {
   achievement_unlock:  20,
   phoenix_bonus:       30,
   history_retroactive:  0,   // calculated dynamically (2x of base)
+  create_meeting:       8,
+  meeting_action_done: 15,
 };
 
 // ─── Level / XP System ──────────────────────────────────────────
@@ -147,6 +149,8 @@ export const REASON_LABEL: Record<string, string> = {
   achievement_unlock:  '解鎖成就',
   phoenix_bonus:       '鳳凰加成（退回後修復）',
   history_retroactive: '歷史紀錄回溯獎勵',
+  create_meeting:      '建立會議紀錄',
+  meeting_action_done: '完成全部行動項目',
   hatch_common_egg:    '孵化普通蛋',
   hatch_rare_egg:      '孵化稀有蛋',
   hatch_legendary_egg: '孵化傳說蛋',

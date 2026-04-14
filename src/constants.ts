@@ -190,6 +190,9 @@ export const ACHIEVEMENT_DEFS: AchievementDef[] = [
   // 溝通
   { id: 'comment_50', name: '話題王', description: '留言 50 則', icon: '💬', category: 'communication', tier: 1, condition: { metric: 'comments_made', threshold: 50 } },
   { id: 'comment_200', name: '導師', description: '留言 200 則', icon: '🎓', category: 'communication', tier: 3, condition: { metric: 'comments_made', threshold: 200 } },
+  { id: 'meeting_1', name: '會議達人', description: '建立第一份會議紀錄', icon: '📋', category: 'communication', tier: 1, condition: { metric: 'meetings_created', threshold: 1 } },
+  { id: 'meeting_10', name: '會議老手', description: '建立 10 份會議紀錄', icon: '🗓️', category: 'communication', tier: 2, condition: { metric: 'meetings_created', threshold: 10 } },
+  { id: 'actions_10', name: '行動力', description: '將 10 個 Action Item 轉為待辦', icon: '🎯', category: 'communication', tier: 1, condition: { metric: 'actions_converted', threshold: 10 } },
   // 版更
   { id: 'release_5', name: '出貨達人', description: '參與 5 次版更', icon: '📦', category: 'release', tier: 1, condition: { metric: 'releases_participated', threshold: 5 } },
   { id: 'release_10', name: '里程碑', description: '參與 10 次版更', icon: '🏅', category: 'release', tier: 2, condition: { metric: 'releases_participated', threshold: 10 } },

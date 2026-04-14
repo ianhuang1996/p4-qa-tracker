@@ -1,10 +1,11 @@
 import React, { useMemo, useState } from 'react';
-import { CheckCircle2, Circle, Bug, ArrowRight, Flag, AlertTriangle } from 'lucide-react';
+import { CheckCircle2, Circle, Bug, ArrowRight, Flag, AlertTriangle, NotebookPen } from 'lucide-react';
 import { User as FirebaseUser } from 'firebase/auth';
 import { useTodos } from '../hooks/useTodos';
 import { useAugmentedQAItems } from '../hooks/useAugmentedQAItems';
 import { useReleases } from '../hooks/useReleases';
 import { useWikiPages } from '../hooks/useWikiPages';
+import { useMeetingNotes } from '../hooks/useMeetingNotes';
 import { useAchievements, useAllDailyReports, useAchievementLogs, useUserTiers, getAvatarRing } from '../hooks/useAchievements';
 import { useAppContext } from '../contexts/AppContext';
 import { getTodayStr, getAvatarColor } from '../utils/qaUtils';
@@ -35,15 +36,17 @@ const PRIORITY_FLAG: Record<string, string> = {
 interface OverviewPageProps {
   onNavigateToQA: () => void;
   onNavigateToTodo: () => void;
+  onNavigateToMeetings: () => void;
 }
 
-export const OverviewPage: React.FC<OverviewPageProps> = ({ onNavigateToQA, onNavigateToTodo }) => {
+export const OverviewPage: React.FC<OverviewPageProps> = ({ onNavigateToQA, onNavigateToTodo, onNavigateToMeetings }) => {
   const { user, isAuthReady } = useAppContext();
   const today = getTodayStr();
   const { todos } = useTodos(user, today, 'day');
   const { data, augmentedData } = useAugmentedQAItems(user, isAuthReady);
   const { releases } = useReleases(user);
   const { pages: wikiPages } = useWikiPages(user);
+  const { meetings } = useMeetingNotes(user);
   const allDailyReports = useAllDailyReports(user);
 
   const achievementLogs = useAchievementLogs(user);
@@ -56,6 +59,7 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ onNavigateToQA, onNa
     wikiPages,
     releases,
     dailyReports: allDailyReports,
+    meetings,
   });
 
   const myTodos = useMemo(() => {
@@ -85,6 +89,14 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ onNavigateToQA, onNa
 
   const myPendingTodos = myTodos.filter(t => !t.completed);
   const myCompletedTodos = myTodos.filter(t => t.completed);
+
+  const openActionItems = useMemo(() => {
+    return meetings.flatMap(m =>
+      m.actionItems
+        .filter(ai => !ai.done && !ai.linkedTodoId)
+        .map(ai => ({ ...ai, meetingTitle: m.title || '（未命名）', meetingDate: m.date }))
+    ).slice(0, 5);
+  }, [meetings]);
 
   // Release urgency alerts
   const releaseAlerts = useMemo(() => {
@@ -259,6 +271,35 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ onNavigateToQA, onNa
           </div>
         </div>
       </div>
+
+      {/* Meeting Action Items */}
+      {openActionItems.length > 0 && (
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+          <div className="flex items-center justify-between p-5 border-b border-gray-100">
+            <h3 className="text-sm font-bold text-gray-900 flex items-center gap-2">
+              <NotebookPen size={16} className="text-teal-500" />
+              待跟進行動項目
+            </h3>
+            <button onClick={onNavigateToMeetings} className="text-xs text-blue-600 hover:text-blue-700 font-bold flex items-center gap-1">
+              查看會議 <ArrowRight size={12} />
+            </button>
+          </div>
+          <div className="p-4 space-y-2">
+            {openActionItems.map((ai, idx) => (
+              <div key={`${ai.id}-${idx}`} className="flex items-start gap-3 p-3 rounded-xl hover:bg-gray-50 transition-colors">
+                <div className="w-1.5 h-1.5 rounded-full bg-teal-400 mt-2 shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm text-gray-800">{ai.text}</p>
+                  <p className="text-[10px] text-gray-400 mt-0.5">{ai.meetingTitle} · {ai.meetingDate}</p>
+                </div>
+                {ai.assignee && (
+                  <span className="text-[10px] text-gray-500 shrink-0 bg-gray-100 px-1.5 py-0.5 rounded-full">{ai.assignee}</span>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Daily Report */}
       <DailyReportEditor />
