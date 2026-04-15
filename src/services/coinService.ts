@@ -42,7 +42,13 @@ export async function awardCoins(
       if (newLevel !== petData.level) updates['pet.level'] = newLevel;
       if (newStage !== petData.stage) updates['pet.stage'] = newStage;
     }
-    tx.set(userRef, updates, { merge: true });
+    // Must use update (not set+merge) so dot-notation paths resolve to nested fields
+    if (snap.exists()) {
+      tx.update(userRef, updates);
+    } else {
+      // New user doc: no pet yet, updates only contains { coins } — set+merge is safe here
+      tx.set(userRef, updates, { merge: true });
+    }
   });
 
   logTx(userId, amount, reason, note);
