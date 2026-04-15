@@ -95,16 +95,16 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   <button
                     key={item.page}
                     onClick={() => handleNavigate(item.page)}
-                    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors relative ${
+                    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors relative ${
                       currentPage === item.page
-                        ? 'bg-blue-600/20 text-blue-400'
-                        : 'text-gray-400 hover:text-white hover:bg-gray-800'
+                        ? 'bg-blue-500/25 text-blue-300 font-semibold'
+                        : 'font-medium text-gray-400 hover:text-white hover:bg-gray-800'
                     }`}
                     title={collapsed ? item.label : undefined}
                     aria-label={item.label}
                   >
                     {currentPage === item.page && (
-                      <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 bg-blue-500 rounded-r-full" />
+                      <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-blue-400 rounded-r-full" />
                     )}
                     <span className="shrink-0">{item.icon}</span>
                     {!collapsed && <span className="flex-1 text-left">{item.label}</span>}

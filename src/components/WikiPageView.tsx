@@ -173,6 +173,20 @@ export const WikiPageView: React.FC = () => {
 
         {/* Page list grouped by category */}
         <div className="space-y-4 overflow-y-auto max-h-[60vh] lg:max-h-[calc(100vh-450px)]">
+          {isLoading && pages.length === 0 && (
+            <div className="space-y-3 animate-pulse">
+              {[1, 2].map(g => (
+                <div key={g}>
+                  <div className="h-3 w-16 bg-gray-100 rounded mb-2" />
+                  <div className="space-y-1">
+                    {[1, 2, 3].map(i => (
+                      <div key={i} className="h-9 bg-gray-100 rounded-lg" />
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
           {Object.entries(groupedPages).map(([category, categoryPages]) => (
             <div key={category}>
               <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1 flex items-center gap-1">

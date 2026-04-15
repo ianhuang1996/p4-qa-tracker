@@ -224,7 +224,14 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ onNavigateToQA, onNa
           </div>
           <div className="p-4 space-y-2">
             {myTodos.length === 0 ? (
-              <p className="text-sm text-gray-400 text-center py-6">今天還沒有待辦事項</p>
+              <div className="flex flex-col items-center gap-2 py-8 text-center">
+                <span className="text-3xl">✅</span>
+                <p className="text-sm font-medium text-gray-500">今天沒有待辦</p>
+                <p className="text-xs text-gray-400">休息一下，或前往新增任務</p>
+                <button onClick={onNavigateToTodo} className="mt-1 text-xs text-blue-600 hover:text-blue-700 font-bold flex items-center gap-1">
+                  前往待辦 <ArrowRight size={12} />
+                </button>
+              </div>
             ) : (
               [...myPendingTodos, ...myCompletedTodos].slice(0, 6).map(todo => (
                 <div key={todo.id} className={`flex items-center gap-3 p-3 rounded-xl transition-all ${todo.completed ? 'opacity-50' : ''}`}>
@@ -250,7 +257,14 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ onNavigateToQA, onNa
           </div>
           <div className="p-4 space-y-2">
             {recentItems.length === 0 ? (
-              <p className="text-sm text-gray-400 text-center py-6">目前沒有 QA 項目</p>
+              <div className="flex flex-col items-center gap-2 py-8 text-center">
+                <span className="text-3xl">🎉</span>
+                <p className="text-sm font-medium text-gray-500">沒有待處理的 QA 項目</p>
+                <p className="text-xs text-gray-400">有新的問題？前往新增</p>
+                <button onClick={onNavigateToQA} className="mt-1 text-xs text-blue-600 hover:text-blue-700 font-bold flex items-center gap-1">
+                  前往 QA 追蹤 <ArrowRight size={12} />
+                </button>
+              </div>
             ) : (
               recentItems.map(item => (
                 <div key={item.id} className="flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 transition-colors cursor-pointer" onClick={onNavigateToQA}>

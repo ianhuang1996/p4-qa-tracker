@@ -105,8 +105,8 @@ export const FilterBar = React.memo(function FilterBar({
             {versions.map(v => <option key={v} value={v}>{v}</option>)}
           </select>
 
-          {/* Date range */}
-          <div className="flex items-center gap-1">
+          {/* Date range — hidden on mobile, shown in filter panel */}
+          <div className="hidden sm:flex items-center gap-1">
             <input
               type="date"
               className="text-xs border border-gray-200 rounded-lg px-2 py-2 bg-white focus:ring-1 focus:ring-blue-500 focus:border-blue-500 w-[120px]"
@@ -213,6 +213,24 @@ export const FilterBar = React.memo(function FilterBar({
                 {m}
               </button>
             ))}
+          </div>
+
+          {/* Date range — mobile only (desktop shows in top row) */}
+          <div className="sm:hidden flex items-center gap-2 flex-wrap">
+            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider w-12 shrink-0">日期</span>
+            <input
+              type="date"
+              className="text-xs border border-gray-200 rounded-lg px-2 py-1.5 bg-white focus:ring-1 focus:ring-blue-500 focus:border-blue-500 flex-1 min-w-[110px]"
+              value={dateRange.start}
+              onChange={(e) => setDateRange({ ...dateRange, start: e.target.value })}
+            />
+            <span className="text-gray-400 text-xs">~</span>
+            <input
+              type="date"
+              className="text-xs border border-gray-200 rounded-lg px-2 py-1.5 bg-white focus:ring-1 focus:ring-blue-500 focus:border-blue-500 flex-1 min-w-[110px]"
+              value={dateRange.end}
+              onChange={(e) => setDateRange({ ...dateRange, end: e.target.value })}
+            />
           </div>
 
           {/* Clear all */}

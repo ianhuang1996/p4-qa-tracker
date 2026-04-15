@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Save, Trash2, ArrowLeft, CheckSquare2, Square, Users, Calendar, Sparkles, Loader2 } from 'lucide-react';
+import { Plus, Save, Trash2, ArrowLeft, CheckSquare2, Square, Users, Calendar, Sparkles, Loader2, ArrowRight } from 'lucide-react';
 import { User as FirebaseUser } from 'firebase/auth';
 import { toast } from 'sonner';
 import { useMeetingNotes } from '../hooks/useMeetingNotes';
@@ -147,7 +147,17 @@ export const MeetingNotesPage: React.FC<MeetingNotesPageProps> = ({ user, onNavi
 
       <div className="flex-1 overflow-y-auto">
         {isLoading ? (
-          <p className="p-4 text-sm text-gray-400">載入中…</p>
+          <div className="p-3 space-y-2 animate-pulse">
+            {[1, 2, 3].map(i => (
+              <div key={i} className="px-3 py-3 rounded-xl border border-gray-100">
+                <div className="flex items-center gap-2 mb-1.5">
+                  <div className="h-4 w-14 bg-gray-100 rounded-full" />
+                  <div className="h-3 w-20 bg-gray-100 rounded" />
+                </div>
+                <div className="h-4 w-3/4 bg-gray-100 rounded" />
+              </div>
+            ))}
+          </div>
         ) : meetings.length === 0 ? (
           <div className="p-8 text-center text-gray-400 text-sm space-y-3">
             <p className="text-3xl">📋</p>
@@ -379,9 +389,9 @@ export const MeetingNotesPage: React.FC<MeetingNotesPageProps> = ({ user, onNavi
                       action: { label: '前往待辦', onClick: onNavigateToTodo },
                     } : undefined);
                   })}
-                  className="text-[10px] text-blue-500 hover:text-blue-700 font-medium shrink-0 whitespace-nowrap"
+                  className="flex items-center gap-1 text-[10px] font-bold text-blue-600 hover:text-blue-700 border border-blue-200 hover:border-blue-400 hover:bg-blue-50 px-1.5 py-0.5 rounded-lg shrink-0 transition-colors whitespace-nowrap"
                 >
-                  → 待辦
+                  派工 <ArrowRight size={10} />
                 </button>
               )}
             </div>

@@ -493,7 +493,7 @@ export const ReleasePage: React.FC = () => {
                     <button onClick={() => setEditingNotes(false)} className="text-xs text-gray-500 px-3 py-1.5">取消</button>
                     <button
                       onClick={() => { updateRelease(selectedRelease.id, { releaseNotes: noteDraft }); setEditingNotes(false); }}
-                      className="text-xs bg-blue-600 text-white px-4 py-1.5 rounded-lg font-bold hover:bg-blue-700"
+                      className="text-xs bg-blue-600 text-white px-4 py-1.5 rounded-lg font-bold hover:bg-blue-700 transition-colors"
                     >
                       儲存
                     </button>
