@@ -89,7 +89,7 @@ export const ModalEditForm: React.FC<ModalEditFormProps> = ({
           className="w-full p-4 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all min-h-[120px] font-mono text-sm"
           value={editForm?.description || ''}
           onChange={(e) => setEditForm(prev => prev ? { ...prev, description: e.target.value } : null)}
-          placeholder="請詳細描述問題內容... (支援 Markdown)"
+          placeholder={"## 現況\n\n\n## 預期結果\n\n"}
         />
       </div>
 

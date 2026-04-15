@@ -218,7 +218,7 @@ export const QAPage: React.FC<QAPageProps> = () => {
     const uniqueId = `Q_NEW_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
     const newItem = {
       id: uniqueId, title: '', priority: '-', date: getTodayStr(), module: '其他',
-      tester: user?.displayName || 'Ian', description: '現況：\n\n預期結果：\n', imageLink: '', imageLinks: [],
+      tester: user?.displayName || 'Ian', description: '## 現況\n\n\n## 預期結果\n\n', imageLink: '', imageLinks: [],
       videoLink: '', videoLinks: [], currentFlow: STATUS.pending, assignee: 'Unassigned', answer: '',
       version: selectedVersion !== 'all' ? selectedVersion : '', attachmentUrl: '', attachmentName: '', attachments: []
     };
