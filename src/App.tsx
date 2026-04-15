@@ -149,7 +149,7 @@ function AppLayout() {
                 ) : currentPage === 'pet' ? (
                   <PetPage user={user} />
                 ) : currentPage === 'meetings' ? (
-                  <MeetingNotesPage user={user} />
+                  <MeetingNotesPage user={user} onNavigateToTodo={() => setCurrentPage('todo')} />
                 ) : (
                   <QAPage />
                 )}

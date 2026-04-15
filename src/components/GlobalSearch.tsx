@@ -16,7 +16,7 @@ interface GlobalSearchProps {
 }
 
 export const GlobalSearch: React.FC<GlobalSearchProps> = ({ onNavigate }) => {
-  const { user, isAuthReady, navigateToQAItem } = useAppContext();
+  const { user, isAuthReady, navigateToQAItem, navigateToWikiPage, navigateToMeetingNote } = useAppContext();
   const { data: qaData } = useQAItems(user, isAuthReady);
   const { pages: wikiPages } = useWikiPages(user);
   const { todos } = useTodos(user, getTodayStr(), 'day');
@@ -155,7 +155,10 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({ onNavigate }) => {
                 else if (e.key === 'ArrowUp') { e.preventDefault(); setSelectedIdx(i => Math.max(i - 1, -1)); }
                 else if (e.key === 'Enter' && selectedIdx >= 0 && results[selectedIdx]) {
                   const item = results[selectedIdx];
-                  if (item.type === 'qa') { navigateToQAItem(item.id); } else { onNavigate(item.page); }
+                  if (item.type === 'qa') { navigateToQAItem(item.id); }
+                  else if (item.type === 'wiki') { navigateToWikiPage(item.id); }
+                  else if (item.type === 'meeting') { navigateToMeetingNote(item.id); }
+                  else { onNavigate(item.page); }
                   setIsOpen(false);
                 }
               }}
@@ -175,11 +178,10 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({ onNavigate }) => {
               <FadeIn key={`${item.type}-${item.id}-${idx}`} slideY={4} duration={0.12} delay={idx * 0.03}>
                 <button
                   onClick={() => {
-                    if (item.type === 'qa') {
-                      navigateToQAItem(item.id);
-                    } else {
-                      onNavigate(item.page);
-                    }
+                    if (item.type === 'qa') { navigateToQAItem(item.id); }
+                    else if (item.type === 'wiki') { navigateToWikiPage(item.id); }
+                    else if (item.type === 'meeting') { navigateToMeetingNote(item.id); }
+                    else { onNavigate(item.page); }
                     setIsOpen(false);
                   }}
                   className={`w-full flex items-center gap-3 px-5 py-3 hover:bg-blue-50 transition-colors text-left border-b border-gray-50 last:border-0 ${idx === selectedIdx ? 'bg-blue-50' : ''}`}

@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { ArrowRight, Calendar, Package, Clock } from 'lucide-react';
+import { ArrowRight, Calendar, Package, Clock, AlertTriangle } from 'lucide-react';
 import { Release, AugmentedQAItem } from '../types';
 
 function getDaysUntil(dateStr: string): number {
@@ -45,8 +45,12 @@ export const NextReleaseBlock: React.FC<Props> = ({ releases, allItems, onNaviga
 
   const current = unreleased[Math.min(selectedIdx, unreleased.length - 1)];
   const linkedItems = allItems.filter(i => current.linkedItemIds.includes(i.id));
-  const fixedCount = linkedItems.filter(i => i.currentFlow === '已修復' || i.currentFlow === '已關閉' || i.currentFlow === '已修正待測試').length;
+  const RESOLVED = new Set(['已修復', '已關閉', '已修正待測試']);
+  const fixedCount = linkedItems.filter(i => RESOLVED.has(i.currentFlow)).length;
   const totalItems = linkedItems.length;
+  const blockingItems = linkedItems
+    .filter(i => (i.priority === 'P0' || i.priority === 'P1') && !RESOLVED.has(i.currentFlow))
+    .slice(0, 2);
   const fixPct = totalItems > 0 ? Math.round((fixedCount / totalItems) * 100) : 0;
   const checklistDone = current.checklist.filter(c => c.checked).length;
   const checklistTotal = current.checklist.length;
@@ -125,6 +129,20 @@ export const NextReleaseBlock: React.FC<Props> = ({ releases, allItems, onNaviga
           前往版更管理 <ArrowRight size={12} />
         </button>
       </div>
+
+      {/* Blocking items */}
+      {blockingItems.length > 0 && (
+        <div className="px-4 pb-4 space-y-1.5">
+          {blockingItems.map(item => (
+            <div key={item.id} className="flex items-center gap-2 bg-red-50 border border-red-100 rounded-lg px-3 py-1.5">
+              <AlertTriangle size={12} className="text-red-500 shrink-0" />
+              <span className="text-[10px] font-bold text-red-600 shrink-0">{item.priority}</span>
+              <span className="text-[11px] text-red-700 truncate flex-1">{item.title || item.description?.substring(0, 60) || item.id}</span>
+              <span className="text-[10px] text-red-400 shrink-0">{item.assignee}</span>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 };

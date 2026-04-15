@@ -17,8 +17,15 @@ interface AppContextValue {
   toggleSidebar: () => void;
   handleLogin: () => Promise<void>;
   handleLogout: () => Promise<void>;
+  // Deep-link helpers — navigate to a page AND open a specific item
   pendingItemId: string | null;
   navigateToQAItem: (itemId: string) => void;
+  pendingWikiId: string | null;
+  navigateToWikiPage: (pageId: string) => void;
+  clearPendingWikiId: () => void;
+  pendingMeetingId: string | null;
+  navigateToMeetingNote: (meetingId: string) => void;
+  clearPendingMeetingId: () => void;
 }
 
 const AppContext = createContext<AppContextValue | null>(null);
@@ -33,16 +40,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [user, setUser] = useState<FirebaseUser | null>(null);
   const [isAuthReady, setIsAuthReady] = useState(false);
   const [pendingItemId, setPendingItemId] = useState<string | null>(null);
-
-  const navigateToQAItem = (itemId: string) => {
-    setPendingItemId(itemId);
-    setCurrentPage('qa');
-  };
+  const [pendingWikiId, setPendingWikiId] = useState<string | null>(null);
+  const [pendingMeetingId, setPendingMeetingId] = useState<string | null>(null);
 
   const [currentPage, setCurrentPage] = useState<AppPage>(() => {
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('currentPage');
-      if (['overview', 'todo', 'qa', 'release', 'wiki'].includes(saved || '')) return saved as AppPage;
+      if (['overview', 'todo', 'qa', 'release', 'wiki', 'meetings', 'pet'].includes(saved || '')) return saved as AppPage;
     }
     return 'overview';
   });
@@ -82,7 +86,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const handleLogin = async () => {
     const provider = new GoogleAuthProvider();
     try {
-      // Use redirect for embedded browsers (LINE, etc.), popup for normal browsers
       const isEmbedded = /Line|FBAN|FBAV|Instagram|Twitter/i.test(navigator.userAgent);
       if (isEmbedded) {
         await signInWithRedirect(auth, provider);
@@ -110,7 +113,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     handleLogin,
     handleLogout,
     pendingItemId,
-    navigateToQAItem,
+    navigateToQAItem: (itemId) => { setPendingItemId(itemId); setCurrentPage('qa'); },
+    pendingWikiId,
+    navigateToWikiPage: (pageId) => { setPendingWikiId(pageId); setCurrentPage('wiki'); },
+    clearPendingWikiId: () => setPendingWikiId(null),
+    pendingMeetingId,
+    navigateToMeetingNote: (meetingId) => { setPendingMeetingId(meetingId); setCurrentPage('meetings'); },
+    clearPendingMeetingId: () => setPendingMeetingId(null),
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

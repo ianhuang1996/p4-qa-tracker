@@ -33,14 +33,19 @@ export const ModalEditForm: React.FC<ModalEditFormProps> = ({
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="space-y-2">
-          <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">標題</label>
+          <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">
+            標題 <span className="text-red-500">*</span>
+          </label>
           <input
             type="text"
-            className="w-full p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+            className={`w-full p-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all ${editForm !== null && !editForm?.title?.trim() ? 'border-red-300 bg-red-50' : 'border-gray-200'}`}
             value={editForm?.title || ''}
             onChange={(e) => setEditForm(prev => prev ? { ...prev, title: e.target.value } : null)}
             placeholder="請輸入問題標題"
           />
+          {editForm !== null && !editForm?.title?.trim() && (
+            <p className="text-xs text-red-500">標題為必填</p>
+          )}
         </div>
         <div className="space-y-2">
           <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">優先級</label>

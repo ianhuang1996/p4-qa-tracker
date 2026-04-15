@@ -18,7 +18,7 @@ const CATEGORIES: { value: WikiCategory; label: string }[] = [
 ];
 
 export const WikiPageView: React.FC = () => {
-  const { user } = useAppContext();
+  const { user, pendingWikiId, clearPendingWikiId } = useAppContext();
   const { pages, isLoading, error: wikiError, addPage, updatePage, deletePage } = useWikiPages(user);
 
   const [selectedPageId, setSelectedPageId] = useState<string | null>(null);
@@ -30,7 +30,9 @@ export const WikiPageView: React.FC = () => {
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [newTitle, setNewTitle] = useState('');
   const [newCategory, setNewCategory] = useState<WikiCategory>('一般');
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const savedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const filteredPages = useMemo(() => {
     return pages.filter(p => {
@@ -52,6 +54,15 @@ export const WikiPageView: React.FC = () => {
   }, [filteredPages]);
 
   const selectedPage = pages.find(p => p.id === selectedPageId) || null;
+
+  // Deep-link: auto-select page from global search
+  useEffect(() => {
+    if (pendingWikiId && pages.length > 0) {
+      setSelectedPageId(pendingWikiId);
+      setIsEditing(false);
+      clearPendingWikiId();
+    }
+  }, [pendingWikiId, pages, clearPendingWikiId]);
 
   const handleCreate = async () => {
     if (!newTitle.trim()) return;
@@ -83,8 +94,12 @@ export const WikiPageView: React.FC = () => {
   useEffect(() => {
     if (!isEditing || !selectedPage) return;
     if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
-    saveTimerRef.current = setTimeout(() => {
-      updatePage(selectedPage.id, { title: editTitle, content: editContent });
+    setSaveStatus('saving');
+    saveTimerRef.current = setTimeout(async () => {
+      await updatePage(selectedPage.id, { title: editTitle, content: editContent });
+      setSaveStatus('saved');
+      if (savedTimerRef.current) clearTimeout(savedTimerRef.current);
+      savedTimerRef.current = setTimeout(() => setSaveStatus('idle'), 2000);
     }, 2000);
     return () => { if (saveTimerRef.current) clearTimeout(saveTimerRef.current); };
   }, [editContent, editTitle, isEditing, selectedPage, updatePage]);
@@ -224,7 +239,8 @@ export const WikiPageView: React.FC = () => {
               <div className="flex items-center gap-2">
                 {isEditing ? (
                   <>
-                    <span className="text-[10px] text-gray-400">自動儲存中</span>
+                    {saveStatus === 'saving' && <span className="text-[10px] text-gray-400">儲存中…</span>}
+                    {saveStatus === 'saved' && <span className="text-[10px] text-green-500 font-medium">已儲存 ✓</span>}
                     <button onClick={handleSave} className="flex items-center gap-1 text-xs bg-blue-600 text-white px-3 py-1.5 rounded-lg font-bold hover:bg-blue-700">
                       <Save size={12} /> 完成編輯
                     </button>

@@ -23,7 +23,14 @@ export const PetPage: React.FC<PetPageProps> = ({ user }) => {
   const [showAllTx, setShowAllTx] = useState(false);
 
   if (isLoading) {
-    return <div className="flex items-center justify-center py-32 text-gray-400">載入中…</div>;
+    return (
+      <div className="max-w-lg mx-auto space-y-5 animate-pulse">
+        <div className="h-16 bg-gray-100 rounded-2xl" />
+        <div className="h-72 bg-gray-100 rounded-3xl" />
+        <div className="h-36 bg-gray-100 rounded-2xl" />
+        <div className="h-28 bg-gray-100 rounded-2xl" />
+      </div>
+    );
   }
 
   const def = pet ? PET_DEFS[pet.typeId] : null;

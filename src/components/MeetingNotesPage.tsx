@@ -3,12 +3,14 @@ import { Plus, Save, Trash2, ArrowLeft, CheckSquare2, Square, Users, Calendar, S
 import { User as FirebaseUser } from 'firebase/auth';
 import { toast } from 'sonner';
 import { useMeetingNotes } from '../hooks/useMeetingNotes';
+import { useAppContext } from '../contexts/AppContext';
 import { MeetingNote, MeetingType } from '../types';
 import { MEMBER_COLORS } from '../constants';
 import { summarizeMeeting, MeetingSummary } from '../services/geminiService';
 
 interface MeetingNotesPageProps {
   user: FirebaseUser;
+  onNavigateToTodo?: () => void;
 }
 
 const TEAM_MEMBERS = Object.keys(MEMBER_COLORS).filter(m => m !== 'Unassigned');
@@ -27,8 +29,9 @@ function formatDate(dateStr: string) {
 
 type DraftFields = Pick<MeetingNote, 'title' | 'date' | 'type' | 'attendees' | 'notes'>;
 
-export const MeetingNotesPage: React.FC<MeetingNotesPageProps> = ({ user }) => {
+export const MeetingNotesPage: React.FC<MeetingNotesPageProps> = ({ user, onNavigateToTodo }) => {
   const { meetings, isLoading, addMeeting, updateMeeting, deleteMeeting, addActionItem, toggleActionItem, convertToTodo } = useMeetingNotes(user);
+  const { pendingMeetingId, clearPendingMeetingId } = useAppContext();
 
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [mobileShowDetail, setMobileShowDetail] = useState(false);
@@ -52,6 +55,15 @@ export const MeetingNotesPage: React.FC<MeetingNotesPageProps> = ({ user }) => {
       setMobileShowDetail(false);
     }
   }, [meetings, selectedId]);
+
+  // Deep-link: auto-select meeting from global search
+  useEffect(() => {
+    if (pendingMeetingId && meetings.length > 0) {
+      handleSelect(pendingMeetingId);
+      clearPendingMeetingId();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pendingMeetingId, meetings]);
 
   const handleSelect = (id: string) => {
     const m = meetings.find(m => m.id === id);
@@ -362,7 +374,11 @@ export const MeetingNotesPage: React.FC<MeetingNotesPageProps> = ({ user }) => {
                 <span className="text-[10px] text-green-600 font-medium shrink-0">✓ 已派工</span>
               ) : (
                 <button
-                  onClick={() => convertToTodo(selectedId, item.id)}
+                  onClick={() => convertToTodo(selectedId, item.id, () => {
+                    toast.success('已建立待辦', onNavigateToTodo ? {
+                      action: { label: '前往待辦', onClick: onNavigateToTodo },
+                    } : undefined);
+                  })}
                   className="text-[10px] text-blue-500 hover:text-blue-700 font-medium shrink-0 whitespace-nowrap"
                 >
                   → 待辦

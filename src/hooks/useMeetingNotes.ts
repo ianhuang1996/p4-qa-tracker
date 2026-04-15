@@ -98,7 +98,7 @@ export function useMeetingNotes(user: FirebaseUser | null) {
     }
   };
 
-  const convertToTodo = async (meetingId: string, itemId: string) => {
+  const convertToTodo = async (meetingId: string, itemId: string, onSuccess?: () => void) => {
     if (!user) return;
     const meeting = meetings.find(m => m.id === meetingId);
     if (!meeting) return;
@@ -120,7 +120,11 @@ export function useMeetingNotes(user: FirebaseUser | null) {
         ai.id === itemId ? { ...ai, linkedTodoId: ref.id } : ai
       );
       await updateMeeting(meetingId, { actionItems: updated });
-      toast.success('已建立待辦');
+      if (onSuccess) {
+        onSuccess();
+      } else {
+        toast.success('已建立待辦');
+      }
     } catch {
       toast.error('建立待辦失敗');
     }

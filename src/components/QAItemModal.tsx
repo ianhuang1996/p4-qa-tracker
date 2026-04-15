@@ -266,12 +266,20 @@ export const QAItemModal: React.FC<QAItemModalProps> = ({
                 </button>
               </>
             ) : (
-              <button
-                onClick={onClose}
-                className="bg-gray-900 text-white px-8 py-2 rounded-xl text-sm font-bold hover:bg-gray-800 transition-colors"
-              >
-                關閉
-              </button>
+              <>
+                <button
+                  onClick={onEdit}
+                  className="flex items-center gap-2 px-5 py-2 rounded-xl text-sm font-bold border border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors"
+                >
+                  <Edit2 size={16} /> 編輯
+                </button>
+                <button
+                  onClick={onClose}
+                  className="bg-gray-900 text-white px-8 py-2 rounded-xl text-sm font-bold hover:bg-gray-800 transition-colors"
+                >
+                  關閉
+                </button>
+              </>
             )}
           </div>
         </div>

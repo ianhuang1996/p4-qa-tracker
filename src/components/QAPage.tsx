@@ -167,11 +167,20 @@ export const QAPage: React.FC<QAPageProps> = () => {
   }, [statusFilters, assigneeFilters, moduleFilters, priorityFilter, searchQuery, augmentedData, selectedVersion, releaseVersionItemMap, dateRange, sortConfig, hideClosed]);
 
   // Release versions for filter dropdown (sorted by scheduledDate desc)
+  // When hideClosed is on, omit already-released versions (they only contain closed items)
   const versions = useMemo(() => {
     return [...releases]
+      .filter(r => !hideClosed || r.status !== 'released')
       .sort((a, b) => (b.scheduledDate ?? '').localeCompare(a.scheduledDate ?? ''))
       .map(r => r.version);
-  }, [releases]);
+  }, [releases, hideClosed]);
+
+  // If the selected version disappears from the filtered list, reset to 'all'
+  React.useEffect(() => {
+    if (selectedVersion !== 'all' && !versions.includes(selectedVersion)) {
+      setSelectedVersion('all');
+    }
+  }, [versions, selectedVersion, setSelectedVersion]);
 
   const quickStats = useMemo(() => {
     const totalActive = augmentedData.filter(i => i.currentFlow !== STATUS.closed && i.currentFlow !== STATUS.fixed).length;
