@@ -152,10 +152,10 @@ export const ADMIN_EMAILS: string[] = [
 export const EMAIL_TO_MEMBER: Record<string, string> = {
   'ian@osensetech.com':          'Ian',
   'sienna@osensetech.com':       'Sienna',
-  'summer@osensetech.com.tw':    'Summer',
-  // 'neo@osensetech.com':       'Neo',
-  // '后玲的email':              '后玲',
-  // 'popo@osensetech.com':      'Popo',
+  'summer@osensetech.com':    'Summer',
+  'neo@osensetech.com':       'Neo',
+  'astor@osensetech.com':              '后玲',
+  'popo@osensetech.com':      'Popo',
 };
 
 export const SORT_EDITOR_EMAILS: string[] = [
