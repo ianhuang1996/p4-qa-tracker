@@ -148,6 +148,16 @@ export const ADMIN_EMAILS: string[] = [
   'sienna@osensetech.com',
 ];
 
+/** Maps each team member's login email to their display name in the system */
+export const EMAIL_TO_MEMBER: Record<string, string> = {
+  'ian@osensetech.com':          'Ian',
+  'sienna@osensetech.com':       'Sienna',
+  'summer@osensetech.com.tw':    'Summer',
+  // 'neo@osensetech.com':       'Neo',
+  // '后玲的email':              '后玲',
+  // 'popo@osensetech.com':      'Popo',
+};
+
 export const SORT_EDITOR_EMAILS: string[] = [
   'ian@osensetech.com',
   'sienna@osensetech.com',

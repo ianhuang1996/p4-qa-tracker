@@ -8,7 +8,7 @@ import { useTodos, DateMode } from '../hooks/useTodos';
 import { useQAItems } from '../hooks/useQAItems';
 import { useAppContext } from '../contexts/AppContext';
 import { TodoItem, AugmentedQAItem } from '../types';
-import { RDS, PMS, ADMIN_EMAILS, STATUS_COLORS, STATUS, isResolved, isActive } from '../constants';
+import { RDS, PMS, ADMIN_EMAILS, EMAIL_TO_MEMBER, STATUS_COLORS, STATUS, isResolved, isActive } from '../constants';
 import { getAvatarColor, getTodayStr, toDateStr, augmentQAItems } from '../utils/qaUtils';
 import { EmptyState } from './EmptyState';
 
@@ -309,7 +309,8 @@ export const DailyTodo: React.FC<DailyTodoProps> = ({ user, qaItems: qaItemsProp
   const [selectedDate, setSelectedDate] = useState(today);
   const [dateMode, setDateMode] = useState<DateMode>('day');
   const [viewMode, setViewMode] = useState<TodoViewMode>('list');
-  const [filterAssignee, setFilterAssignee] = useState<string>('all');
+  const myMemberName = user.email ? (EMAIL_TO_MEMBER[user.email] ?? null) : null;
+  const [filterAssignee, setFilterAssignee] = useState<string>(myMemberName ?? 'all');
 
   const { todos, isLoading, error: todosError, addTodo, toggleTodo, deleteTodo, updateTodo } = useTodos(user, selectedDate, dateMode);
 
@@ -330,7 +331,7 @@ export const DailyTodo: React.FC<DailyTodoProps> = ({ user, qaItems: qaItemsProp
 
   // New todo form
   const [newText, setNewText] = useState('');
-  const [newAssignee, setNewAssignee] = useState(user.displayName || ALL_MEMBERS[0]);
+  const [newAssignee, setNewAssignee] = useState(myMemberName ?? user.displayName ?? ALL_MEMBERS[0]);
   const [newPriority, setNewPriority] = useState<TodoItem['priority']>(undefined);
   const [newLinkedQA, setNewLinkedQA] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
