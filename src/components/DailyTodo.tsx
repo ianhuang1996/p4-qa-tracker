@@ -174,19 +174,22 @@ const TodoCard: React.FC<{
             </select>
           ) : null}
         </div>
-        {/* instruction / deliverable always visible in edit — needed to fix items saved without type='task' */}
-        <div>
-          <label className="text-[10px] font-bold text-indigo-500 uppercase tracking-wider">請做（選填）</label>
-          <textarea value={editState.instruction} onChange={(e) => set({ instruction: e.target.value })}
-            className="w-full mt-1 text-xs border border-gray-200 rounded-lg px-3 py-2 outline-none focus:ring-1 focus:ring-indigo-400 min-h-[52px] resize-y"
-            placeholder="具體指示說明..." />
-        </div>
-        <div>
-          <label className="text-[10px] font-bold text-indigo-500 uppercase tracking-wider">交付（選填）</label>
-          <textarea value={editState.deliverable} onChange={(e) => set({ deliverable: e.target.value })}
-            className="w-full mt-1 text-xs border border-gray-200 rounded-lg px-3 py-2 outline-none focus:ring-1 focus:ring-indigo-400 min-h-[52px] resize-y"
-            placeholder="請交什麼給我（檔案、連結、截圖...）" />
-        </div>
+        {editIsTask && (
+          <>
+            <div>
+              <label className="text-[10px] font-bold text-indigo-500 uppercase tracking-wider">請做（選填）</label>
+              <textarea value={editState.instruction} onChange={(e) => set({ instruction: e.target.value })}
+                className="w-full mt-1 text-xs border border-gray-200 rounded-lg px-3 py-2 outline-none focus:ring-1 focus:ring-indigo-400 min-h-[52px] resize-y"
+                placeholder="具體指示說明..." />
+            </div>
+            <div>
+              <label className="text-[10px] font-bold text-indigo-500 uppercase tracking-wider">交付（選填）</label>
+              <textarea value={editState.deliverable} onChange={(e) => set({ deliverable: e.target.value })}
+                className="w-full mt-1 text-xs border border-gray-200 rounded-lg px-3 py-2 outline-none focus:ring-1 focus:ring-indigo-400 min-h-[52px] resize-y"
+                placeholder="請交什麼給我（檔案、連結、截圖...）" />
+            </div>
+          </>
+        )}
         <div className="flex justify-end gap-2">
           <button onClick={() => setIsEditing(false)} className="text-xs text-gray-500 hover:text-gray-700 px-3 py-1.5">取消</button>
           <button onClick={handleSave} className="text-xs bg-blue-600 text-white px-3 py-1.5 rounded-lg hover:bg-blue-700 flex items-center gap-1">
