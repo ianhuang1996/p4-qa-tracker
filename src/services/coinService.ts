@@ -88,7 +88,7 @@ export async function feedPet(user: FirebaseUser): Promise<boolean> {
     const snap = await tx.get(userRef);
     const current = snap.data()?.coins ?? 0;
     if (current < FEED_COST) return false;
-    tx.set(userRef, { coins: increment(-FEED_COST), 'pet.lastFed': Date.now() }, { merge: true });
+    tx.update(userRef, { coins: increment(-FEED_COST), 'pet.lastFed': Date.now() });
     return true;
   });
   if (success) logTx(user.uid, -FEED_COST, 'feed_pet');
