@@ -28,11 +28,15 @@ export function useQAItems(user: FirebaseUser | null, isAuthReady: boolean) {
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const items: QAItem[] = [];
       snapshot.forEach((doc) => {
-        const result = QAItemSchema.safeParse({ id: doc.id, ...doc.data() });
+        const raw = { id: doc.id, ...doc.data() };
+        const result = QAItemSchema.safeParse(raw);
         if (result.success) {
           items.push(result.data as QAItem);
         } else {
-          console.warn(`[QA] Skipping malformed document ${doc.id}`, result.error.issues);
+          // Fallback: keep the document even if it doesn't fully match the schema,
+          // so no data is lost. Log a warning for future cleanup.
+          console.warn(`[QA] Document ${doc.id} has schema issues (still loaded):`, result.error.issues);
+          items.push(raw as QAItem);
         }
       });
       // Client-side sort to ensure correct numerical order for IDs like QA-001, QA-100

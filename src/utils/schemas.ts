@@ -20,7 +20,7 @@ export const QAItemSchema = z.object({
   id: z.string(),
   title: z.string().optional(),
   priority: z.string().optional(),
-  date: z.string(),
+  date: z.string().default(''),
   module: z.string().default(''),
   tester: z.string().default(''),
   description: z.string().default(''),
