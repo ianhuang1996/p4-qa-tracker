@@ -3,7 +3,7 @@ import { Plus, Download, ArrowUpDown, Eye, EyeOff } from 'lucide-react';
 import { toast } from 'sonner';
 import { AnimatePresence } from 'motion/react';
 import { QAItem, AugmentedQAItem, ViewMode } from '../types';
-import { PRIORITY_ORDER, BTN, STATUS } from '../constants';
+import { PRIORITY_ORDER, BTN, STATUS, RELEASE_STATUS, isActiveRelease } from '../constants';
 import { useAugmentedQAItems } from '../hooks/useAugmentedQAItems';
 import { useReleases } from '../hooks/useReleases';
 import { getTodayStr } from '../utils/qaUtils';
@@ -43,8 +43,8 @@ export const QAPage: React.FC<QAPageProps> = () => {
   } = useAugmentedQAItems(user, isAuthReady);
 
   const { releases, linkItems, unlinkItem, unlinkItems } = useReleases(user);
-  const activeRelease = useMemo(() => releases.find(r => r.status === 'planning' || r.status === 'uat') || null, [releases]);
-  const unreleasedReleases = useMemo(() => releases.filter(r => r.status === 'planning' || r.status === 'uat'), [releases]);
+  const activeRelease = useMemo(() => releases.find(r => isActiveRelease(r.status)) || null, [releases]);
+  const unreleasedReleases = useMemo(() => releases.filter(r => isActiveRelease(r.status)), [releases]);
   // Map: itemId → version string (for badge display)
   const itemReleaseMap = useMemo(() => {
     const map: Record<string, string> = {};
@@ -170,7 +170,7 @@ export const QAPage: React.FC<QAPageProps> = () => {
   // When hideClosed is on, omit already-released versions (they only contain closed items)
   const versions = useMemo(() => {
     return [...releases]
-      .filter(r => !hideClosed || r.status !== 'released')
+      .filter(r => !hideClosed || r.status !== RELEASE_STATUS.RELEASED)
       .sort((a, b) => (b.scheduledDate ?? '').localeCompare(a.scheduledDate ?? ''))
       .map(r => r.version);
   }, [releases, hideClosed]);

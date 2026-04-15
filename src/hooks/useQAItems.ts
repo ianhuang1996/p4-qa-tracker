@@ -1,14 +1,15 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { db, auth } from '../firebase';
-import { collection, onSnapshot, doc, setDoc, deleteDoc, writeBatch, addDoc, query, increment } from 'firebase/firestore';
+import { collection, onSnapshot, doc, setDoc, deleteDoc, writeBatch, addDoc, query } from 'firebase/firestore';
 import { User as FirebaseUser } from 'firebase/auth';
 import { toast } from 'sonner';
 import { QAItem, OperationType } from '../types';
-import { parseMentions } from '../utils/mentionUtils';
 import { createNotification, getUserIdByName } from '../services/notificationService';
 import { handleFirestoreError } from '../utils/firestoreUtils';
 import { awardCoins } from '../services/coinService';
 import { STATUS } from '../constants';
+import { QAItemSchema } from '../utils/schemas';
+import { useQAComments } from './useQAComments';
 
 export function useQAItems(user: FirebaseUser | null, isAuthReady: boolean) {
   const [data, setData] = useState<QAItem[]>([]);
@@ -27,7 +28,12 @@ export function useQAItems(user: FirebaseUser | null, isAuthReady: boolean) {
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const items: QAItem[] = [];
       snapshot.forEach((doc) => {
-        items.push(doc.data() as QAItem);
+        const result = QAItemSchema.safeParse({ id: doc.id, ...doc.data() });
+        if (result.success) {
+          items.push(result.data as QAItem);
+        } else {
+          console.warn(`[QA] Skipping malformed document ${doc.id}`, result.error.issues);
+        }
       });
       // Client-side sort to ensure correct numerical order for IDs like QA-001, QA-100
       items.sort((a, b) => {
@@ -180,83 +186,8 @@ export function useQAItems(user: FirebaseUser | null, isAuthReady: boolean) {
     }
   };
 
-  const addComment = async (itemId: string, text: string) => {
-    if (!user || !text.trim()) return;
-    const path = `qa_items/${itemId}/comments`;
-    try {
-      const commentsRef = collection(db, 'qa_items', itemId, 'comments');
-      await addDoc(commentsRef, {
-        userId: user.uid,
-        userName: user.displayName || '匿名用戶',
-        text: text.trim(),
-        createdAt: Date.now()
-      });
-
-      // Update comment count on main document
-      await setDoc(doc(db, 'qa_items', itemId), {
-        commentCount: increment(1)
-      }, { merge: true });
-
-      // Notify the author of the item about the new comment
-      const item = data.find(i => i.id === itemId);
-      if (item && item.authorUID && item.authorUID !== user.uid) {
-        await createNotification({
-          userId: item.authorUID,
-          fromUserId: user.uid,
-          fromUserName: user.displayName || '匿名用戶',
-          itemId: itemId,
-          itemTitle: item.title || item.description.substring(0, 30),
-          type: 'comment',
-          newValue: text.trim()
-        }, user);
-      }
-
-      // Notify @mentioned users
-      const mentions = parseMentions(text);
-      for (const name of mentions) {
-        const mentionedUserId = await getUserIdByName(name);
-        if (mentionedUserId && mentionedUserId !== user.uid && mentionedUserId !== item?.authorUID) {
-          await createNotification({
-            userId: mentionedUserId,
-            fromUserId: user.uid,
-            fromUserName: user.displayName || '匿名用戶',
-            itemId: itemId,
-            itemTitle: item?.title || item?.description.substring(0, 30) || itemId,
-            type: 'comment',
-            newValue: `提及了你: ${text.trim().substring(0, 50)}`
-          }, user);
-        }
-      }
-    } catch (error) {
-      handleFirestoreError(error, OperationType.WRITE, path);
-    }
-  };
-
-  const deleteComment = async (itemId: string, commentId: string) => {
-    const path = `qa_items/${itemId}/comments/${commentId}`;
-    try {
-      await deleteDoc(doc(db, 'qa_items', itemId, 'comments', commentId));
-      
-      // Update comment count on main document
-      await setDoc(doc(db, 'qa_items', itemId), {
-        commentCount: increment(-1)
-      }, { merge: true });
-    } catch (error) {
-      handleFirestoreError(error, OperationType.DELETE, path);
-    }
-  };
-
-  const editComment = async (itemId: string, commentId: string, newText: string) => {
-    const path = `qa_items/${itemId}/comments/${commentId}`;
-    try {
-      await setDoc(doc(db, 'qa_items', itemId, 'comments', commentId), {
-        text: newText.trim(),
-        updatedAt: Date.now()
-      }, { merge: true });
-    } catch (error) {
-      handleFirestoreError(error, OperationType.WRITE, path);
-    }
-  };
+  const getItem = useCallback((itemId: string) => data.find(i => i.id === itemId), [data]);
+  const { addComment, deleteComment, editComment } = useQAComments(user, getItem);
 
   const bulkDelete = async (itemIds: string[]) => {
     if (!user || itemIds.length === 0) return;

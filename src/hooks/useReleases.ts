@@ -6,7 +6,7 @@ import { toast } from 'sonner';
 import { Release, ChecklistItem, OperationType } from '../types';
 import { handleFirestoreError } from '../utils/firestoreUtils';
 import { awardCoins } from '../services/coinService';
-import { STATUS } from '../constants';
+import { STATUS, RELEASE_STATUS } from '../constants';
 
 const DEFAULT_CHECKLIST: ChecklistItem[] = [
   { id: '1', label: 'UAT 測試完成', checked: false },
@@ -43,7 +43,7 @@ export function useReleases(user: FirebaseUser | null) {
       await addDoc(collection(db, 'releases'), {
         version,
         title,
-        status: 'planning',
+        status: RELEASE_STATUS.PLANNING,
         scheduledDate,
         releasedAt: null,
         linkedItemIds: [],
@@ -141,7 +141,7 @@ export function useReleases(user: FirebaseUser | null) {
       }
       // Update release status
       const releaseRef = doc(db, 'releases', release.id);
-      await setDoc(releaseRef, { status: 'released', releasedAt: Date.now() }, { merge: true });
+      await setDoc(releaseRef, { status: RELEASE_STATUS.RELEASED, releasedAt: Date.now() }, { merge: true });
       if (failCount > 0) {
         toast.success(`${release.version} 已發布！（${failCount} 個項目更新失敗，請手動檢查）`);
       } else {

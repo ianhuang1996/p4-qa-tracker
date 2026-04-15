@@ -8,7 +8,7 @@ import { useTodos, DateMode } from '../hooks/useTodos';
 import { useQAItems } from '../hooks/useQAItems';
 import { useAppContext } from '../contexts/AppContext';
 import { TodoItem, AugmentedQAItem } from '../types';
-import { RDS, PMS, ADMIN_EMAILS, STATUS_COLORS } from '../constants';
+import { RDS, PMS, ADMIN_EMAILS, STATUS_COLORS, STATUS, isResolved, isActive } from '../constants';
 import { getAvatarColor, getTodayStr, toDateStr, augmentQAItems } from '../utils/qaUtils';
 import { EmptyState } from './EmptyState';
 
@@ -145,7 +145,7 @@ const TodoCard: React.FC<{
               className="text-xs border border-gray-200 rounded-lg px-2 py-1.5 bg-white max-w-[200px]"
             >
               <option value="">不關聯 QA</option>
-              {qaItems.filter(q => q.currentFlow !== '已關閉').map(q => (
+              {qaItems.filter(q => q.currentFlow !== STATUS.closed).map(q => (
                 <option key={q.id} value={q.id}>{q.id} - {q.displayTitle}</option>
               ))}
             </select>
@@ -198,7 +198,7 @@ const TodoCard: React.FC<{
               <Link2 size={10} />
               {todo.linkedQAItemId}
               {linkedQA && (
-                <span className={`px-1.5 py-0.5 text-[9px] font-bold rounded-full border ${STATUS_COLORS[linkedQA.currentFlow || '待處理']}`}>
+                <span className={`px-1.5 py-0.5 text-[9px] font-bold rounded-full border ${STATUS_COLORS[linkedQA.currentFlow || STATUS.pending]}`}>
                   {linkedQA.currentFlow}
                 </span>
               )}
@@ -262,7 +262,7 @@ export const DailyTodo: React.FC<DailyTodoProps> = ({ user, qaItems: qaItemsProp
       if (todo.completed || !todo.linkedQAItemId) return;
       if (autoCompletedRef.current.has(todo.id)) return;
       const qa = qaItems.find(q => q.id === todo.linkedQAItemId);
-      if (qa && (qa.currentFlow === '已修復' || qa.currentFlow === '已關閉')) {
+      if (qa && isResolved(qa.currentFlow)) {
         autoCompletedRef.current.add(todo.id);
         toggleTodo(todo.id, true);
       }
@@ -481,7 +481,7 @@ export const DailyTodo: React.FC<DailyTodoProps> = ({ user, qaItems: qaItemsProp
             className="text-xs border border-gray-200 rounded-lg px-2 py-1.5 bg-white max-w-[180px]"
           >
             <option value="">關聯 QA</option>
-            {qaItems.filter(q => q.currentFlow !== '已關閉' && q.currentFlow !== '已修復').map(q => (
+            {qaItems.filter(q => isActive(q.currentFlow)).map(q => (
               <option key={q.id} value={q.id}>{q.id} — {(q.title || q.description).substring(0, 20)}</option>
             ))}
           </select>

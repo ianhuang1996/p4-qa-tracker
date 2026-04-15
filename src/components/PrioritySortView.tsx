@@ -18,7 +18,7 @@ import {
 import { CSS } from '@dnd-kit/utilities';
 import { GripVertical, X } from 'lucide-react';
 import { AugmentedQAItem } from '../types';
-import { PRIORITY_COLORS, PRIORITY_ORDER, BTN } from '../constants';
+import { PRIORITY_COLORS, PRIORITY_ORDER, BTN, STATUS, isActive } from '../constants';
 import { getAvatarColor } from '../utils/qaUtils';
 
 interface PrioritySortViewProps {
@@ -71,8 +71,8 @@ const SortableItem: React.FC<{ item: AugmentedQAItem; index: number }> = ({ item
       </div>
 
       <span className={`px-2 py-0.5 text-[10px] font-bold rounded-full border shrink-0 ${
-        item.currentFlow === '待處理' ? 'bg-slate-100 text-slate-600 border-slate-200' :
-        item.currentFlow === '開發中' ? 'bg-blue-100 text-blue-600 border-blue-200' :
+        item.currentFlow === STATUS.pending    ? 'bg-slate-100 text-slate-600 border-slate-200' :
+        item.currentFlow === STATUS.inProgress ? 'bg-blue-100 text-blue-600 border-blue-200' :
         'bg-gray-100 text-gray-600 border-gray-200'
       }`}>
         {item.currentFlow}
@@ -90,7 +90,7 @@ export const PrioritySortView: React.FC<PrioritySortViewProps> = ({ items, onSav
 
   // Group items by priority, only active items (not closed/fixed)
   const activeItems = useMemo(() => {
-    return items.filter(i => i.currentFlow !== '已關閉' && i.currentFlow !== '已修復');
+    return items.filter(i => isActive(i.currentFlow));
   }, [items]);
 
   const priorities = useMemo(() => {

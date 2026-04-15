@@ -3,6 +3,7 @@ import { doc, setDoc, addDoc, collection, increment, getDoc, updateDoc, runTrans
 import { User as FirebaseUser } from 'firebase/auth';
 import { CoinReason, Pet, PetRarity } from '../types';
 import { COIN_REWARDS, getLevel, getStage, PETS_BY_RARITY, getEggPrice, FEED_COST } from '../constants/petConstants';
+import { RELEASE_STATUS } from '../constants';
 
 // ─── Internal: fire-and-forget transaction log ───────────────────
 function logTx(userId: string, amount: number, reason: string, note?: string | null) {
@@ -123,7 +124,7 @@ export async function awardHistoryCoins(user: FirebaseUser): Promise<number> {
   const [reportsSnap, qaSnap, releasesSnap] = await Promise.all([
     getDocs(query(collection(db, 'daily_reports'), where('userId', '==', user.uid))),
     getDocs(query(collection(db, 'qa_items'), where('authorUID', '==', user.uid))),
-    getDocs(query(collection(db, 'releases'), where('createdBy', '==', user.uid), where('status', '==', 'released'))),
+    getDocs(query(collection(db, 'releases'), where('createdBy', '==', user.uid), where('status', '==', RELEASE_STATUS.RELEASED))),
   ]);
 
   const total =

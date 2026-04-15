@@ -25,7 +25,7 @@ import { useAppContext } from '../contexts/AppContext';
 import { useReleases } from '../hooks/useReleases';
 import { useAugmentedQAItems } from '../hooks/useAugmentedQAItems';
 import { Release, AugmentedQAItem } from '../types';
-import { STATUS_COLORS, PRIORITY_COLORS, PRIORITY_ORDER, BTN, STATUS, RELEASE_STATUS_COLORS, RELEASE_STATUS_LABEL, FEATURE_FLAGS } from '../constants';
+import { STATUS_COLORS, PRIORITY_COLORS, PRIORITY_ORDER, BTN, STATUS, RELEASE_STATUS_COLORS, RELEASE_STATUS_LABEL, RELEASE_STATUS, isActiveRelease, isArchivedRelease, FEATURE_FLAGS } from '../constants';
 import { formatTimestamp, getAvatarColor, getTodayStr } from '../utils/qaUtils';
 import { parseReleaseNotes, NoteSection } from '../utils/releaseUtils';
 import { useUserTiers, getAvatarRing } from '../hooks/useAchievements';
@@ -173,11 +173,11 @@ export const ReleasePage: React.FC = () => {
   const [activeOrder, setActiveOrder] = useState<string[]>([]);
 
   const activeReleases = useMemo(
-    () => releases.filter(r => r.status !== 'released' && r.status !== 'cancelled'),
+    () => releases.filter(r => isActiveRelease(r.status)),
     [releases],
   );
   const pastReleases = useMemo(
-    () => releases.filter(r => r.status === 'released' || r.status === 'cancelled'),
+    () => releases.filter(r => isArchivedRelease(r.status)),
     [releases],
   );
 
@@ -289,7 +289,7 @@ export const ReleasePage: React.FC = () => {
           <div>
             <h2 className="text-xl sm:text-2xl font-black text-gray-900 flex items-center gap-3 flex-wrap">
               <Package size={24} className="text-blue-600 shrink-0" />
-              {selectedRelease.status !== 'released' ? (
+              {selectedRelease.status !== RELEASE_STATUS.RELEASED ? (
                 <span className="relative group/edit">
                   <input
                     type="text"
@@ -308,7 +308,7 @@ export const ReleasePage: React.FC = () => {
               <span>{selectedRelease.title}</span>
               <span>—</span>
               <span>預計</span>
-              {selectedRelease.status !== 'released' ? (
+              {selectedRelease.status !== RELEASE_STATUS.RELEASED ? (
                 <input
                   type="date"
                   value={selectedRelease.scheduledDate}
@@ -319,15 +319,15 @@ export const ReleasePage: React.FC = () => {
             </div>
           </div>
           <div className="flex items-center gap-2 flex-wrap">
-            {selectedRelease.status === 'planning' && (
+            {selectedRelease.status === RELEASE_STATUS.PLANNING && (
               <button
-                onClick={() => updateRelease(selectedRelease.id, { status: 'uat' })}
+                onClick={() => updateRelease(selectedRelease.id, { status: RELEASE_STATUS.UAT })}
                 className="flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-xl text-sm font-bold transition-colors"
               >
                 <Play size={16} /> 進入 UAT
               </button>
             )}
-            {(selectedRelease.status === 'planning' || selectedRelease.status === 'uat') && isAdmin && (
+            {isActiveRelease(selectedRelease.status) && isAdmin && (
               <button
                 onClick={() => {
                   if (confirm(`確定要發布 ${selectedRelease.version} 嗎？所有關聯的 QA 項目將被標為已關閉。`)) {
@@ -408,7 +408,7 @@ export const ReleasePage: React.FC = () => {
                 <h3 className="text-sm font-bold text-gray-700 flex items-center gap-2">
                   <Link2 size={16} /> 關聯 QA 項目 ({linkedItems.length})
                 </h3>
-                {selectedRelease.status !== 'released' && (
+                {selectedRelease.status !== RELEASE_STATUS.RELEASED && (
                   <button
                     onClick={() => setShowLinkPicker(true)}
                     className="text-xs font-bold text-blue-600 hover:text-blue-700 flex items-center gap-1"
@@ -433,7 +433,7 @@ export const ReleasePage: React.FC = () => {
                     <span className={`px-2 py-0.5 text-[9px] font-bold rounded-full border ${STATUS_COLORS[item.currentFlow || STATUS.pending]}`}>
                       {item.currentFlow}
                     </span>
-                    {selectedRelease.status !== 'released' && (
+                    {selectedRelease.status !== RELEASE_STATUS.RELEASED && (
                       <button
                         onClick={() => unlinkItem(selectedRelease.id, item.id)}
                         className="p-1 text-gray-300 hover:text-red-500"
@@ -453,7 +453,7 @@ export const ReleasePage: React.FC = () => {
                 <h3 className="text-sm font-bold text-gray-700 flex items-center gap-2">
                   <FileText size={16} /> Release Notes
                 </h3>
-                {!editingNotes && selectedRelease.status !== 'released' && (
+                {!editingNotes && selectedRelease.status !== RELEASE_STATUS.RELEASED && (
                   <div className="flex items-center gap-3">
                     {FEATURE_FLAGS.AI_FEATURES && (
                       <button
@@ -524,10 +524,10 @@ export const ReleasePage: React.FC = () => {
                 {selectedRelease.checklist.map(item => (
                   <button
                     key={item.id}
-                    onClick={() => selectedRelease.status !== 'released' && toggleChecklist(selectedRelease.id, selectedRelease.checklist, item.id)}
+                    onClick={() => selectedRelease.status !== RELEASE_STATUS.RELEASED && toggleChecklist(selectedRelease.id, selectedRelease.checklist, item.id)}
                     className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-left transition-colors ${
                       item.checked ? 'text-gray-400 line-through' : 'text-gray-700 hover:bg-gray-50'
-                    } ${selectedRelease.status === 'released' ? 'cursor-default' : 'cursor-pointer'}`}
+                    } ${selectedRelease.status === RELEASE_STATUS.RELEASED ? 'cursor-default' : 'cursor-pointer'}`}
                   >
                     {item.checked ? <Check size={16} className="text-green-500 shrink-0" /> : <Square size={16} className="text-gray-300 shrink-0" />}
                     {item.label}
@@ -592,7 +592,7 @@ export const ReleasePage: React.FC = () => {
                   )}
                 </div>
               )}
-              {selectedRelease.status !== 'released' && (
+              {selectedRelease.status !== RELEASE_STATUS.RELEASED && (
                 <button
                   onClick={() => { if (confirm('確定要刪除此版本嗎？')) deleteRelease(selectedRelease.id).then(() => setSelectedReleaseId(null)); }}
                   className="w-full mt-2 text-xs text-red-500 hover:text-red-600 font-bold flex items-center justify-center gap-1 py-2"

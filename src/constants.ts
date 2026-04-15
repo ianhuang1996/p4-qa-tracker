@@ -112,6 +112,34 @@ export const STATUS = {
 export type StatusValue = typeof STATUS[keyof typeof STATUS];
 
 export const QA_FLOWS: StatusValue[] = [STATUS.pending, STATUS.inProgress, STATUS.readyToTest, STATUS.fixed, STATUS.returned, STATUS.closed];
+
+/** Release status constants — avoid 'planning'/'uat'/etc. magic strings */
+export const RELEASE_STATUS = {
+  PLANNING:  'planning',
+  UAT:       'uat',
+  RELEASED:  'released',
+  CANCELLED: 'cancelled',
+} as const;
+export type ReleaseStatusValue = typeof RELEASE_STATUS[keyof typeof RELEASE_STATUS];
+
+/** True when a QA item is resolved (fixed or closed) */
+export function isResolved(flow: string): boolean {
+  return flow === STATUS.fixed || flow === STATUS.closed;
+}
+/** True when a QA item is still open (not fixed and not closed) */
+export function isActive(flow: string): boolean {
+  return flow !== STATUS.fixed && flow !== STATUS.closed;
+}
+/** True when a release is still in-flight (planning or UAT) */
+export function isActiveRelease(status: string): boolean {
+  return status === RELEASE_STATUS.PLANNING || status === RELEASE_STATUS.UAT;
+}
+/** True when a release is done (released or cancelled) */
+export function isArchivedRelease(status: string): boolean {
+  return status === RELEASE_STATUS.RELEASED || status === RELEASE_STATUS.CANCELLED;
+}
+/** Set of flows considered "resolved" for blocking/progress checks */
+export const RESOLVED_FLOWS = new Set<string>([STATUS.fixed, STATUS.closed, STATUS.readyToTest]);
 export const PMS = ['Ian', 'Sienna'];
 export const RDS = ['Neo', 'Summer', '后玲', 'Popo', 'Unassigned'];
 

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { X, Edit2, Trash2, Save, Info, AlertTriangle, MessageSquare, History } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { QAItem, QAComment, AugmentedQAItem, HistoryEntry } from '../types';
+import { QAItem, QAComment, AugmentedQAItem, HistoryEntry, ReleaseLinksProps } from '../types';
 import { STATUS_COLORS, BTN } from '../constants';
 import { getVideoEmbedUrl } from '../utils/qaUtils';
 import { db } from '../firebase';
@@ -13,7 +13,7 @@ import { ModalDetails } from './modal/ModalDetails';
 import { ModalComments } from './modal/ModalComments';
 import { ModalHistory } from './modal/ModalHistory';
 
-interface QAItemModalProps {
+interface QAItemModalProps extends ReleaseLinksProps {
   item: AugmentedQAItem;
   isEditing: boolean;
   isAdding: boolean;
@@ -35,9 +35,6 @@ interface QAItemModalProps {
   activeReleaseVersion?: string;
   isInActiveRelease?: boolean;
   onToggleRelease?: (add: boolean) => void;
-  unreleasedReleases?: { id: string; version: string; linkedItemIds: string[] }[];
-  onLinkToRelease?: (releaseId: string) => void;
-  onUnlinkFromRelease?: (releaseId: string) => void;
 }
 
 export const QAItemModal: React.FC<QAItemModalProps> = ({

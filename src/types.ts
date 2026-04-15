@@ -6,8 +6,10 @@ export interface QAItem {
   module: string;
   tester: string;
   description: string;
+  /** @deprecated Use `imageLinks` array instead */
   imageLink: string;
   imageLinks?: string[];
+  /** @deprecated Use `videoLinks` array instead */
   videoLink?: string;
   videoLinks?: string[];
   currentFlow: string;
@@ -21,7 +23,9 @@ export interface QAItem {
   fixedAt?: number;
   version?: string;
   authorUID?: string;
+  /** @deprecated Use `attachments` array instead */
   attachmentUrl?: string;
+  /** @deprecated Use `attachments` array instead */
   attachmentName?: string;
   attachments?: { name: string; url: string }[];
   isNextRelease?: boolean;
@@ -176,6 +180,13 @@ export interface ChecklistItem {
   id: string;
   label: string;
   checked: boolean;
+}
+
+/** Shared props for components that render release-link controls */
+export interface ReleaseLinksProps {
+  unreleasedReleases?: { id: string; version: string; linkedItemIds: string[] }[];
+  onLinkToRelease?: (releaseId: string) => void;
+  onUnlinkFromRelease?: (releaseId: string) => void;
 }
 
 export interface Release {

@@ -3,7 +3,7 @@ import { User as FirebaseUser } from 'firebase/auth';
 import { db } from '../firebase';
 import { collection, onSnapshot, query, where, orderBy, limit as fbLimit, addDoc, getDocs } from 'firebase/firestore';
 import { QAItem, AugmentedQAItem, TodoItem, WikiPage, Release, DailyReport, TeamGoalProgress, AchievementLog, MeetingNote } from '../types';
-import { ACHIEVEMENT_DEFS, TEAM_GOAL_DEFS, HOLIDAYS_2026, PMS, RDS, MODULES } from '../constants';
+import { ACHIEVEMENT_DEFS, TEAM_GOAL_DEFS, HOLIDAYS_2026, PMS, RDS, MODULES, RELEASE_STATUS, isResolved, isActive, isActiveRelease } from '../constants';
 import { augmentQAItems } from '../utils/qaUtils';
 import { toast } from 'sonner';
 
@@ -53,8 +53,7 @@ function computeMetrics(inputs: MetricInputs): Record<string, number> {
   const metrics: Record<string, number> = {};
 
   // --- Bug fix metrics ---
-  const fixedStatuses = ['已修復', '已關閉'];
-  const myFixed = qaItems.filter(i => i.assignee === userName && fixedStatuses.includes(i.currentFlow));
+  const myFixed = qaItems.filter(i => i.assignee === userName && isResolved(i.currentFlow));
   metrics.bugs_fixed = myFixed.length;
 
   const myP0Fixed = myFixed.filter(i => i.priority === 'P0');
@@ -151,7 +150,7 @@ function computeMetrics(inputs: MetricInputs): Record<string, number> {
   metrics.comments_made = commentEstimate;
 
   // --- Release participation ---
-  const releasedVersions = releases.filter(r => r.status === 'released');
+  const releasedVersions = releases.filter(r => r.status === RELEASE_STATUS.RELEASED);
   let releaseParticipation = 0;
   releasedVersions.forEach(release => {
     const linkedItems = qaItems.filter(i => release.linkedItemIds.includes(i.id));
@@ -168,7 +167,7 @@ function computeMetrics(inputs: MetricInputs): Record<string, number> {
   metrics.retest_count = myRetested.length;
   metrics.retest_failed = myRetested.filter(i => i.retestResult === 'failed').length;
 
-  metrics.releases_published = releases.filter(r => r.status === 'released' && r.createdBy === userId).length;
+  metrics.releases_published = releases.filter(r => r.status === RELEASE_STATUS.RELEASED && r.createdBy === userId).length;
 
   metrics.todos_created_for_others = todos.filter(t => t.creatorId === userId && t.assignee !== userName).length;
 
@@ -336,7 +335,7 @@ export function useAchievements({ user, qaItems, todos, wikiPages, releases, dai
 
   // Team goals
   const teamGoals = useMemo((): TeamGoalProgress[] => {
-    const activeRelease = releases.find(r => r.status === 'planning' || r.status === 'uat');
+    const activeRelease = releases.find(r => isActiveRelease(r.status));
     const allMembers = [...PMS, ...RDS].filter(n => n !== 'Unassigned');
 
     return TEAM_GOAL_DEFS.map(goal => {
@@ -344,7 +343,7 @@ export function useAchievements({ user, qaItems, todos, wikiPages, releases, dai
         case 'zero_p0': {
           if (!activeRelease) return { goalId: goal.id, current: 0, target: 0, achieved: false };
           const linkedP0 = augmented.filter(
-            i => activeRelease.linkedItemIds.includes(i.id) && i.priority === 'P0' && i.currentFlow !== '已關閉' && i.currentFlow !== '已修復'
+            i => activeRelease.linkedItemIds.includes(i.id) && i.priority === 'P0' && isActive(i.currentFlow)
           );
           return { goalId: goal.id, current: linkedP0.length, target: 0, achieved: linkedP0.length === 0 && activeRelease.linkedItemIds.length > 0 };
         }
@@ -358,7 +357,7 @@ export function useAchievements({ user, qaItems, todos, wikiPages, releases, dai
           if (!activeRelease) return { goalId: goal.id, current: 0, target: 0, achieved: false };
           const linkedIds = activeRelease.linkedItemIds;
           const linked = augmented.filter(i => linkedIds.includes(i.id));
-          const closed = linked.filter(i => i.currentFlow === '已關閉' || i.currentFlow === '已修復');
+          const closed = linked.filter(i => isResolved(i.currentFlow));
           return { goalId: goal.id, current: closed.length, target: linked.length, achieved: closed.length === linked.length && linked.length > 0 };
         }
         default:

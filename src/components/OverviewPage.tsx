@@ -9,7 +9,7 @@ import { useMeetingNotes } from '../hooks/useMeetingNotes';
 import { useAchievements, useAllDailyReports, useAchievementLogs, useUserTiers, getAvatarRing } from '../hooks/useAchievements';
 import { useAppContext } from '../contexts/AppContext';
 import { getTodayStr, getAvatarColor } from '../utils/qaUtils';
-import { STATUS_COLORS, PRIORITY_COLORS, ACHIEVEMENT_DEFS, STATUS } from '../constants';
+import { STATUS_COLORS, PRIORITY_COLORS, ACHIEVEMENT_DEFS, STATUS, isActiveRelease } from '../constants';
 import { AugmentedQAItem } from '../types';
 import { WeeklyReport } from './WeeklyReport';
 import { DailyReportEditor } from './DailyReportEditor';
@@ -103,7 +103,7 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ onNavigateToQA, onNa
     const now = new Date();
     now.setHours(0, 0, 0, 0);
     return releases
-      .filter(r => r.status === 'planning' || r.status === 'uat')
+      .filter(r => isActiveRelease(r.status))
       .map(r => {
         const target = new Date(r.scheduledDate + 'T00:00:00');
         const days = Math.ceil((target.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));

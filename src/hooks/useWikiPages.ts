@@ -1,38 +1,31 @@
-import { useState, useEffect } from 'react';
+import { useMemo } from 'react';
 import { db } from '../firebase';
-import { collection, onSnapshot, doc, setDoc, deleteDoc, addDoc, query, orderBy } from 'firebase/firestore';
+import { collection, doc, setDoc, deleteDoc, addDoc, query, orderBy } from 'firebase/firestore';
 import { User as FirebaseUser } from 'firebase/auth';
 import { toast } from 'sonner';
 import { WikiPage, WikiCategory, OperationType } from '../types';
 import { handleFirestoreError } from '../utils/firestoreUtils';
 import { awardCoins } from '../services/coinService';
+import { useFirestoreCollection } from './useFirestoreCollection';
+
+const COLLECTION = 'wiki_pages';
 
 export function useWikiPages(user: FirebaseUser | null) {
-  const [pages, setPages] = useState<WikiPage[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const q = useMemo(
+    () => user ? query(collection(db, COLLECTION), orderBy('updatedAt', 'desc')) : null,
+    [user],
+  );
 
-  useEffect(() => {
-    if (!user) { setIsLoading(false); return; }
-    setIsLoading(true);
-    const q = query(collection(db, 'wiki_pages'), orderBy('updatedAt', 'desc'));
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const items: WikiPage[] = [];
-      snapshot.forEach(d => items.push({ id: d.id, ...d.data() } as WikiPage));
-      setPages(items);
-      setError(null);
-      setIsLoading(false);
-    }, () => {
-      setError('知識庫載入失敗');
-      setIsLoading(false);
-    });
-    return () => unsubscribe();
-  }, [user]);
+  const { data: pages, isLoading, error } = useFirestoreCollection(
+    q,
+    (d) => ({ id: d.id, ...d.data() } as WikiPage),
+    COLLECTION,
+  );
 
   const addPage = async (title: string, category: WikiCategory) => {
     if (!user) return null;
     try {
-      const ref = await addDoc(collection(db, 'wiki_pages'), {
+      const ref = await addDoc(collection(db, COLLECTION), {
         title,
         content: '',
         category,
@@ -48,7 +41,7 @@ export function useWikiPages(user: FirebaseUser | null) {
       return ref.id;
     } catch (error) {
       toast.error('建立失敗');
-      handleFirestoreError(error, OperationType.WRITE, 'wiki_pages');
+      handleFirestoreError(error, OperationType.WRITE, COLLECTION);
     }
   };
 
@@ -62,21 +55,21 @@ export function useWikiPages(user: FirebaseUser | null) {
     sanitized.updatedBy = user.uid;
     sanitized.updatedByName = user.displayName || '匿名';
     try {
-      await setDoc(doc(db, 'wiki_pages', pageId), sanitized, { merge: true });
+      await setDoc(doc(db, COLLECTION, pageId), sanitized, { merge: true });
     } catch (error) {
       toast.error('儲存失敗');
-      handleFirestoreError(error, OperationType.WRITE, `wiki_pages/${pageId}`);
+      handleFirestoreError(error, OperationType.WRITE, `${COLLECTION}/${pageId}`);
     }
   };
 
   const deletePage = async (pageId: string) => {
     if (!user) return;
     try {
-      await deleteDoc(doc(db, 'wiki_pages', pageId));
+      await deleteDoc(doc(db, COLLECTION, pageId));
       toast.success('頁面已刪除');
     } catch (error) {
       toast.error('刪除失敗');
-      handleFirestoreError(error, OperationType.DELETE, `wiki_pages/${pageId}`);
+      handleFirestoreError(error, OperationType.DELETE, `${COLLECTION}/${pageId}`);
     }
   };
 

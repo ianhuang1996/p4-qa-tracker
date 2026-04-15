@@ -1,4 +1,5 @@
 import { toDateStr } from './qaUtils';
+import { STATUS, isResolved, isActive } from '../constants';
 
 export interface WeekBoundary {
   start: string; // YYYY-MM-DD (Monday)
@@ -59,10 +60,10 @@ export function computeWeeklyStats<T extends ItemLike>(items: T[], start: string
     return fixDate >= start && fixDate <= end;
   });
   const closed = items.filter(i => {
-    return (i.currentFlow === '已關閉' || i.currentFlow === '已修復') && i.fixedAt &&
+    return isResolved(i.currentFlow) && i.fixedAt &&
       toDateStr(new Date(i.fixedAt)) >= start && toDateStr(new Date(i.fixedAt)) <= end;
   });
-  const remaining = items.filter(i => i.currentFlow !== '已關閉' && i.currentFlow !== '已修復');
+  const remaining = items.filter(i => isActive(i.currentFlow));
 
   const addedCount = added.length;
   const fixedCount = fixed.length;
@@ -77,18 +78,18 @@ export function computeWeeklyStats<T extends ItemLike>(items: T[], start: string
 }
 
 export function computeRDWorkload<T extends ItemLike>(items: T[]): RDWorkload[] {
-  const active = items.filter(i => i.currentFlow !== '已關閉' && i.currentFlow !== '已修復');
+  const active = items.filter(i => isActive(i.currentFlow));
   const map: Record<string, RDWorkload> = {};
 
   active.forEach(item => {
     const name = item.assignee || 'Unassigned';
     if (!map[name]) map[name] = { name, assigned: 0, fixed: 0, inProgress: 0 };
     map[name].assigned++;
-    if (item.currentFlow === '開發中') map[name].inProgress++;
+    if (item.currentFlow === STATUS.inProgress) map[name].inProgress++;
   });
 
   // Count fixed items per RD (all time)
-  items.filter(i => i.currentFlow === '已修復' || i.currentFlow === '已關閉').forEach(item => {
+  items.filter(i => isResolved(i.currentFlow)).forEach(item => {
     const name = item.assignee || 'Unassigned';
     if (!map[name]) map[name] = { name, assigned: 0, fixed: 0, inProgress: 0 };
     map[name].fixed++;

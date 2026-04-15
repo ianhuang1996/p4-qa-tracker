@@ -1,10 +1,10 @@
 import React from 'react';
 import { X, Video, UploadCloud, Loader2, FileText, Check } from 'lucide-react';
-import { QAItem } from '../../types';
+import { QAItem, ReleaseLinksProps } from '../../types';
 import { QA_FLOWS, RDS, MODULES } from '../../constants';
 import { getDirectImageUrl } from '../../utils/qaUtils';
 
-interface ModalEditFormProps {
+interface ModalEditFormProps extends ReleaseLinksProps {
   editForm: QAItem | null;
   setEditForm: React.Dispatch<React.SetStateAction<QAItem | null>>;
   isUploading: boolean;
@@ -17,10 +17,7 @@ interface ModalEditFormProps {
   activeReleaseVersion?: string;
   isInActiveRelease?: boolean;
   onToggleRelease?: (add: boolean) => void;
-  unreleasedReleases?: { id: string; version: string; linkedItemIds: string[] }[];
   itemId?: string;
-  onLinkToRelease?: (releaseId: string) => void;
-  onUnlinkFromRelease?: (releaseId: string) => void;
 }
 
 export const ModalEditForm: React.FC<ModalEditFormProps> = ({

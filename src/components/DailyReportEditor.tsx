@@ -8,6 +8,7 @@ import { useQAItems } from '../hooks/useQAItems';
 import { useReleases } from '../hooks/useReleases';
 import { useAppContext } from '../contexts/AppContext';
 import { getTodayStr, toDateStr, formatTimestamp } from '../utils/qaUtils';
+import { STATUS, isResolved, isActiveRelease } from '../constants';
 import { generateDailyReport } from '../services/geminiService';
 
 export const DailyReportEditor: React.FC = () => {
@@ -46,7 +47,7 @@ export const DailyReportEditor: React.FC = () => {
     return () => clearTimeout(autoSaveTimer.current);
   }, [completed, inProgress, risks]);
 
-  const activeRelease = releases.find(r => r.status === 'planning' || r.status === 'uat');
+  const activeRelease = releases.find(r => isActiveRelease(r.status));
 
   const handleGenerate = async () => {
     if (!user) return;
@@ -58,16 +59,16 @@ export const DailyReportEditor: React.FC = () => {
       const pendingTodos = todos.filter(t => !t.completed).map(t => t.text);
 
       const completedQAItems = qaData
-        .filter(i => (i.currentFlow === '已修復' || i.currentFlow === '已關閉') && i.fixedAt && toDateStr(new Date(i.fixedAt)) === today)
+        .filter(i => isResolved(i.currentFlow) && i.fixedAt && toDateStr(new Date(i.fixedAt)) === today)
         .map(i => ({ id: i.id, title: i.title || i.description.substring(0, 40), module: i.module }));
 
       const inProgressQAItems = qaData
-        .filter(i => i.currentFlow === '開發中' || i.currentFlow === '已修正待測試')
+        .filter(i => i.currentFlow === STATUS.inProgress || i.currentFlow === STATUS.readyToTest)
         .map(i => ({ id: i.id, title: i.title || i.description.substring(0, 40), module: i.module, assignee: i.assignee }));
 
       const riskItems = qaData
         .filter(i => {
-          if (i.currentFlow === '已關閉' || i.currentFlow === '已修復') return false;
+          if (isResolved(i.currentFlow)) return false;
           if (i.priority === 'P0') return true;
           if (i.currentFlow === '退回重修') return true;
           return false;

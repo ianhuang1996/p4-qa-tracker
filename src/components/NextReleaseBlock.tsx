@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { ArrowRight, Calendar, Package, Clock, AlertTriangle } from 'lucide-react';
 import { Release, AugmentedQAItem } from '../types';
+import { RESOLVED_FLOWS, isActiveRelease } from '../constants';
 
 function getDaysUntil(dateStr: string): number {
   const target = new Date(dateStr + 'T00:00:00');
@@ -34,7 +35,7 @@ export const NextReleaseBlock: React.FC<Props> = ({ releases, allItems, onNaviga
   // Sort by scheduledDate ascending (nearest deadline first, newer plans to the right)
   const unreleased = useMemo(() =>
     releases
-      .filter(r => r.status === 'planning' || r.status === 'uat')
+      .filter(r => isActiveRelease(r.status))
       .sort((a, b) => (a.scheduledDate || '').localeCompare(b.scheduledDate || '')),
   [releases]);
 
@@ -45,11 +46,10 @@ export const NextReleaseBlock: React.FC<Props> = ({ releases, allItems, onNaviga
 
   const current = unreleased[Math.min(selectedIdx, unreleased.length - 1)];
   const linkedItems = allItems.filter(i => current.linkedItemIds.includes(i.id));
-  const RESOLVED = new Set(['已修復', '已關閉', '已修正待測試']);
-  const fixedCount = linkedItems.filter(i => RESOLVED.has(i.currentFlow)).length;
+  const fixedCount = linkedItems.filter(i => RESOLVED_FLOWS.has(i.currentFlow)).length;
   const totalItems = linkedItems.length;
   const blockingItems = linkedItems
-    .filter(i => (i.priority === 'P0' || i.priority === 'P1') && !RESOLVED.has(i.currentFlow))
+    .filter(i => (i.priority === 'P0' || i.priority === 'P1') && !RESOLVED_FLOWS.has(i.currentFlow))
     .slice(0, 2);
   const fixPct = totalItems > 0 ? Math.round((fixedCount / totalItems) * 100) : 0;
   const checklistDone = current.checklist.filter(c => c.checked).length;
