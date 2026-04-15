@@ -71,6 +71,7 @@ interface EditingState {
   priority: TodoItem['priority'];
   date: string;
   linkedQAItemId: string;
+  type: 'todo' | 'task';
   dueTime: string;
   instruction: string;
   deliverable: string;
@@ -79,14 +80,15 @@ interface EditingState {
 const TodoCard: React.FC<{
   todo: TodoItem;
   canEdit: boolean;
+  isAdmin?: boolean;
   qaItems?: AugmentedQAItem[];
   onToggle: () => void;
   onDelete: () => void;
   onUpdate: (updates: Partial<TodoItem>) => void;
   onNavigateToQA?: (itemId: string) => void;
-}> = ({ todo, canEdit, qaItems, onToggle, onDelete, onUpdate, onNavigateToQA }) => {
+}> = ({ todo, canEdit, isAdmin, qaItems, onToggle, onDelete, onUpdate, onNavigateToQA }) => {
   const isTask = todo.type === 'task';
-  const linkedQA = !isTask && todo.linkedQAItemId && qaItems
+  const linkedQA = todo.linkedQAItemId && qaItems
     ? qaItems.find(q => q.id === todo.linkedQAItemId) : null;
 
   const [isEditing, setIsEditing] = useState(false);
@@ -96,41 +98,55 @@ const TodoCard: React.FC<{
     priority: todo.priority,
     date: todo.date,
     linkedQAItemId: todo.linkedQAItemId || '',
+    type: todo.type || 'todo',
     dueTime: todo.dueTime || '',
     instruction: todo.instruction || '',
     deliverable: todo.deliverable || '',
   });
 
   const set = (patch: Partial<EditingState>) => setEditState(p => ({ ...p, ...patch }));
+  const editIsTask = editState.type === 'task';
 
   const handleSave = () => {
-    const updates: Partial<TodoItem> = {
+    onUpdate({
       text: editState.text,
       assignee: editState.assignee,
       priority: editState.priority || undefined,
       date: editState.date,
-    };
-    if (isTask) {
-      updates.dueTime = editState.dueTime || undefined;
-      updates.instruction = editState.instruction || undefined;
-      updates.deliverable = editState.deliverable || undefined;
-    } else {
-      updates.linkedQAItemId = editState.linkedQAItemId || undefined;
-    }
-    onUpdate(updates);
+      type: editState.type,
+      linkedQAItemId: editIsTask ? undefined : (editState.linkedQAItemId || undefined),
+      dueTime: editIsTask ? (editState.dueTime || undefined) : undefined,
+      instruction: editState.instruction || undefined,
+      deliverable: editState.deliverable || undefined,
+    });
     setIsEditing(false);
   };
 
   if (isEditing && canEdit) {
     return (
-      <div className="bg-white rounded-xl border border-blue-200 shadow-sm p-4 space-y-3">
-        <input
-          type="text"
-          value={editState.text}
-          onChange={(e) => set({ text: e.target.value })}
-          className="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500"
-          autoFocus
-        />
+      <div className={`bg-white rounded-xl shadow-sm p-4 space-y-3 ${editIsTask ? 'border border-l-4 border-l-indigo-400 border-gray-200' : 'border border-blue-200'}`}>
+        <div className="flex items-center gap-2">
+          <input
+            type="text"
+            value={editState.text}
+            onChange={(e) => set({ text: e.target.value })}
+            className="flex-1 text-sm border border-gray-200 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500"
+            autoFocus
+          />
+          {/* Type toggle — only admins can switch type */}
+          {isAdmin && (
+            <div className="flex items-center gap-0.5 bg-gray-100 p-0.5 rounded-lg shrink-0">
+              <button onClick={() => set({ type: 'todo' })}
+                className={`text-[10px] font-bold px-2 py-1 rounded-md transition-colors ${!editIsTask ? 'bg-white shadow-sm text-gray-700' : 'text-gray-400'}`}>
+                一般
+              </button>
+              <button onClick={() => set({ type: 'task' })}
+                className={`text-[10px] font-bold px-2 py-1 rounded-md flex items-center gap-0.5 transition-colors ${editIsTask ? 'bg-indigo-600 text-white shadow-sm' : 'text-gray-400'}`}>
+                <ClipboardList size={9} /> 任務
+              </button>
+            </div>
+          )}
+        </div>
         <div className="flex flex-wrap items-center gap-2">
           <select value={editState.assignee} onChange={(e) => set({ assignee: e.target.value })}
             className="text-xs border border-gray-200 rounded-lg px-2 py-1.5 bg-white">
@@ -145,7 +161,7 @@ const TodoCard: React.FC<{
           </select>
           <input type="date" value={editState.date} onChange={(e) => set({ date: e.target.value })}
             className="text-xs border border-gray-200 rounded-lg px-2 py-1.5 bg-white" />
-          {isTask ? (
+          {editIsTask ? (
             <input type="time" value={editState.dueTime} onChange={(e) => set({ dueTime: e.target.value })}
               className="text-xs border border-gray-200 rounded-lg px-2 py-1.5 bg-white" />
           ) : qaItems ? (
@@ -158,22 +174,19 @@ const TodoCard: React.FC<{
             </select>
           ) : null}
         </div>
-        {isTask && (
-          <>
-            <div>
-              <label className="text-[10px] font-bold text-indigo-500 uppercase tracking-wider">請做</label>
-              <textarea value={editState.instruction} onChange={(e) => set({ instruction: e.target.value })}
-                className="w-full mt-1 text-xs border border-gray-200 rounded-lg px-3 py-2 outline-none focus:ring-1 focus:ring-indigo-400 min-h-[60px] resize-y"
-                placeholder="具體指示說明..." />
-            </div>
-            <div>
-              <label className="text-[10px] font-bold text-indigo-500 uppercase tracking-wider">交付</label>
-              <textarea value={editState.deliverable} onChange={(e) => set({ deliverable: e.target.value })}
-                className="w-full mt-1 text-xs border border-gray-200 rounded-lg px-3 py-2 outline-none focus:ring-1 focus:ring-indigo-400 min-h-[60px] resize-y"
-                placeholder="請交什麼給我（檔案、連結、截圖...）" />
-            </div>
-          </>
-        )}
+        {/* instruction / deliverable always visible in edit — needed to fix items saved without type='task' */}
+        <div>
+          <label className="text-[10px] font-bold text-indigo-500 uppercase tracking-wider">請做（選填）</label>
+          <textarea value={editState.instruction} onChange={(e) => set({ instruction: e.target.value })}
+            className="w-full mt-1 text-xs border border-gray-200 rounded-lg px-3 py-2 outline-none focus:ring-1 focus:ring-indigo-400 min-h-[52px] resize-y"
+            placeholder="具體指示說明..." />
+        </div>
+        <div>
+          <label className="text-[10px] font-bold text-indigo-500 uppercase tracking-wider">交付（選填）</label>
+          <textarea value={editState.deliverable} onChange={(e) => set({ deliverable: e.target.value })}
+            className="w-full mt-1 text-xs border border-gray-200 rounded-lg px-3 py-2 outline-none focus:ring-1 focus:ring-indigo-400 min-h-[52px] resize-y"
+            placeholder="請交什麼給我（檔案、連結、截圖...）" />
+        </div>
         <div className="flex justify-end gap-2">
           <button onClick={() => setIsEditing(false)} className="text-xs text-gray-500 hover:text-gray-700 px-3 py-1.5">取消</button>
           <button onClick={handleSave} className="text-xs bg-blue-600 text-white px-3 py-1.5 rounded-lg hover:bg-blue-700 flex items-center gap-1">
@@ -220,10 +233,10 @@ const TodoCard: React.FC<{
                 <Flag size={10} />{PRIORITY_LABELS[todo.priority]}
               </span>
             )}
-            {isTask && todo.dueTime && (
+            {todo.dueTime && (
               <span className="text-[10px] font-medium text-indigo-600">截止 {todo.dueTime}</span>
             )}
-            {!isTask && todo.linkedQAItemId && (
+            {todo.linkedQAItemId && (
               <button onClick={() => onNavigateToQA?.(todo.linkedQAItemId!)}
                 className="text-[10px] font-bold text-blue-600 hover:text-blue-700 flex items-center gap-1">
                 <Link2 size={10} />{todo.linkedQAItemId}
@@ -245,6 +258,7 @@ const TodoCard: React.FC<{
                 setEditState({
                   text: todo.text, assignee: todo.assignee, priority: todo.priority,
                   date: todo.date, linkedQAItemId: todo.linkedQAItemId || '',
+                  type: todo.type || 'todo',
                   dueTime: todo.dueTime || '', instruction: todo.instruction || '', deliverable: todo.deliverable || '',
                 });
                 setIsEditing(true);
@@ -262,8 +276,8 @@ const TodoCard: React.FC<{
         )}
       </div>
 
-      {/* Task body: instruction + deliverable */}
-      {isTask && (todo.instruction || todo.deliverable) && !todo.completed && (
+      {/* Structured body: show if instruction or deliverable has content */}
+      {(todo.instruction || todo.deliverable) && !todo.completed && (
         <div className="px-4 pb-3 space-y-2 border-t border-gray-100 bg-gray-50/60">
           {todo.instruction && (
             <div className="pt-2">
@@ -396,6 +410,7 @@ export const DailyTodo: React.FC<DailyTodoProps> = ({ user, qaItems: qaItemsProp
       key={todo.id}
       todo={todo}
       canEdit={canEdit(todo)}
+      isAdmin={isAdmin}
       qaItems={qaItems}
       onToggle={() => toggleTodo(todo.id, !todo.completed)}
       onDelete={() => deleteTodo(todo.id)}
