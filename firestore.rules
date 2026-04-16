@@ -163,7 +163,10 @@ service cloud.firestore {
     match /todos/{todoId} {
       allow read: if isAuthenticated();
       allow create: if isAuthenticated();
-      allow update, delete: if isAuthenticated() &&
+      // Any team member can update (toggle complete, edit assigned tasks)
+      allow update: if isAuthenticated();
+      // Only creator or admin can delete
+      allow delete: if isAuthenticated() &&
         (resource.data.creatorId == request.auth.uid || isAdmin());
     }
 

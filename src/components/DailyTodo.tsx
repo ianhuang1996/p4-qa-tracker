@@ -309,8 +309,13 @@ export const DailyTodo: React.FC<DailyTodoProps> = ({ user, qaItems: qaItemsProp
   const [selectedDate, setSelectedDate] = useState(today);
   const [dateMode, setDateMode] = useState<DateMode>('day');
   const [viewMode, setViewMode] = useState<TodoViewMode>('list');
+  const isAdmin = !!user.email && ADMIN_EMAILS.includes(user.email);
   const myMemberName = user.email ? (EMAIL_TO_MEMBER[user.email] ?? null) : null;
-  const [filterAssignee, setFilterAssignee] = useState<string>(myMemberName ?? 'all');
+  // Admins see everyone by default (they assign tasks to others)
+  // Regular members default to their own tasks
+  const [filterAssignee, setFilterAssignee] = useState<string>(
+    isAdmin ? 'all' : (myMemberName ?? 'all')
+  );
 
   const { todos, isLoading, error: todosError, addTodo, toggleTodo, deleteTodo, updateTodo } = useTodos(user, selectedDate, dateMode);
 
@@ -335,8 +340,6 @@ export const DailyTodo: React.FC<DailyTodoProps> = ({ user, qaItems: qaItemsProp
   const [newPriority, setNewPriority] = useState<TodoItem['priority']>(undefined);
   const [newLinkedQA, setNewLinkedQA] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
-
-  const isAdmin = !!user.email && ADMIN_EMAILS.includes(user.email);
 
   // Add form type toggle (admin only)
   const [newType, setNewType] = useState<'todo' | 'task'>('todo');
