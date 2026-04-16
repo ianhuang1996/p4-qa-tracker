@@ -112,7 +112,7 @@ const TodoCard: React.FC<{
       text: editState.text,
       assignee: editState.assignee,
       priority: editState.priority || undefined,
-      date: editState.date,
+      date: editState.date || todo.date,
       type: editState.type,
       linkedQAItemId: editIsTask ? undefined : (editState.linkedQAItemId || undefined),
       dueTime: editIsTask ? (editState.dueTime || undefined) : undefined,

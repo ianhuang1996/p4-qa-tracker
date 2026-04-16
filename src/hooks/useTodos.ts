@@ -74,7 +74,14 @@ export function useTodos(user: FirebaseUser | null, date: string, dateMode: Date
     return () => unsubscribe();
   }, [user, date, dateMode]);
 
-  const addTodo = async (text: string, assignee: string, todoDate: string, priority?: TodoItem['priority'], linkedQAItemId?: string) => {
+  const addTodo = async (
+    text: string,
+    assignee: string,
+    todoDate: string,
+    priority?: TodoItem['priority'],
+    linkedQAItemId?: string,
+    taskFields?: Pick<TodoItem, 'type' | 'instruction' | 'deliverable' | 'dueTime'>,
+  ) => {
     if (!user || !text.trim()) return;
     try {
       await addDoc(collection(db, 'todos'), {
@@ -87,6 +94,10 @@ export function useTodos(user: FirebaseUser | null, date: string, dateMode: Date
         priority: priority || null,
         linkedQAItemId: linkedQAItemId || null,
         createdAt: Date.now(),
+        type: taskFields?.type || 'todo',
+        instruction: taskFields?.instruction || null,
+        deliverable: taskFields?.deliverable || null,
+        dueTime: taskFields?.dueTime || null,
       });
       awardCoins(user.uid, 'create_todo', text.trim().substring(0, 30)).catch(console.error);
     } catch (error) {
@@ -120,6 +131,8 @@ export function useTodos(user: FirebaseUser | null, date: string, dateMode: Date
     if (!user) return;
     const sanitized: Record<string, unknown> = {};
     Object.entries(updates).forEach(([key, val]) => {
+      // Never overwrite 'date' with an empty string — it would break the date query and hide the item
+      if (key === 'date' && !val) return;
       sanitized[key] = val === undefined ? null : val;
     });
     try {
