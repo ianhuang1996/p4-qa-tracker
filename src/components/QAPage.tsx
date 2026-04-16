@@ -90,6 +90,7 @@ export const QAPage: React.FC<QAPageProps> = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [isAdding, setIsAdding] = useState(false);
   const [editForm, setEditForm] = useState<QAItem | null>(null);
+  const [pendingReleaseId, setPendingReleaseId] = useState('');
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>(null);
@@ -242,7 +243,12 @@ export const QAPage: React.FC<QAPageProps> = () => {
           const num = parseInt(item.id.replace(/\D/g, ''), 10);
           return !isNaN(num) && num > max ? num : max;
         }, 0);
-        await addItem({ ...editForm, id: `Q${maxId + 1}` });
+        const realId = `Q${maxId + 1}`;
+        await addItem({ ...editForm, id: realId });
+        if (pendingReleaseId) {
+          await linkItems(pendingReleaseId, [realId]);
+          setPendingReleaseId('');
+        }
       } else {
         await updateItem(editForm.id, editForm, selectedItem as QAItem);
       }
@@ -431,11 +437,11 @@ export const QAPage: React.FC<QAPageProps> = () => {
       <AnimatePresence>
         {selectedItem && (
           <QAItemModal item={selectedItem} isEditing={isEditing} isAdding={isAdding} editForm={editForm} setEditForm={setEditForm}
-            onClose={() => { setSelectedItemId(null); setIsEditing(false); setIsAdding(false); }}
+            onClose={() => { setSelectedItemId(null); setIsEditing(false); setIsAdding(false); setPendingReleaseId(''); }}
             onEdit={() => { setEditForm(selectedItem); setIsEditing(true); }}
             onSave={handleSave}
             onDelete={() => deleteItem(selectedItem.id).then(() => setSelectedItemId(null))}
-            onCancel={() => { setIsEditing(false); if (isAdding) { setSelectedItemId(null); setIsAdding(false); } }}
+            onCancel={() => { setIsEditing(false); if (isAdding) { setSelectedItemId(null); setIsAdding(false); setPendingReleaseId(''); } }}
             onQuickStatusUpdate={(status) => updateItem(selectedItem.id, { currentFlow: status }, selectedItem)}
             onCommentSubmit={(text) => addComment(selectedItem.id, text)}
             onCommentDelete={(id) => deleteComment(selectedItem.id, id)}
@@ -450,11 +456,19 @@ export const QAPage: React.FC<QAPageProps> = () => {
                 unlinkItem(activeRelease.id, selectedItem.id);
               }
             } : undefined}
-            unreleasedReleases={unreleasedReleases.map(r => ({ id: r.id, version: r.version, linkedItemIds: r.linkedItemIds }))}
+            unreleasedReleases={unreleasedReleases.map(r => ({
+              id: r.id, version: r.version,
+              // When adding, inject temp ID so the radio shows as selected
+              linkedItemIds: isAdding && pendingReleaseId === r.id
+                ? [...r.linkedItemIds, selectedItem.id]
+                : r.linkedItemIds,
+            }))}
             onLinkToRelease={(releaseId) => {
+              if (isAdding) { setPendingReleaseId(releaseId); return; }
               linkItems(releaseId, [selectedItem.id]);
             }}
             onUnlinkFromRelease={(releaseId) => {
+              if (isAdding) { setPendingReleaseId(''); return; }
               unlinkItem(releaseId, selectedItem.id);
             }}
           />
