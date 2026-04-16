@@ -16,14 +16,14 @@ import {
   arrayMove,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { GripVertical, X } from 'lucide-react';
+import { GripVertical, X, Loader2, Check } from 'lucide-react';
 import { AugmentedQAItem } from '../types';
 import { PRIORITY_COLORS, PRIORITY_ORDER, BTN, STATUS, isActive } from '../constants';
 import { getAvatarColor } from '../utils/qaUtils';
 
 interface PrioritySortViewProps {
   items: AugmentedQAItem[];
-  onSave: (updates: { id: string; sortOrder: number }[]) => void;
+  onSave: (updates: { id: string; sortOrder: number }[]) => Promise<void>;
   onClose: () => void;
 }
 
@@ -117,6 +117,7 @@ export const PrioritySortView: React.FC<PrioritySortViewProps> = ({ items, onSav
   });
 
   const [hasChanges, setHasChanges] = useState(false);
+  const [saveState, setSaveState] = useState<'idle' | 'saving' | 'saved'>('idle');
 
   const handleDragEnd = (priority: string) => (event: DragEndEvent) => {
     const { active, over } = event;
@@ -131,14 +132,18 @@ export const PrioritySortView: React.FC<PrioritySortViewProps> = ({ items, onSav
     setHasChanges(true);
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     const updates: { id: string; sortOrder: number }[] = [];
     Object.values(groupOrders).forEach(ids => {
       ids.forEach((id, index) => {
         updates.push({ id, sortOrder: index });
       });
     });
-    onSave(updates);
+    setSaveState('saving');
+    await onSave(updates);
+    setSaveState('saved');
+    setHasChanges(false);
+    setTimeout(() => setSaveState('idle'), 1500);
   };
 
   const getItemById = (id: string) => activeItems.find(i => i.id === id);
@@ -153,12 +158,19 @@ export const PrioritySortView: React.FC<PrioritySortViewProps> = ({ items, onSav
             <p className="text-xs text-gray-500 mt-1">拖拉調整每個優先級內的修復順序</p>
           </div>
           <div className="flex items-center gap-3">
-            {hasChanges && (
+            {(hasChanges || saveState !== 'idle') && (
               <button
                 onClick={handleSave}
-                className={BTN.primary}
+                disabled={saveState === 'saving' || saveState === 'saved'}
+                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all ${
+                  saveState === 'saving' ? 'bg-blue-400 text-white cursor-not-allowed' :
+                  saveState === 'saved'  ? 'bg-green-500 text-white cursor-default' :
+                  BTN.primary
+                }`}
               >
-                儲存排序
+                {saveState === 'saving' && <Loader2 size={15} className="animate-spin" />}
+                {saveState === 'saved'  && <Check size={15} />}
+                {saveState === 'saving' ? '儲存中...' : saveState === 'saved' ? '已儲存' : '儲存排序'}
               </button>
             )}
             <button
