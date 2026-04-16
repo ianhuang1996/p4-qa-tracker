@@ -30,6 +30,8 @@ export interface QAItem {
   attachments?: { name: string; url: string }[];
   isNextRelease?: boolean;
   releaseNote?: string;
+  linkedReleaseId?: string;
+  linkedReleaseVersion?: string;
   sortOrder?: number;
   retestResult?: 'passed' | 'failed';
   retestNote?: string;
@@ -243,6 +245,11 @@ export interface TodoItem {
   linkedQAItemId?: string;
   createdAt: number;
   completedAt?: number;
+  // ── 任務單欄位 (type === 'task' 時啟用) ──
+  type?: 'todo' | 'task';
+  instruction?: string;    // 請做：具體指示
+  deliverable?: string;    // 交付：交什麼給我
+  dueTime?: string;        // 截止時間 HH:MM
 }
 
 export interface DailyReport {

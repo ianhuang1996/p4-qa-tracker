@@ -21,7 +21,7 @@ import {
   useSortable
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { Image as ImageIcon, Video, MessageSquare, FileText, Rocket } from 'lucide-react';
+import { Image as ImageIcon, Video, MessageSquare, FileText, Rocket, Tag } from 'lucide-react';
 import { AugmentedQAItem } from '../types';
 import { QA_FLOWS, PRIORITY_COLORS, STATUS_COLORS, STATUS } from '../constants';
 import { getDirectImageUrl, getAvatarColor } from '../utils/qaUtils';
@@ -82,6 +82,13 @@ const KanbanCard = React.memo(({ item, onClick, onStatusChange }: KanbanCardProp
         <div className="flex items-center gap-1 px-1.5 py-0.5 bg-indigo-50 text-indigo-600 rounded text-[10px] font-bold border border-indigo-100 w-fit mb-2" title="排入下次發布">
           <Rocket size={10} />
           Next Release
+        </div>
+      )}
+
+      {item.linkedReleaseVersion && (
+        <div className="flex items-center gap-1 px-1.5 py-0.5 bg-violet-50 text-violet-600 rounded text-[10px] font-bold border border-violet-100 w-fit mb-2" title={`已排入版更 ${item.linkedReleaseVersion}`}>
+          <Tag size={10} />
+          {item.linkedReleaseVersion}
         </div>
       )}
 

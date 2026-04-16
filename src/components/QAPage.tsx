@@ -42,7 +42,7 @@ export const QAPage: React.FC<QAPageProps> = () => {
     addComment, deleteComment, editComment, bulkUpdate, bulkDelete
   } = useAugmentedQAItems(user, isAuthReady);
 
-  const { releases, linkItems, unlinkItem, unlinkItems } = useReleases(user);
+  const { releases, linkItems, unlinkItem, unlinkItems, moveItemToRelease } = useReleases(user);
   const activeRelease = useMemo(() => releases.find(r => isActiveRelease(r.status)) || null, [releases]);
   const unreleasedReleases = useMemo(() => releases.filter(r => isActiveRelease(r.status)), [releases]);
   // Map: itemId → version string (for badge display)

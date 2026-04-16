@@ -43,10 +43,12 @@ export const QAItemSchema = z.object({
   attachmentName: z.string().optional(),
   attachments: z.array(z.object({ name: z.string(), url: z.string() })).optional(),
   isNextRelease: z.boolean().optional(),
+  linkedReleaseId: z.string().optional(),
   releaseNote: z.string().optional(),
   sortOrder: z.number().optional(),
   retestResult: z.enum(['passed', 'failed']).optional(),
   retestNote: z.string().optional(),
   retestDate: z.number().optional(),
   retestBy: z.string().optional(),
+  linkedReleaseVersion: z.string().optional(),
 });

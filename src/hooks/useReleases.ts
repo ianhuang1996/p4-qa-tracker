@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { db } from '../firebase';
-import { collection, onSnapshot, doc, setDoc, deleteDoc, addDoc, query, orderBy, arrayUnion, arrayRemove } from 'firebase/firestore';
+import { collection, onSnapshot, doc, setDoc, deleteDoc, addDoc, query, orderBy, arrayUnion, arrayRemove, writeBatch } from 'firebase/firestore';
 import { User as FirebaseUser } from 'firebase/auth';
 import { toast } from 'sonner';
 import { Release, ChecklistItem, OperationType } from '../types';
@@ -93,9 +93,19 @@ export function useReleases(user: FirebaseUser | null) {
   const linkItems = async (releaseId: string, newIds: string[]) => {
     if (!user || newIds.length === 0) return;
     try {
-      await setDoc(doc(db, 'releases', releaseId), {
-        linkedItemIds: arrayUnion(...newIds)
-      }, { merge: true });
+      const version = releases.find(r => r.id === releaseId)?.version ?? '';
+      const otherReleases = releases.filter(r => r.id !== releaseId);
+      const batch = writeBatch(db);
+      batch.set(doc(db, 'releases', releaseId), { linkedItemIds: arrayUnion(...newIds) }, { merge: true });
+      for (const id of newIds) {
+        // Remove from any previous release (handles items linked before linkedReleaseId field existed)
+        const prevRelease = otherReleases.find(r => r.linkedItemIds.includes(id));
+        if (prevRelease) {
+          batch.set(doc(db, 'releases', prevRelease.id), { linkedItemIds: arrayRemove(id) }, { merge: true });
+        }
+        batch.update(doc(db, 'qa_items', id), { linkedReleaseId: releaseId, linkedReleaseVersion: version });
+      }
+      await batch.commit();
       toast.success(`已加入 ${newIds.length} 個項目`);
     } catch (error) {
       toast.error('加入失敗');
@@ -106,20 +116,38 @@ export function useReleases(user: FirebaseUser | null) {
   const unlinkItem = async (releaseId: string, removeId: string) => {
     if (!user) return;
     try {
-      await setDoc(doc(db, 'releases', releaseId), {
-        linkedItemIds: arrayRemove(removeId)
-      }, { merge: true });
+      const batch = writeBatch(db);
+      batch.set(doc(db, 'releases', releaseId), { linkedItemIds: arrayRemove(removeId) }, { merge: true });
+      batch.update(doc(db, 'qa_items', removeId), { linkedReleaseId: null, linkedReleaseVersion: null });
+      await batch.commit();
     } catch (error) {
       handleFirestoreError(error, OperationType.WRITE, `releases/${releaseId}`);
+    }
+  };
+
+  const moveItemToRelease = async (itemId: string, fromReleaseId: string, toReleaseId: string) => {
+    if (!user) return;
+    try {
+      const toVersion = releases.find(r => r.id === toReleaseId)?.version ?? '';
+      const batch = writeBatch(db);
+      batch.set(doc(db, 'releases', fromReleaseId), { linkedItemIds: arrayRemove(itemId) }, { merge: true });
+      batch.set(doc(db, 'releases', toReleaseId), { linkedItemIds: arrayUnion(itemId) }, { merge: true });
+      batch.update(doc(db, 'qa_items', itemId), { linkedReleaseId: toReleaseId, linkedReleaseVersion: toVersion });
+      await batch.commit();
+      toast.success(`已移至 ${toVersion}`);
+    } catch (error) {
+      toast.error('移動失敗');
+      handleFirestoreError(error, OperationType.WRITE, `releases/${toReleaseId}`);
     }
   };
 
   const unlinkItems = async (releaseId: string, removeIds: string[]) => {
     if (!user || removeIds.length === 0) return;
     try {
-      await setDoc(doc(db, 'releases', releaseId), {
-        linkedItemIds: arrayRemove(...removeIds)
-      }, { merge: true });
+      const batch = writeBatch(db);
+      batch.set(doc(db, 'releases', releaseId), { linkedItemIds: arrayRemove(...removeIds) }, { merge: true });
+      removeIds.forEach(id => batch.update(doc(db, 'qa_items', id), { linkedReleaseId: null, linkedReleaseVersion: null }));
+      await batch.commit();
     } catch (error) {
       handleFirestoreError(error, OperationType.WRITE, `releases/${releaseId}`);
     }
@@ -166,5 +194,5 @@ export function useReleases(user: FirebaseUser | null) {
     }
   };
 
-  return { releases, isLoading, error, addRelease, updateRelease, deleteRelease, toggleChecklist, linkItems, unlinkItem, unlinkItems, executeRelease, updateReleaseSortOrders };
+  return { releases, isLoading, error, addRelease, updateRelease, deleteRelease, toggleChecklist, linkItems, unlinkItem, unlinkItems, moveItemToRelease, executeRelease, updateReleaseSortOrders };
 }
