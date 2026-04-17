@@ -156,6 +156,38 @@ export const FilterBar = React.memo(function FilterBar({
         </div>
       </div>
 
+      {/* Active filter chips — always visible when any filter is on */}
+      {totalActiveFilters > 0 && (
+        <div className="flex items-center gap-1.5 flex-wrap pt-1">
+          <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider shrink-0">篩選中：</span>
+          {priorityFilter !== '全部' && (
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-50 text-blue-700 text-[10px] font-bold rounded-lg border border-blue-200">
+              {priorityFilter}
+              <button onClick={() => setPriorityFilter('全部')} className="hover:text-blue-900 leading-none">×</button>
+            </span>
+          )}
+          {statusFilters.map(s => (
+            <span key={s} className="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-50 text-blue-700 text-[10px] font-bold rounded-lg border border-blue-200">
+              {s}
+              <button onClick={() => setStatusFilters(statusFilters.filter(x => x !== s))} className="hover:text-blue-900 leading-none">×</button>
+            </span>
+          ))}
+          {assigneeFilters.map(a => (
+            <span key={a} className="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-50 text-blue-700 text-[10px] font-bold rounded-lg border border-blue-200">
+              {a}
+              <button onClick={() => setAssigneeFilters(assigneeFilters.filter(x => x !== a))} className="hover:text-blue-900 leading-none">×</button>
+            </span>
+          ))}
+          {moduleFilters.map(m => (
+            <span key={m} className="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-50 text-blue-700 text-[10px] font-bold rounded-lg border border-blue-200">
+              {m}
+              <button onClick={() => setModuleFilters(moduleFilters.filter(x => x !== m))} className="hover:text-blue-900 leading-none">×</button>
+            </span>
+          ))}
+          <button onClick={clearAll} className="text-[10px] font-bold text-red-500 hover:text-red-600 transition-colors ml-1">清除全部</button>
+        </div>
+      )}
+
       {/* Row 2: Inline pill filters (collapsible) */}
       {showFilters && (
         <div className="space-y-2 pt-2 border-t border-gray-100">

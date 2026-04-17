@@ -123,7 +123,7 @@ export const QAItemTable = React.memo(function QAItemTable({
                 className={`hover:bg-blue-50/50 transition-colors cursor-pointer group ${selectedIds.includes(item.id) ? 'bg-blue-50' : ''}`}
                 onClick={() => onItemClick(item)}
               >
-                <td className="px-4 py-4" onClick={(e) => e.stopPropagation()}>
+                <td className="px-4 py-2" onClick={(e) => e.stopPropagation()}>
                   <input 
                     type="checkbox" 
                     checked={selectedIds.includes(item.id)}
@@ -131,20 +131,20 @@ export const QAItemTable = React.memo(function QAItemTable({
                     className="rounded text-blue-600 focus:ring-blue-500"
                   />
                 </td>
-                <td className="px-4 py-4 whitespace-nowrap text-xs font-bold text-gray-400">{item.id}</td>
-                <td className="hidden md:table-cell px-4 py-4 whitespace-nowrap">
+                <td className="px-4 py-2 whitespace-nowrap text-xs font-bold text-gray-400">{item.id}</td>
+                <td className="hidden md:table-cell px-4 py-2 whitespace-nowrap">
                   {item.priority !== '-' && (
                     <span className={`px-2 py-0.5 text-[10px] font-bold rounded border ${PRIORITY_COLORS[item.priority]}`}>
                       {item.priority}
                     </span>
                   )}
                 </td>
-                <td className="hidden md:table-cell px-4 py-4 whitespace-nowrap">
+                <td className="hidden md:table-cell px-4 py-2 whitespace-nowrap">
                   <span className="px-2 py-0.5 bg-gray-100 text-gray-600 text-[10px] font-bold rounded border border-gray-200 uppercase tracking-wider">
                     {item.module}
                   </span>
                 </td>
-                <td className="px-4 py-4">
+                <td className="px-4 py-2">
                   <div className="flex items-center gap-2">
                     <div className="text-sm font-semibold text-gray-900 line-clamp-1 group-hover:text-blue-600 transition-colors">
                       {item.displayTitle}
@@ -164,7 +164,7 @@ export const QAItemTable = React.memo(function QAItemTable({
                     {getOverdueBadge(item)}
                   </div>
                 </td>
-                <td className="hidden md:table-cell px-4 py-4 whitespace-nowrap">
+                <td className="hidden md:table-cell px-4 py-2 whitespace-nowrap">
                   <div className="relative">
                     <button
                       className="flex items-center gap-2 hover:bg-gray-50 p-1 rounded-lg transition-colors"
@@ -210,12 +210,12 @@ export const QAItemTable = React.memo(function QAItemTable({
                     )}
                   </div>
                 </td>
-                <td className="hidden sm:table-cell px-4 py-4 whitespace-nowrap">
+                <td className="hidden sm:table-cell px-4 py-2 whitespace-nowrap">
                   <span className={`px-2.5 py-1 text-[10px] font-bold rounded-full border ${STATUS_COLORS[item.currentFlow || STATUS.pending]}`}>
                     {item.currentFlow}
                   </span>
                 </td>
-                <td className="hidden md:table-cell px-4 py-4 whitespace-nowrap">
+                <td className="hidden md:table-cell px-4 py-2 whitespace-nowrap">
                   <div className="flex items-center gap-2">
                     {(item.imageLink || (item.imageLinks && item.imageLinks.length > 0)) && (
                       <div className="w-8 h-8 rounded border border-gray-200 overflow-hidden bg-gray-50 flex-shrink-0">
@@ -226,7 +226,7 @@ export const QAItemTable = React.memo(function QAItemTable({
                     {(item.attachmentUrl || (item.attachments && item.attachments.length > 0)) && <FileText size={16} className="text-orange-400" />}
                   </div>
                 </td>
-                <td className="px-4 py-4 whitespace-nowrap text-right text-sm font-medium">
+                <td className="px-4 py-2 whitespace-nowrap text-right text-sm font-medium">
                   <div className="flex items-center justify-end gap-1">
                     {(item.currentFlow === STATUS.inProgress || item.currentFlow === STATUS.returned) && (
                       <button

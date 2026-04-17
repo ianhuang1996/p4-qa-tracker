@@ -174,7 +174,7 @@ export const PRIORITY_ORDER: Record<string, number> = {
 export const STATUS_COLORS: Record<string, string> = {
   [STATUS.closed]:      'bg-gray-100 text-gray-600 border-gray-200',
   [STATUS.fixed]:       'bg-green-100 text-green-700 border-green-200',
-  [STATUS.readyToTest]: 'bg-teal-100 text-teal-700 border-teal-200',
+  [STATUS.readyToTest]: 'bg-teal-500 text-white border-teal-600',
   [STATUS.returned]:    'bg-red-500 text-white border-red-600',
   [STATUS.inProgress]:  'bg-blue-100 text-blue-700 border-blue-200',
   [STATUS.pending]:     'bg-slate-100 text-slate-700 border-slate-200',

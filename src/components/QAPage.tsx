@@ -370,14 +370,14 @@ export const QAPage: React.FC<QAPageProps> = () => {
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-8">
         {[
-          { label: '未結案問題', value: quickStats.totalActive },
-          { label: 'P0/P1 嚴重', value: quickStats.criticalBugs },
-          { label: '待 PM 測試', value: quickStats.readyForTest },
-          { label: '我的待辦', value: quickStats.myPending }
+          { label: '未結案問題', value: quickStats.totalActive,    card: 'bg-white border-gray-100',     num: 'text-gray-900', lbl: 'text-gray-400' },
+          { label: 'P0/P1 嚴重', value: quickStats.criticalBugs,  card: 'bg-red-50 border-red-200',     num: 'text-red-700',  lbl: 'text-red-400' },
+          { label: '待 PM 測試', value: quickStats.readyForTest,   card: 'bg-amber-50 border-amber-200', num: 'text-amber-700',lbl: 'text-amber-400' },
+          { label: '我的待辦',   value: quickStats.myPending,      card: 'bg-blue-50 border-blue-100',   num: 'text-blue-700', lbl: 'text-blue-400' },
         ].map(stat => (
-          <div key={stat.label} className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
-            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">{stat.label}</p>
-            <p className="text-2xl font-black text-gray-900">{stat.value}</p>
+          <div key={stat.label} className={`p-4 rounded-2xl shadow-sm border ${stat.card}`}>
+            <p className={`text-[10px] font-bold uppercase tracking-widest mb-1 ${stat.lbl}`}>{stat.label}</p>
+            <p className={`text-2xl font-black ${stat.num}`}>{stat.value}</p>
           </div>
         ))}
       </div>
