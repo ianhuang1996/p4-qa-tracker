@@ -8,7 +8,7 @@ import { useTodos, DateMode } from '../hooks/useTodos';
 import { useQAItems } from '../hooks/useQAItems';
 import { useAppContext } from '../contexts/AppContext';
 import { TodoItem, AugmentedQAItem } from '../types';
-import { RDS, PMS, ADMIN_EMAILS, EMAIL_TO_MEMBER, STATUS_COLORS, STATUS, isResolved, isActive } from '../constants';
+import { RDS, PMS, EMAIL_TO_MEMBER, STATUS_COLORS, STATUS, isResolved, isActive } from '../constants';
 import { getAvatarColor, getTodayStr, toDateStr, augmentQAItems } from '../utils/qaUtils';
 import { EmptyState } from './EmptyState';
 
@@ -302,14 +302,13 @@ const TodoCard: React.FC<{
 
 // ─── Main Component ────────────────────────────────────────────
 export const DailyTodo: React.FC<DailyTodoProps> = ({ user, qaItems: qaItemsProp, onNavigateToQA }) => {
-  const { isAuthReady } = useAppContext();
+  const { isAuthReady, isAdmin } = useAppContext();
   const { data: rawQAData } = useQAItems(user, isAuthReady);
   const qaItems = qaItemsProp || useMemo(() => augmentQAItems(rawQAData), [rawQAData]);
   const today = getTodayStr();
   const [selectedDate, setSelectedDate] = useState(today);
   const [dateMode, setDateMode] = useState<DateMode>('day');
   const [viewMode, setViewMode] = useState<TodoViewMode>('list');
-  const isAdmin = !!user.email && ADMIN_EMAILS.includes(user.email);
   const myMemberName = user.email ? (EMAIL_TO_MEMBER[user.email] ?? null) : null;
   // Admins see everyone by default (they assign tasks to others)
   // Regular members default to their own tasks

@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   DndContext,
   closestCenter,
@@ -119,6 +119,12 @@ export const PrioritySortView: React.FC<PrioritySortViewProps> = ({ items, onSav
   const [hasChanges, setHasChanges] = useState(false);
   const [saveState, setSaveState] = useState<'idle' | 'saving' | 'saved'>('idle');
 
+  useEffect(() => {
+    if (saveState !== 'saved') return;
+    const timer = setTimeout(() => setSaveState('idle'), 1500);
+    return () => clearTimeout(timer);
+  }, [saveState]);
+
   const handleDragEnd = (priority: string) => (event: DragEndEvent) => {
     const { active, over } = event;
     if (!over || active.id === over.id) return;
@@ -143,7 +149,6 @@ export const PrioritySortView: React.FC<PrioritySortViewProps> = ({ items, onSav
     await onSave(updates);
     setSaveState('saved');
     setHasChanges(false);
-    setTimeout(() => setSaveState('idle'), 1500);
   };
 
   const getItemById = (id: string) => activeItems.find(i => i.id === id);

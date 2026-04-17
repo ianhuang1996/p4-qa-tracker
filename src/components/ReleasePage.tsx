@@ -177,7 +177,9 @@ export const ReleasePage: React.FC = () => {
     [releases],
   );
   const pastReleases = useMemo(
-    () => releases.filter(r => isArchivedRelease(r.status)),
+    () => releases
+      .filter(r => isArchivedRelease(r.status))
+      .sort((a, b) => (b.releasedAt ?? 0) - (a.releasedAt ?? 0)),
     [releases],
   );
 

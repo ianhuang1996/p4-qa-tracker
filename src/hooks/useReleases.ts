@@ -113,17 +113,7 @@ export function useReleases(user: FirebaseUser | null) {
     }
   };
 
-  const unlinkItem = async (releaseId: string, removeId: string) => {
-    if (!user) return;
-    try {
-      const batch = writeBatch(db);
-      batch.set(doc(db, 'releases', releaseId), { linkedItemIds: arrayRemove(removeId) }, { merge: true });
-      batch.update(doc(db, 'qa_items', removeId), { linkedReleaseId: null, linkedReleaseVersion: null });
-      await batch.commit();
-    } catch (error) {
-      handleFirestoreError(error, OperationType.WRITE, `releases/${releaseId}`);
-    }
-  };
+  const unlinkItem = (releaseId: string, removeId: string) => unlinkItems(releaseId, [removeId]);
 
   const moveItemToRelease = async (itemId: string, fromReleaseId: string, toReleaseId: string) => {
     if (!user) return;
@@ -185,9 +175,9 @@ export function useReleases(user: FirebaseUser | null) {
   const updateReleaseSortOrders = async (updates: { id: string; sortOrder: number }[]) => {
     if (!user) return;
     try {
-      for (const { id, sortOrder } of updates) {
-        await setDoc(doc(db, 'releases', id), { sortOrder }, { merge: true });
-      }
+      const batch = writeBatch(db);
+      updates.forEach(({ id, sortOrder }) => batch.set(doc(db, 'releases', id), { sortOrder }, { merge: true }));
+      await batch.commit();
     } catch (error) {
       toast.error('排序儲存失敗');
       handleFirestoreError(error, OperationType.WRITE, 'releases (sort)');
