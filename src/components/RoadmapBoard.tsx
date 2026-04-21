@@ -175,9 +175,9 @@ export const RoadmapBoard: React.FC<RoadmapBoardProps> = ({
   return (
     <DndContext sensors={sensors} onDragStart={handleDragStart} onDragOver={handleDragOver} onDragEnd={handleDragEnd}>
       <div className="overflow-x-auto">
-        <div className="min-w-[800px]">
+        <div className="min-w-[640px] md:min-w-[800px]">
           {/* Column headers */}
-          <div className="grid grid-cols-[160px_1fr_1fr_1fr] gap-3 mb-3">
+          <div className="grid grid-cols-[100px_1fr_1fr_1fr] md:grid-cols-[160px_1fr_1fr_1fr] gap-2 md:gap-3 mb-3">
             <div />
             {ROADMAP_BOARD_STATUSES.map(s => (
               <div key={s.id} className={`rounded-xl px-4 py-2.5 text-center ${ROADMAP_STATUS_HEADER[s.id]}`}>
@@ -194,7 +194,7 @@ export const RoadmapBoard: React.FC<RoadmapBoardProps> = ({
               const isDerivedTrack = track.id === 'bug_fix';
 
               return (
-                <div key={track.id} className="grid grid-cols-[160px_1fr_1fr_1fr] gap-3">
+                <div key={track.id} className="grid grid-cols-[100px_1fr_1fr_1fr] md:grid-cols-[160px_1fr_1fr_1fr] gap-2 md:gap-3">
                   <div className={`rounded-xl ${ts.header} flex flex-col items-start justify-center px-4 py-3 gap-0.5`}>
                     <div className="flex items-center gap-2">
                       <span className="text-lg">{track.emoji}</span>

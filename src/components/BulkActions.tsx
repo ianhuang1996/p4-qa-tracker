@@ -22,7 +22,7 @@ export const BulkActions = React.memo(function BulkActions({
   if (selectedIds.length === 0) return null;
 
   return (
-    <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-40 bg-gray-900 text-white px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-6 border border-gray-700 animate-in fade-in slide-in-from-bottom-4">
+    <div className="fixed bottom-4 sm:bottom-8 left-1/2 -translate-x-1/2 z-40 bg-gray-900 text-white px-3 sm:px-6 py-3 sm:py-4 rounded-2xl shadow-2xl flex items-center gap-3 sm:gap-6 border border-gray-700 animate-in fade-in slide-in-from-bottom-4 max-w-[95vw] overflow-x-auto">
       <div className="flex items-center gap-3 pr-6 border-r border-gray-700">
         <div className="bg-blue-500 text-white w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold">
           {selectedIds.length}
@@ -30,7 +30,7 @@ export const BulkActions = React.memo(function BulkActions({
         <span className="text-sm font-bold">已選取</span>
       </div>
 
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-2 sm:gap-4">
         {unreleasedReleases.length > 0 && onBulkAddToSpecificRelease && (
           <div className="flex items-center gap-2 bg-indigo-500/10 rounded-lg p-1 border border-indigo-500/20">
             <Rocket size={14} className="text-indigo-400 ml-2" />

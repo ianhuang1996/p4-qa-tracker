@@ -171,7 +171,7 @@ export const RoadmapPage: React.FC = () => {
       </div>
 
       {/* Stats strip */}
-      <div className="grid grid-cols-4 gap-3 mb-6">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3 mb-6">
         {[
           { label: 'Now',   value: stats.now,   color: 'text-emerald-700 bg-emerald-50 border-emerald-200' },
           { label: 'Next',  value: stats.next,  color: 'text-blue-700 bg-blue-50 border-blue-200' },

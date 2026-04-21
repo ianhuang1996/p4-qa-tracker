@@ -135,8 +135,8 @@ export const RoadmapTimeline: React.FC<RoadmapTimelineProps> = ({ items, canEdit
   return (
     <DndContext sensors={sensors} onDragStart={handleDragStart} onDragOver={handleDragOver} onDragEnd={handleDragEnd}>
       <div className="overflow-x-auto">
-        <div style={{ minWidth: `${160 + columns.length * 200}px` }}>
-          <div className="grid gap-3 mb-3" style={{ gridTemplateColumns: `160px repeat(${columns.length}, 1fr)` }}>
+        <div style={{ minWidth: `${100 + columns.length * 160}px` }}>
+          <div className="grid gap-2 md:gap-3 mb-3" style={{ gridTemplateColumns: `100px repeat(${columns.length}, 1fr)` }}>
             <div />
             {months.map(m => (
               <div key={m} className="rounded-xl bg-amber-500 text-white px-3 py-2.5 text-center">
@@ -153,7 +153,7 @@ export const RoadmapTimeline: React.FC<RoadmapTimelineProps> = ({ items, canEdit
               const ts = ROADMAP_TRACK_STYLES[track.id];
               const isDerived = track.id === 'bug_fix';
               return (
-                <div key={track.id} className="grid gap-3" style={{ gridTemplateColumns: `160px repeat(${columns.length}, 1fr)` }}>
+                <div key={track.id} className="grid gap-3" style={{ gridTemplateColumns: `100px repeat(${columns.length}, 1fr)` }}>
                   <div className={`rounded-xl ${ts.header} flex items-center gap-2 px-4 py-3`}>
                     <span className="text-lg">{track.emoji}</span>
                     <span className="text-xs font-black">{track.label}</span>
