@@ -22,9 +22,22 @@ function releaseToRoadmapStatus(r: Release): RoadmapStatus {
   return 'later';
 }
 
+function parseVersion(v: string): number[] {
+  return v.replace(/^v/i, '').split('.').map(n => parseInt(n, 10) || 0);
+}
+
 export function deriveBugFixItems(releases: Release[], qaItems: QAItem[]): RoadmapItem[] {
   return releases
     .filter(r => r.status !== RELEASE_STATUS.CANCELLED)
+    .sort((a, b) => {
+      const va = parseVersion(a.version);
+      const vb = parseVersion(b.version);
+      for (let i = 0; i < Math.max(va.length, vb.length); i++) {
+        const diff = (vb[i] ?? 0) - (va[i] ?? 0); // desc: newest first
+        if (diff !== 0) return diff;
+      }
+      return 0;
+    })
     .map(r => {
       const linked = qaItems.filter(q => r.linkedItemIds.includes(q.id));
       const open   = linked.filter(q => q.currentFlow !== STATUS.closed && q.currentFlow !== STATUS.fixed).length;
