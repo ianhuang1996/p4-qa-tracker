@@ -161,7 +161,7 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ onNavigateToQA, onNa
       {/* Quick Stats Row — clickable */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         <button onClick={onNavigateToTodo} className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 text-left hover:border-blue-200 hover:shadow-md transition-all">
-          <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">我的待辦</p>
+          <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">我的待辦</p>
           <p className="text-2xl font-black text-gray-900">{myPendingTodos.length}</p>
           <p className="text-[10px] text-gray-400 mt-1">已完成 {myCompletedTodos.length} 項</p>
         </button>

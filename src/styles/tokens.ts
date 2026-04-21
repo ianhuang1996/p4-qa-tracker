@@ -13,9 +13,10 @@ export const RADIUS = {
 export const Z = {
   dropdown: 'z-20',          // Dropdown menus, popovers
   modal: 'z-50',             // Modals, sheets, sidebars
-  confirm: 'z-60',           // Confirmation dialogs (above modal)
+  confirm: 'z-[60]',          // Confirmation dialogs (above modal)
   lightbox: 'z-[100]',       // Lightbox, image viewer
-  search: 'z-[100]',         // Global search (top layer)
+  search: 'z-[200]',         // Global search overlay (top layer)
+  searchPanel: 'z-[201]',    // Global search panel (above overlay)
 } as const;
 
 /** Backdrop opacity */

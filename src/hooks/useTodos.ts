@@ -7,7 +7,7 @@ import { TodoItem, OperationType } from '../types';
 import { toDateStr } from '../utils/qaUtils';
 import { handleFirestoreError } from '../utils/firestoreUtils';
 import { awardCoins } from '../services/coinService';
-import { EMAIL_TO_MEMBER } from '../constants';
+import { EMAIL_TO_MEMBER, DEFAULT_DISPLAY_NAME } from '../constants';
 
 export type DateMode = 'day' | 'week';
 
@@ -87,7 +87,7 @@ export function useTodos(user: FirebaseUser | null, date: string, dateMode: Date
     try {
       await addDoc(collection(db, 'todos'), {
         creatorId: user.uid,
-        creatorName: user.displayName || '匿名',
+        creatorName: user.displayName || DEFAULT_DISPLAY_NAME,
         assignee,
         text: text.trim(),
         completed: false,

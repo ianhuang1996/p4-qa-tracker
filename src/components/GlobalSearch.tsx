@@ -3,6 +3,7 @@ import { Search, X, Bug, CheckSquare, BookOpen, FileText, NotebookPen } from 'lu
 import { motion, AnimatePresence } from 'motion/react';
 import { FadeIn } from './ui/FadeIn';
 import { useAppContext } from '../contexts/AppContext';
+import { Z } from '../styles/tokens';
 import { useQAItems } from '../hooks/useQAItems';
 import { useWikiPages } from '../hooks/useWikiPages';
 import { useTodos } from '../hooks/useTodos';
@@ -135,8 +136,8 @@ export const GlobalSearch: React.FC<GlobalSearchProps> = ({ onNavigate }) => {
 
   return (
     <>
-      <div className="fixed inset-0 z-[200] bg-black/50 backdrop-blur-sm" onClick={() => setIsOpen(false)} />
-      <div className="fixed inset-x-2 sm:inset-x-4 top-[8%] sm:top-[15%] z-[201] max-w-xl mx-auto">
+      <div className={`fixed inset-0 ${Z.search} bg-black/50 backdrop-blur-sm`} onClick={() => setIsOpen(false)} />
+      <div className={`fixed inset-x-2 sm:inset-x-4 top-[8%] sm:top-[15%] ${Z.searchPanel} max-w-xl mx-auto`}>
         <motion.div
           initial={{ opacity: 0, scale: 0.95, y: -10 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}

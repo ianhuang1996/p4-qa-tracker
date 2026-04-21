@@ -6,7 +6,7 @@ import { toast } from 'sonner';
 import { Release, ChecklistItem, OperationType } from '../types';
 import { handleFirestoreError } from '../utils/firestoreUtils';
 import { awardCoins, getUserPetBuff } from '../services/coinService';
-import { STATUS, RELEASE_STATUS } from '../constants';
+import { STATUS, RELEASE_STATUS, DEFAULT_DISPLAY_NAME } from '../constants';
 import confetti from 'canvas-confetti';
 
 const DEFAULT_CHECKLIST: ChecklistItem[] = [
@@ -51,7 +51,7 @@ export function useReleases(user: FirebaseUser | null) {
         checklist: DEFAULT_CHECKLIST,
         releaseNotes: '',
         createdBy: user.uid,
-        createdByName: user.displayName || '匿名',
+        createdByName: user.displayName || DEFAULT_DISPLAY_NAME,
         createdAt: Date.now(),
       });
       toast.success('版本已建立');

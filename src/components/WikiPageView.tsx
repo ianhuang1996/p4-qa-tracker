@@ -152,7 +152,7 @@ export const WikiPageView: React.FC = () => {
         {/* Recent edits */}
         {filteredPages.length > 0 && (
           <div className="mb-2">
-            <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1 flex items-center gap-1">
+            <h4 className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1 flex items-center gap-1">
               <Clock size={12} /> 最近編輯
             </h4>
             <div className="space-y-1">
@@ -189,7 +189,7 @@ export const WikiPageView: React.FC = () => {
           )}
           {Object.entries(groupedPages).map(([category, categoryPages]) => (
             <div key={category}>
-              <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1 flex items-center gap-1">
+              <h4 className="text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1 flex items-center gap-1">
                 <FolderOpen size={12} /> {category} ({categoryPages.length})
               </h4>
               <div className="space-y-1">

@@ -3,6 +3,7 @@ import { X, Edit2, Trash2, Save, Info, AlertTriangle, MessageSquare, History } f
 import { motion, AnimatePresence } from 'motion/react';
 import { QAItem, QAComment, AugmentedQAItem, HistoryEntry, ReleaseLinksProps } from '../types';
 import { STATUS_COLORS, BTN } from '../constants';
+import { Z } from '../styles/tokens';
 import { getVideoEmbedUrl } from '../utils/qaUtils';
 import { db } from '../firebase';
 import { collection, query, orderBy, onSnapshot } from 'firebase/firestore';
@@ -285,7 +286,7 @@ export const QAItemModal: React.FC<QAItemModalProps> = ({
       {/* Delete Confirmation */}
       <AnimatePresence>
         {showDeleteConfirm && (
-          <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+          <div className={`fixed inset-0 ${Z.confirm} flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm`}>
             <motion.div
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -323,7 +324,7 @@ export const QAItemModal: React.FC<QAItemModalProps> = ({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] bg-black/95 flex items-center justify-center p-4 cursor-zoom-out"
+            className={`fixed inset-0 ${Z.lightbox} bg-black/95 flex items-center justify-center p-4 cursor-zoom-out`}
             onClick={() => setLightboxUrl(null)}
           >
             <button className="absolute top-6 right-6 text-white/50 hover:text-white transition-colors">
@@ -347,7 +348,7 @@ export const QAItemModal: React.FC<QAItemModalProps> = ({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] bg-black/95 flex items-center justify-center p-4 md:p-12"
+            className={`fixed inset-0 ${Z.lightbox} bg-black/95 flex items-center justify-center p-4 md:p-12`}
           >
             <button
               onClick={() => setLightboxVideo(null)}

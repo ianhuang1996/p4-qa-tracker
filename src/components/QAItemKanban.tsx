@@ -67,7 +67,7 @@ const KanbanCard = React.memo(({ item, onClick, onStatusChange }: KanbanCardProp
         </div>
       )}
       <div className="flex justify-between items-start mb-2">
-        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">{item.id}</span>
+        <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">{item.id}</span>
         {item.priority !== '-' && (
           <span className={`px-1.5 py-0.5 text-[10px] font-bold rounded border ${PRIORITY_COLORS[item.priority]}`}>
             {item.priority}
@@ -249,7 +249,7 @@ export const QAItemKanban: React.FC<QAItemKanbanProps> = ({ items, onItemClick, 
         {activeItem ? (
           <div className="bg-white p-4 rounded-lg shadow-xl border border-blue-200 cursor-grabbing w-80 ring-2 ring-blue-400">
             <div className="flex justify-between items-start mb-2">
-              <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">{activeItem.id}</span>
+              <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">{activeItem.id}</span>
               {activeItem.priority !== '-' && (
                 <span className={`px-1.5 py-0.5 text-[10px] font-bold rounded border ${PRIORITY_COLORS[activeItem.priority]}`}>
                   {activeItem.priority}

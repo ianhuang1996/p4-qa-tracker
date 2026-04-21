@@ -61,19 +61,19 @@ export const WeeklyReport: React.FC<WeeklyReportProps> = ({ items }) => {
       {/* Stats cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
-          <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">新增 Bug</p>
+          <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">新增 Bug</p>
           <p className="text-xl font-black text-gray-900">{stats.addedCount}</p>
         </div>
         <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
-          <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">已修復</p>
+          <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">已修復</p>
           <p className="text-xl font-black text-green-600">{stats.fixedCount}</p>
         </div>
         <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
-          <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">未結案</p>
+          <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">未結案</p>
           <p className="text-xl font-black text-orange-600">{stats.remainingCount}</p>
         </div>
         <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
-          <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">修復率</p>
+          <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">修復率</p>
           <div className="flex items-center gap-2">
             <p className="text-xl font-black text-gray-900">{stats.fixRate}%</p>
             {stats.fixRate >= 80 ? <TrendingUp size={16} className="text-green-500" /> :

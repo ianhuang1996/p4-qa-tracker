@@ -86,7 +86,33 @@ export interface AugmentedQAItem extends QAItem {
 }
 
 export type ViewMode = 'table' | 'kanban';
-export type AppPage = 'overview' | 'todo' | 'qa' | 'release' | 'wiki' | 'pet' | 'meetings';
+export type AppPage = 'overview' | 'todo' | 'qa' | 'release' | 'wiki' | 'pet' | 'meetings' | 'roadmap';
+
+// ===== Roadmap =====
+export type RoadmapTrack = 'bug_fix' | 'feature' | 'backend';
+export type RoadmapStatus = 'now' | 'next' | 'later' | 'completed' | 'cancelled';
+
+export interface RoadmapItem {
+  id: string;
+  title: string;
+  description: string;
+  track: RoadmapTrack;
+  status: RoadmapStatus;
+  targetMonth?: string;             // 'YYYY-MM', e.g. '2026-04'
+  priority?: 'high' | 'medium' | 'low';
+  linkedReleaseId?: string;
+  linkedReleaseVersion?: string;
+  linkedQAItemIds?: string[];     // 後台開發 track: linked QA items
+  assignees: string[];
+  createdBy: string;
+  createdByName: string;
+  sortOrder?: number;
+  createdAt: number;
+  updatedAt?: number;
+  // Derived-only fields (not stored in Firestore, computed at runtime)
+  isDerived?: boolean;
+  qaStats?: { open: number; closed: number; total: number };
+}
 
 // ===== Meeting Notes =====
 export type MeetingType = 'client' | 'internal';

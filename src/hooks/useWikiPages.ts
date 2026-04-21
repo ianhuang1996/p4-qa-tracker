@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 import { WikiPage, WikiCategory, OperationType } from '../types';
 import { handleFirestoreError } from '../utils/firestoreUtils';
 import { awardCoins } from '../services/coinService';
+import { DEFAULT_DISPLAY_NAME } from '../constants';
 import { useFirestoreCollection } from './useFirestoreCollection';
 
 const COLLECTION = 'wiki_pages';
@@ -30,11 +31,11 @@ export function useWikiPages(user: FirebaseUser | null) {
         content: '',
         category,
         createdBy: user.uid,
-        createdByName: user.displayName || '匿名',
+        createdByName: user.displayName || DEFAULT_DISPLAY_NAME,
         createdAt: Date.now(),
         updatedAt: Date.now(),
         updatedBy: user.uid,
-        updatedByName: user.displayName || '匿名',
+        updatedByName: user.displayName || DEFAULT_DISPLAY_NAME,
       });
       toast.success('頁面已建立');
       awardCoins(user.uid, 'create_wiki', title).catch(console.error);
@@ -53,7 +54,7 @@ export function useWikiPages(user: FirebaseUser | null) {
     });
     sanitized.updatedAt = Date.now();
     sanitized.updatedBy = user.uid;
-    sanitized.updatedByName = user.displayName || '匿名';
+    sanitized.updatedByName = user.displayName || DEFAULT_DISPLAY_NAME;
     try {
       await setDoc(doc(db, COLLECTION, pageId), sanitized, { merge: true });
     } catch (error) {

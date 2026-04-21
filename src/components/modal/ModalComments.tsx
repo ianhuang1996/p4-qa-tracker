@@ -3,6 +3,7 @@ import { X, Share2, MessageSquare, Sparkles, Loader2, Trash2 } from 'lucide-reac
 import { motion, AnimatePresence } from 'motion/react';
 import { QAComment, AugmentedQAItem } from '../../types';
 import { RDS, PMS, FEATURE_FLAGS } from '../../constants';
+import { Z } from '../../styles/tokens';
 import { summarizeDiscussion } from '../../services/geminiService';
 import { User as FirebaseUser } from 'firebase/auth';
 import { formatTimestamp } from '../../utils/qaUtils';
@@ -97,9 +98,9 @@ export const ModalComments: React.FC<ModalCommentsProps> = ({
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 10 }}
-              className="absolute top-full left-0 mt-1 w-48 bg-white border border-gray-200 rounded-xl shadow-2xl p-2 z-[60]"
+              className={`absolute top-full left-0 mt-1 w-48 bg-white border border-gray-200 rounded-xl shadow-2xl p-2 ${Z.confirm}`}
             >
-              <div className="text-[10px] font-bold text-gray-400 px-2 py-1 uppercase tracking-wider">提及成員</div>
+              <div className="text-[10px] font-bold text-gray-500 px-2 py-1 uppercase tracking-wider">提及成員</div>
               {[...RDS, ...PMS].filter(n => n !== 'Unassigned').map(name => (
                 <button
                   key={name}

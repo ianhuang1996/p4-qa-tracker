@@ -3,7 +3,7 @@ import { User as FirebaseUser } from 'firebase/auth';
 import { db } from '../firebase';
 import { collection, onSnapshot, query, where, orderBy, limit as fbLimit, addDoc, getDocs } from 'firebase/firestore';
 import { QAItem, AugmentedQAItem, TodoItem, WikiPage, Release, DailyReport, TeamGoalProgress, AchievementLog, MeetingNote } from '../types';
-import { ACHIEVEMENT_DEFS, TEAM_GOAL_DEFS, HOLIDAYS_2026, PMS, RDS, MODULES, RELEASE_STATUS, isResolved, isActive, isActiveRelease } from '../constants';
+import { ACHIEVEMENT_DEFS, TEAM_GOAL_DEFS, HOLIDAYS_2026, PMS, RDS, MODULES, RELEASE_STATUS, isResolved, isActive, isActiveRelease, DEFAULT_DISPLAY_NAME } from '../constants';
 import { augmentQAItems } from '../utils/qaUtils';
 import { toast } from 'sonner';
 
@@ -302,14 +302,18 @@ export function useAchievements({ user, qaItems, todos, wikiPages, releases, dai
   useEffect(() => {
     if (!user) return;
     setLogsReady(false);
+    let mounted = true;
     const q = query(collection(db, 'achievement_logs'), where('userId', '==', user.uid));
     getDocs(q).then(snapshot => {
+      if (!mounted) return;
       snapshot.forEach(d => loggedIdsRef.current.add(d.data().achievementId));
       setLogsReady(true);
     }).catch(err => {
-      console.error('Failed to load achievement logs:', err);
-      setLogsReady(true); // Still allow new unlocks even if load fails
+      if (!mounted) return;
+      console.warn('Failed to load achievement logs:', err);
+      setLogsReady(true);
     });
+    return () => { mounted = false; };
   }, [user]);
 
   // Watch for new unlocks (triggers when logsReady flips to true OR unlocked list changes)
@@ -324,7 +328,7 @@ export function useAchievements({ user, qaItems, todos, wikiPages, releases, dai
       addDoc(collection(db, 'achievement_logs'), {
         achievementId: ach.id,
         userId: user.uid,
-        userName: user.displayName || '匿名',
+        userName: user.displayName || DEFAULT_DISPLAY_NAME,
         unlockedAt: Date.now(),
       }).catch(err => console.error('Failed to log achievement:', err));
 

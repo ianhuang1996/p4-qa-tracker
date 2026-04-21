@@ -150,7 +150,7 @@ const SortableReleaseCard: React.FC<{ release: Release; itemCount: number; onCli
 
 // ─── Main Component ─────────────────────────────────────────────
 export const ReleasePage: React.FC = () => {
-  const { user, isAuthReady, isAdmin } = useAppContext();
+  const { user, isAuthReady, isAdmin, setCurrentPage } = useAppContext();
   const {
     releases, isLoading, error: releasesError, addRelease, updateRelease, deleteRelease,
     toggleChecklist, linkItems, unlinkItem, executeRelease, updateReleaseSortOrders,
@@ -285,6 +285,14 @@ export const ReleasePage: React.FC = () => {
           </button>
           <span>/</span>
           <span className="text-gray-700 font-bold">{selectedRelease.version}</span>
+          <span className="ml-auto">
+            <button
+              onClick={() => setCurrentPage('roadmap')}
+              className="flex items-center gap-1 text-[11px] font-bold text-purple-600 hover:text-purple-800 bg-purple-50 hover:bg-purple-100 px-2.5 py-1 rounded-lg transition-colors"
+            >
+              🗺 查看 Roadmap
+            </button>
+          </span>
         </nav>
 
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">

@@ -159,7 +159,7 @@ export const FilterBar = React.memo(function FilterBar({
       {/* Active filter chips — always visible when any filter is on */}
       {totalActiveFilters > 0 && (
         <div className="flex items-center gap-1.5 flex-wrap pt-1">
-          <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider shrink-0">篩選中：</span>
+          <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider shrink-0">篩選中：</span>
           {priorityFilter !== '全部' && (
             <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-50 text-blue-700 text-[10px] font-bold rounded-lg border border-blue-200">
               {priorityFilter}
@@ -193,7 +193,7 @@ export const FilterBar = React.memo(function FilterBar({
         <div className="space-y-2 pt-2 border-t border-gray-100">
           {/* Priority pills */}
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider w-12 shrink-0">優先級</span>
+            <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider w-12 shrink-0">優先級</span>
             {['P0', 'P1', 'P2', 'P3', '-'].map(p => (
               <button
                 key={p}
@@ -207,7 +207,7 @@ export const FilterBar = React.memo(function FilterBar({
 
           {/* Status pills */}
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider w-12 shrink-0">狀態</span>
+            <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider w-12 shrink-0">狀態</span>
             {QA_FLOWS.map(s => (
               <button
                 key={s}
@@ -221,7 +221,7 @@ export const FilterBar = React.memo(function FilterBar({
 
           {/* Assignee pills */}
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider w-12 shrink-0">負責人</span>
+            <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider w-12 shrink-0">負責人</span>
             {RDS.map(a => (
               <button
                 key={a}
@@ -235,7 +235,7 @@ export const FilterBar = React.memo(function FilterBar({
 
           {/* Module pills */}
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider w-12 shrink-0">模組</span>
+            <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider w-12 shrink-0">模組</span>
             {MODULES.map(m => (
               <button
                 key={m}
@@ -249,7 +249,7 @@ export const FilterBar = React.memo(function FilterBar({
 
           {/* Date range — mobile only (desktop shows in top row) */}
           <div className="sm:hidden flex items-center gap-2 flex-wrap">
-            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider w-12 shrink-0">日期</span>
+            <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider w-12 shrink-0">日期</span>
             <input
               type="date"
               className="text-xs border border-gray-200 rounded-lg px-2 py-1.5 bg-white focus:ring-1 focus:ring-blue-500 focus:border-blue-500 flex-1 min-w-[110px]"

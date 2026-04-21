@@ -21,6 +21,7 @@ const WikiPageView = lazy(() => import('./components/WikiPageView').then(m => ({
 const DailyTodo = lazy(() => import('./components/DailyTodo').then(m => ({ default: m.DailyTodo })));
 const PetPage = lazy(() => import('./components/PetPage').then(m => ({ default: m.PetPage })));
 const MeetingNotesPage = lazy(() => import('./components/MeetingNotesPage').then(m => ({ default: m.MeetingNotesPage })));
+const RoadmapPage = lazy(() => import('./components/RoadmapPage').then(m => ({ default: m.RoadmapPage })));
 
 function LoadingSkeleton() {
   return (
@@ -123,10 +124,10 @@ function AppLayout() {
             <header className="flex items-center justify-between gap-6 pl-12 lg:pl-0 mb-8">
               <div>
                 <h1 className="text-2xl md:text-3xl font-black text-gray-900 tracking-tight">
-                  {{ todo: '每日待辦', qa: 'QA 追蹤', release: '版更管理', wiki: '知識庫', pet: '我的寵物', meetings: '會議紀錄' }[currentPage] || ''}
+                  {{ todo: '每日待辦', qa: 'QA 追蹤', release: '版更管理', wiki: '知識庫', pet: '我的寵物', meetings: '會議紀錄', roadmap: 'Roadmap' }[currentPage] || ''}
                 </h1>
                 <p className="text-gray-500 mt-1 font-medium text-sm">
-                  {{ todo: '管理團隊每日工作項目', qa: '數據分析與任務管理儀表板', release: '版本排程、發布與歷史紀錄', wiki: '團隊產品知識與文件管理', pet: '養育你的專屬寵物', meetings: '記錄客戶與組內會議、追蹤行動項目' }[currentPage] || ''}
+                  {{ todo: '管理團隊每日工作項目', qa: '數據分析與任務管理儀表板', release: '版本排程、發布與歷史紀錄', wiki: '團隊產品知識與文件管理', pet: '養育你的專屬寵物', meetings: '記錄客戶與組內會議、追蹤行動項目', roadmap: '產品方向規劃與功能優先排序' }[currentPage] || ''}
                 </p>
               </div>
             </header>
@@ -152,6 +153,8 @@ function AppLayout() {
                   <PetPage user={user} />
                 ) : currentPage === 'meetings' ? (
                   <MeetingNotesPage user={user} onNavigateToTodo={() => setCurrentPage('todo')} />
+                ) : currentPage === 'roadmap' ? (
+                  <RoadmapPage />
                 ) : (
                   <QAPage />
                 )}

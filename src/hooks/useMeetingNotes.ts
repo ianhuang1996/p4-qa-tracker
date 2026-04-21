@@ -7,6 +7,7 @@ import { MeetingNote, MeetingActionItem, OperationType } from '../types';
 import { handleFirestoreError } from '../utils/firestoreUtils';
 import { getTodayStr } from '../utils/qaUtils';
 import { awardCoins } from '../services/coinService';
+import { DEFAULT_DISPLAY_NAME } from '../constants';
 
 function genId(): string {
   return Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
@@ -44,7 +45,7 @@ export function useMeetingNotes(user: FirebaseUser | null) {
         notes: '',
         actionItems: [],
         createdBy: user.uid,
-        createdByName: user.displayName || '匿名',
+        createdByName: user.displayName || DEFAULT_DISPLAY_NAME,
         createdAt: Date.now(),
         updatedAt: Date.now(),
       });
@@ -107,8 +108,8 @@ export function useMeetingNotes(user: FirebaseUser | null) {
     try {
       const ref = await addDoc(collection(db, 'todos'), {
         creatorId: user.uid,
-        creatorName: user.displayName || '匿名',
-        assignee: item.assignee || user.displayName || '匿名',
+        creatorName: user.displayName || DEFAULT_DISPLAY_NAME,
+        assignee: item.assignee || user.displayName || DEFAULT_DISPLAY_NAME,
         text: item.text,
         completed: false,
         date: getTodayStr(),

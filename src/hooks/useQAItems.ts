@@ -7,7 +7,7 @@ import { QAItem, OperationType } from '../types';
 import { createNotification, getUserIdByName } from '../services/notificationService';
 import { getUserPetBuff, awardCoins } from '../services/coinService';
 import { handleFirestoreError } from '../utils/firestoreUtils';
-import { STATUS } from '../constants';
+import { STATUS, DEFAULT_DISPLAY_NAME } from '../constants';
 import { QAItemSchema } from '../utils/schemas';
 import { useQAComments } from './useQAComments';
 
@@ -60,12 +60,12 @@ export function useQAItems(user: FirebaseUser | null, isAuthReady: boolean) {
       const userRef = doc(db, 'users', user.uid);
       setDoc(userRef, {
         uid: user.uid,
-        displayName: user.displayName || '匿名用戶',
+        displayName: user.displayName || DEFAULT_DISPLAY_NAME,
         email: user.email,
         photoURL: user.photoURL,
         lastLogin: Date.now()
       }, { merge: true }).catch(err => {
-        console.error('Failed to update user profile for:', user.uid, err);
+        console.warn('Failed to update user profile for:', user.uid, err);
       });
     }
   }, [isAuthReady, user]);
@@ -123,7 +123,7 @@ export function useQAItems(user: FirebaseUser | null, isAuthReady: boolean) {
           await createNotification({
             userId: assigneeId,
             fromUserId: user.uid,
-            fromUserName: user.displayName || '匿名',
+            fromUserName: user.displayName || DEFAULT_DISPLAY_NAME,
             itemId,
             itemTitle: oldItem.title || oldItem.description.substring(0, 30),
             type: 'status_change',
@@ -136,7 +136,7 @@ export function useQAItems(user: FirebaseUser | null, isAuthReady: boolean) {
           await createNotification({
             userId: oldItem.authorUID,
             fromUserId: user.uid,
-            fromUserName: user.displayName || '匿名',
+            fromUserName: user.displayName || DEFAULT_DISPLAY_NAME,
             itemId,
             itemTitle: oldItem.title || oldItem.description.substring(0, 30),
             type: 'status_change',
@@ -153,7 +153,7 @@ export function useQAItems(user: FirebaseUser | null, isAuthReady: boolean) {
           await createNotification({
             userId: newAssigneeId,
             fromUserId: user.uid,
-            fromUserName: user.displayName || '匿名',
+            fromUserName: user.displayName || DEFAULT_DISPLAY_NAME,
             itemId,
             itemTitle: oldItem.title || oldItem.description.substring(0, 30),
             type: 'assignment',

@@ -6,6 +6,7 @@ import { QAItem, OperationType } from '../types';
 import { parseMentions } from '../utils/mentionUtils';
 import { createNotification, getUserIdByName } from '../services/notificationService';
 import { handleFirestoreError } from '../utils/firestoreUtils';
+import { DEFAULT_DISPLAY_NAME } from '../constants';
 
 /**
  * Comment CRUD for QA items.
@@ -24,7 +25,7 @@ export function useQAComments(
       const commentsRef = collection(db, 'qa_items', itemId, 'comments');
       await addDoc(commentsRef, {
         userId: user.uid,
-        userName: user.displayName || '匿名用戶',
+        userName: user.displayName || DEFAULT_DISPLAY_NAME,
         text: text.trim(),
         createdAt: Date.now(),
       });
@@ -36,7 +37,7 @@ export function useQAComments(
         await createNotification({
           userId: item.authorUID,
           fromUserId: user.uid,
-          fromUserName: user.displayName || '匿名用戶',
+          fromUserName: user.displayName || DEFAULT_DISPLAY_NAME,
           itemId,
           itemTitle: item.title || item.description.substring(0, 30),
           type: 'comment',
@@ -45,20 +46,20 @@ export function useQAComments(
       }
 
       const mentions = parseMentions(text);
-      for (const name of mentions) {
-        const mentionedUserId = await getUserIdByName(name);
-        if (mentionedUserId && mentionedUserId !== user.uid && mentionedUserId !== item?.authorUID) {
-          await createNotification({
-            userId: mentionedUserId,
-            fromUserId: user.uid,
-            fromUserName: user.displayName || '匿名用戶',
-            itemId,
-            itemTitle: item?.title || item?.description.substring(0, 30) || itemId,
-            type: 'comment',
-            newValue: `提及了你: ${text.trim().substring(0, 50)}`,
-          }, user);
-        }
-      }
+      const mentionIds = await Promise.all(mentions.map(name => getUserIdByName(name)));
+      await Promise.all(mentions.map((name, i) => {
+        const mentionedUserId = mentionIds[i];
+        if (!mentionedUserId || mentionedUserId === user.uid || mentionedUserId === item?.authorUID) return;
+        return createNotification({
+          userId: mentionedUserId,
+          fromUserId: user.uid,
+          fromUserName: user.displayName || DEFAULT_DISPLAY_NAME,
+          itemId,
+          itemTitle: item?.title || item?.description.substring(0, 30) || itemId,
+          type: 'comment',
+          newValue: `提及了你: ${text.trim().substring(0, 50)}`,
+        }, user);
+      }));
     } catch (error) {
       handleFirestoreError(error, OperationType.WRITE, path);
     }

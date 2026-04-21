@@ -2,21 +2,30 @@ import { db } from '../firebase';
 import { collection, addDoc, getDocs, getDoc, doc, setDoc, query, where } from 'firebase/firestore';
 import { User as FirebaseUser } from 'firebase/auth';
 import { Notification } from '../types';
-import { MEMBER_TO_EMAIL, RDS } from '../constants';
+import { MEMBER_TO_EMAIL, RDS, DEFAULT_DISPLAY_NAME } from '../constants';
 import { getTodayStr } from '../utils/qaUtils';
 
-export const getUserIdByName = async (name: string): Promise<string | null> => {
-  if (!name || name === 'Unassigned') return null;
+const userIdCache = new Map<string, Promise<string | null>>();
+
+export const getUserIdByName = (name: string): Promise<string | null> => {
+  if (!name || name === 'Unassigned') return Promise.resolve(null);
+  const cached = userIdCache.get(name);
+  if (cached) return cached;
   const email = MEMBER_TO_EMAIL[name];
-  if (!email) return null;
-  try {
-    const q = query(collection(db, 'users'), where('email', '==', email));
-    const snapshot = await getDocs(q);
-    if (!snapshot.empty) return snapshot.docs[0].id;
-  } catch (error) {
-    console.error('Error finding user by email:', error);
-  }
-  return null;
+  if (!email) return Promise.resolve(null);
+  const promise = (async () => {
+    try {
+      const q = query(collection(db, 'users'), where('email', '==', email));
+      const snapshot = await getDocs(q);
+      if (!snapshot.empty) return snapshot.docs[0].id;
+    } catch (error) {
+      console.warn('Error finding user by email:', error);
+      userIdCache.delete(name); // allow retry on failure
+    }
+    return null;
+  })();
+  userIdCache.set(name, promise);
+  return promise;
 };
 
 export const sendSlackNotification = async (
@@ -65,12 +74,13 @@ export const createNotification = async (
 
     const recipientEmail = await getUserEmailById(notification.userId);
     if (recipientEmail) {
-      const typeLabels: Record<string, string> = {
+      const typeLabels: Record<Notification['type'], string> = {
         status_change: `${notification.fromUserName} 將狀態從 ${notification.oldValue} → ${notification.newValue}`,
         assignment: `${notification.fromUserName} 將此項目指派給你`,
         comment: `${notification.fromUserName} 留言了`,
+        team_notify: `${notification.fromUserName} 發出全隊通知`,
       };
-      const message = typeLabels[notification.type] || '新通知';
+      const message = typeLabels[notification.type];
       sendSlackNotification(recipientEmail, message, notification.itemId, notification.itemTitle, notification.type);
     }
   } catch (error) {
@@ -111,7 +121,7 @@ export const sendTeamNotify = async (
         return addDoc(collection(db, 'notifications'), {
           userId: recipientId,
           fromUserId: sender.uid,
-          fromUserName: sender.displayName || '匿名',
+          fromUserName: sender.displayName || DEFAULT_DISPLAY_NAME,
           itemId: item.id,
           itemTitle,
           type: 'team_notify',

@@ -140,6 +140,9 @@ export function isArchivedRelease(status: string): boolean {
 }
 /** Set of flows considered "resolved" for blocking/progress checks */
 export const RESOLVED_FLOWS = new Set<string>([STATUS.fixed, STATUS.closed, STATUS.readyToTest]);
+/** Default display name for anonymous / unresolved users */
+export const DEFAULT_DISPLAY_NAME = '匿名';
+
 export const PMS = ['Ian', 'Sienna'];
 export const RDS = ['Neo', 'Summer', '后玲', 'Popo', 'Unassigned'];
 

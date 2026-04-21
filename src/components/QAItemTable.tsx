@@ -89,7 +89,7 @@ export const QAItemTable = React.memo(function QAItemTable({
                 />
               </th>
               <th 
-                className="px-4 py-3 text-left text-[10px] font-bold text-gray-400 uppercase tracking-wider cursor-pointer group hover:text-blue-600 transition-colors"
+                className="px-4 py-3 text-left text-[10px] font-bold text-gray-500 uppercase tracking-wider cursor-pointer group hover:text-blue-600 transition-colors"
                 onClick={() => onSort('id')}
               >
                 <div className="flex items-center gap-1">
@@ -97,26 +97,26 @@ export const QAItemTable = React.memo(function QAItemTable({
                 </div>
               </th>
               <th
-                className="hidden md:table-cell px-4 py-3 text-left text-[10px] font-bold text-gray-400 uppercase tracking-wider cursor-pointer group hover:text-blue-600 transition-colors"
+                className="hidden md:table-cell px-4 py-3 text-left text-[10px] font-bold text-gray-500 uppercase tracking-wider cursor-pointer group hover:text-blue-600 transition-colors"
                 onClick={() => onSort('priority')}
               >
                 <div className="flex items-center gap-1">
                   優先級 {renderSortIcon('priority')}
                 </div>
               </th>
-              <th className="hidden md:table-cell px-4 py-3 text-left text-[10px] font-bold text-gray-400 uppercase tracking-wider">模組</th>
-              <th className="px-4 py-3 text-left text-[10px] font-bold text-gray-400 uppercase tracking-wider">標題</th>
-              <th className="hidden md:table-cell px-4 py-3 text-left text-[10px] font-bold text-gray-400 uppercase tracking-wider">負責人</th>
+              <th className="hidden md:table-cell px-4 py-3 text-left text-[10px] font-bold text-gray-500 uppercase tracking-wider">模組</th>
+              <th className="px-4 py-3 text-left text-[10px] font-bold text-gray-500 uppercase tracking-wider">標題</th>
+              <th className="hidden md:table-cell px-4 py-3 text-left text-[10px] font-bold text-gray-500 uppercase tracking-wider">負責人</th>
               <th
-                className="hidden sm:table-cell px-4 py-3 text-left text-[10px] font-bold text-gray-400 uppercase tracking-wider cursor-pointer group hover:text-blue-600 transition-colors"
+                className="hidden sm:table-cell px-4 py-3 text-left text-[10px] font-bold text-gray-500 uppercase tracking-wider cursor-pointer group hover:text-blue-600 transition-colors"
                 onClick={() => onSort('currentFlow')}
               >
                 <div className="flex items-center gap-1">
                   狀態 {renderSortIcon('currentFlow')}
                 </div>
               </th>
-              <th className="hidden md:table-cell px-4 py-3 text-left text-[10px] font-bold text-gray-400 uppercase tracking-wider">附件</th>
-              <th className="px-4 py-3 text-right text-[10px] font-bold text-gray-400 uppercase tracking-wider">操作</th>
+              <th className="hidden md:table-cell px-4 py-3 text-left text-[10px] font-bold text-gray-500 uppercase tracking-wider">附件</th>
+              <th className="px-4 py-3 text-right text-[10px] font-bold text-gray-500 uppercase tracking-wider">操作</th>
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
