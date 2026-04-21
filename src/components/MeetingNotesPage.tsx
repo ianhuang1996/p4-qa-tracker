@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Save, Trash2, ArrowLeft, CheckSquare2, Square, Users, Calendar, Sparkles, Loader2, ArrowRight } from 'lucide-react';
+import { Plus, Save, Trash2, ArrowLeft, CheckSquare2, Square, Users, Calendar, Sparkles, Loader2, ArrowRight, Scale } from 'lucide-react';
 import { User as FirebaseUser } from 'firebase/auth';
 import { toast } from 'sonner';
 import { useMeetingNotes } from '../hooks/useMeetingNotes';
@@ -31,7 +31,7 @@ type DraftFields = Pick<MeetingNote, 'title' | 'date' | 'type' | 'attendees' | '
 
 export const MeetingNotesPage: React.FC<MeetingNotesPageProps> = ({ user, onNavigateToTodo }) => {
   const { meetings, isLoading, addMeeting, updateMeeting, deleteMeeting, addActionItem, toggleActionItem, convertToTodo } = useMeetingNotes(user);
-  const { pendingMeetingId, clearPendingMeetingId } = useAppContext();
+  const { pendingMeetingId, clearPendingMeetingId, navigateToNewDecision } = useAppContext();
 
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [mobileShowDetail, setMobileShowDetail] = useState(false);
@@ -224,6 +224,20 @@ export const MeetingNotesPage: React.FC<MeetingNotesPageProps> = ({ user, onNavi
                 <Save size={13} /> 儲存
               </button>
             )}
+            <button
+              onClick={() => {
+                const meeting = meetings.find(m => m.id === selectedId);
+                if (!meeting) return;
+                navigateToNewDecision({
+                  meetingNoteId: meeting.id,
+                  context: `會議：${meeting.title}（${meeting.date}）`,
+                });
+              }}
+              className="flex items-center gap-1.5 bg-purple-50 text-purple-700 hover:bg-purple-100 text-xs font-bold px-3 py-1.5 rounded-lg transition-colors"
+              title="記錄此會議的決策"
+            >
+              <Scale size={13} /> 記錄決策
+            </button>
             <button
               onClick={() => setConfirmDelete(true)}
               className="p-1.5 text-gray-400 hover:text-red-500 transition-colors"

@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
-import { Plus, Search, Edit2, Trash2, Save, X, BookOpen, FolderOpen, Clock, Bold, Italic, List, Code, Link2, Heading } from 'lucide-react';
+import { Plus, Search, Edit2, Trash2, Save, X, BookOpen, FolderOpen, Clock, Bold, Italic, List, Code, Link2, Heading, Scale } from 'lucide-react';
 import { useAppContext } from '../contexts/AppContext';
 import { useWikiPages } from '../hooks/useWikiPages';
 import { WikiPage, WikiCategory } from '../types';
@@ -7,6 +7,7 @@ import { EmptyState } from './EmptyState';
 import { ConfirmDialog } from './ConfirmDialog';
 import { useConfirm } from '../hooks/useConfirm';
 import { BTN } from '../constants';
+import { DecisionsPage } from './DecisionsPage';
 import { formatTimestamp, getAvatarColor } from '../utils/qaUtils';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -19,10 +20,18 @@ const CATEGORIES: { value: WikiCategory; label: string }[] = [
   { value: '一般', label: '一般' },
 ];
 
+type WikiTab = 'knowledge' | 'decisions';
+
 export const WikiPageView: React.FC = () => {
-  const { user, pendingWikiId, clearPendingWikiId } = useAppContext();
+  const { user, pendingWikiId, clearPendingWikiId, pendingDecisionPrefill, clearPendingDecisionPrefill } = useAppContext();
   const { pages, isLoading, error: wikiError, addPage, updatePage, deletePage } = useWikiPages(user);
   const { confirm, dialogProps } = useConfirm();
+
+  // Auto-switch to decisions tab when a prefill comes in
+  const [tab, setTab] = useState<WikiTab>(() => pendingDecisionPrefill ? 'decisions' : 'knowledge');
+  useEffect(() => {
+    if (pendingDecisionPrefill) setTab('decisions');
+  }, [pendingDecisionPrefill]);
 
   const [selectedPageId, setSelectedPageId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -109,8 +118,36 @@ export const WikiPageView: React.FC = () => {
 
   if (!user) return null;
 
+  const tabs: { id: WikiTab; label: string; icon: React.ReactNode }[] = [
+    { id: 'knowledge', label: '知識庫', icon: <BookOpen size={16} /> },
+    { id: 'decisions', label: '決策紀錄', icon: <Scale size={16} /> },
+  ];
+
   return (
     <><ConfirmDialog {...dialogProps} />
+    {/* Tab switcher */}
+    <div className="max-w-6xl mx-auto mb-6">
+      <div className="inline-flex bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
+        {tabs.map(t => (
+          <button
+            key={t.id}
+            onClick={() => setTab(t.id)}
+            className={`flex items-center gap-2 px-4 py-2 text-sm font-bold transition-colors ${
+              tab === t.id ? 'bg-blue-600 text-white' : 'text-gray-600 hover:bg-gray-50'
+            }`}
+          >
+            {t.icon} {t.label}
+          </button>
+        ))}
+      </div>
+    </div>
+
+    {tab === 'decisions' ? (
+      <DecisionsPage
+        initialPrefill={pendingDecisionPrefill}
+        onClearPrefill={clearPendingDecisionPrefill}
+      />
+    ) : (
     <div className="flex flex-col lg:flex-row gap-6 max-w-6xl mx-auto" style={{ minHeight: 'calc(100vh - 200px)' }}>
       {/* Left: Page list — on mobile shows as top bar when no page selected */}
       <div className={`lg:w-72 lg:shrink-0 space-y-4 ${selectedPageId ? 'hidden lg:block' : ''}`}>
@@ -393,6 +430,7 @@ export const WikiPageView: React.FC = () => {
         </>
       )}
     </div>
+    )}
     </>
   );
 };

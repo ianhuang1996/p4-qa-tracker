@@ -26,6 +26,9 @@ interface AppContextValue {
   pendingMeetingId: string | null;
   navigateToMeetingNote: (meetingId: string) => void;
   clearPendingMeetingId: () => void;
+  pendingDecisionPrefill: { meetingNoteId?: string; context?: string } | null;
+  navigateToNewDecision: (prefill: { meetingNoteId?: string; context?: string }) => void;
+  clearPendingDecisionPrefill: () => void;
 }
 
 const AppContext = createContext<AppContextValue | null>(null);
@@ -42,6 +45,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [pendingItemId, setPendingItemId] = useState<string | null>(null);
   const [pendingWikiId, setPendingWikiId] = useState<string | null>(null);
   const [pendingMeetingId, setPendingMeetingId] = useState<string | null>(null);
+  const [pendingDecisionPrefill, setPendingDecisionPrefill] = useState<{ meetingNoteId?: string; context?: string } | null>(null);
 
   const [currentPage, setCurrentPage] = useState<AppPage>(() => {
     if (typeof window !== 'undefined') {
@@ -120,6 +124,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     pendingMeetingId,
     navigateToMeetingNote: (meetingId) => { setPendingMeetingId(meetingId); setCurrentPage('meetings'); },
     clearPendingMeetingId: () => setPendingMeetingId(null),
+    pendingDecisionPrefill,
+    navigateToNewDecision: (prefill) => { setPendingDecisionPrefill(prefill); setCurrentPage('wiki'); },
+    clearPendingDecisionPrefill: () => setPendingDecisionPrefill(null),
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

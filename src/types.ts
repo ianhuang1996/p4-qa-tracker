@@ -88,6 +88,30 @@ export interface AugmentedQAItem extends QAItem {
 export type ViewMode = 'table' | 'kanban';
 export type AppPage = 'overview' | 'todo' | 'qa' | 'release' | 'wiki' | 'pet' | 'meetings' | 'roadmap';
 
+// ===== Decision Log =====
+export type DecisionStatus = 'active' | 'superseded' | 'reversed';
+export type DecisionTag = 'scope-change' | 'priority-change' | 'direction-pivot' | 'resource' | 'process' | 'other';
+
+export interface Decision {
+  id: string;
+  date: string;                    // YYYY-MM-DD
+  title: string;
+  context?: string;                // 什麼觸發的
+  decision: string;                // 決策內容
+  rationale?: string;              // 為什麼
+  decidedBy: string;               // 誰拍板
+  status: DecisionStatus;
+  supersedesId?: string;           // 取代了哪個舊決策
+  supersededById?: string;         // 被哪個新決策取代
+  linkedRoadmapItemIds?: string[];
+  tags?: DecisionTag[];
+  meetingNoteId?: string;          // 從會議記錄建立時的來源
+  createdBy: string;
+  createdByName: string;
+  createdAt: number;
+  updatedAt?: number;
+}
+
 // ===== Roadmap =====
 export type RoadmapTrack = 'bug_fix' | 'feature' | 'backend';
 export type RoadmapStatus = 'now' | 'next' | 'later' | 'completed' | 'cancelled';
