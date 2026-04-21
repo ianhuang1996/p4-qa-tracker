@@ -7,6 +7,7 @@ import { getAvatarColor } from '../utils/qaUtils';
 interface RoadmapCardProps {
   item: RoadmapItem;
   canEdit: boolean;
+  compact?: boolean;     // Timeline uses compact mode
   onEdit: (item: RoadmapItem) => void;
   onDelete: (id: string) => void;
   onNavigateToRelease?: () => void;
@@ -15,42 +16,94 @@ interface RoadmapCardProps {
 }
 
 export const RoadmapCard: React.FC<RoadmapCardProps> = ({
-  item, canEdit, onEdit, onDelete,
+  item, canEdit, compact, onEdit, onDelete,
   onNavigateToRelease, onNavigateToQAItem, linkedQAItems = [],
 }) => {
-  const trackStyle = ROADMAP_TRACK_STYLES[item.track];
+  // ── Compact card (Timeline view) ──────────────────────────────
+  if (compact) {
+    return (
+      <div className="bg-white rounded-lg border shadow-sm p-2.5 space-y-1.5 transition-shadow hover:shadow-md">
+        <div className="flex items-start justify-between gap-1.5">
+          <p className="text-xs font-bold text-gray-900 leading-snug flex-1 line-clamp-2">{item.title}</p>
+          <div className="flex gap-0.5 shrink-0">
+            {item.isDerived && onNavigateToRelease && (
+              <button onClick={onNavigateToRelease} className="p-1 rounded text-gray-400 hover:text-teal-600 transition-colors" title="查看版更">
+                <ArrowRight size={11} />
+              </button>
+            )}
+            {!item.isDerived && canEdit && (
+              <>
+                <button onClick={() => onEdit(item)} className="p-1 rounded text-gray-400 hover:text-blue-600 transition-colors" aria-label="編輯">
+                  <Pencil size={11} />
+                </button>
+                <button onClick={() => onDelete(item.id)} className="p-1 rounded text-gray-400 hover:text-red-500 transition-colors" aria-label="刪除">
+                  <Trash2 size={11} />
+                </button>
+              </>
+            )}
+          </div>
+        </div>
 
+        {/* QA stats bar (derived only) */}
+        {item.isDerived && item.qaStats && item.qaStats.total > 0 && (
+          <div className="flex items-center gap-2">
+            <div className="flex-1 h-1 bg-gray-100 rounded-full overflow-hidden">
+              <div className="h-full bg-teal-500 rounded-full" style={{ width: `${Math.round(item.qaStats.closed / item.qaStats.total * 100)}%` }} />
+            </div>
+            <span className="text-[9px] text-gray-400 shrink-0">{item.qaStats.closed}/{item.qaStats.total}</span>
+          </div>
+        )}
+
+        {/* Priority badge + avatars on single line */}
+        <div className="flex items-center justify-between gap-1.5">
+          <div className="flex gap-1">
+            {item.priority && (
+              <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${ROADMAP_PRIORITY_STYLES[item.priority].bg} ${ROADMAP_PRIORITY_STYLES[item.priority].text}`}>
+                {ROADMAP_PRIORITY_STYLES[item.priority].label}
+              </span>
+            )}
+          </div>
+          {item.assignees.length > 0 && (
+            <div className="flex -space-x-1">
+              {item.assignees.slice(0, 4).map(name => (
+                <div
+                  key={name}
+                  className={`w-4 h-4 rounded-full flex items-center justify-center text-[8px] text-white font-bold ring-1 ring-white ${getAvatarColor(name)}`}
+                  title={name}
+                >
+                  {name.charAt(0)}
+                </div>
+              ))}
+              {item.assignees.length > 4 && (
+                <div className="w-4 h-4 rounded-full bg-gray-200 flex items-center justify-center text-[8px] text-gray-500 font-bold ring-1 ring-white">
+                  +{item.assignees.length - 4}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // ── Full card (Board view) ────────────────────────────────────
   return (
     <div className="bg-white rounded-xl border shadow-sm p-3.5 space-y-2.5 transition-shadow hover:shadow-md">
       {/* Title row */}
       <div className="flex items-start justify-between gap-2">
         <p className="text-sm font-bold text-gray-900 leading-snug flex-1">{item.title}</p>
         <div className="flex gap-1 shrink-0">
-          {/* Derived: navigate to release */}
           {item.isDerived && onNavigateToRelease && (
-            <button
-              onClick={onNavigateToRelease}
-              className="p-2 rounded-md text-gray-400 hover:text-teal-600 hover:bg-teal-50 transition-colors"
-              title="查看版更詳情"
-            >
+            <button onClick={onNavigateToRelease} className="p-2 rounded-md text-gray-400 hover:text-teal-600 hover:bg-teal-50 transition-colors" title="查看版更詳情">
               <ArrowRight size={13} />
             </button>
           )}
-          {/* Manual: edit / delete */}
           {!item.isDerived && canEdit && (
             <>
-              <button
-                onClick={() => onEdit(item)}
-                className="p-2 rounded-md text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-colors"
-                aria-label="編輯"
-              >
+              <button onClick={() => onEdit(item)} className="p-2 rounded-md text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-colors" aria-label="編輯">
                 <Pencil size={13} />
               </button>
-              <button
-                onClick={() => onDelete(item.id)}
-                className="p-2 rounded-md text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors"
-                aria-label="刪除"
-              >
+              <button onClick={() => onDelete(item.id)} className="p-2 rounded-md text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors" aria-label="刪除">
                 <Trash2 size={13} />
               </button>
             </>
@@ -71,10 +124,7 @@ export const RoadmapCard: React.FC<RoadmapCardProps> = ({
             <span className="font-bold">{item.qaStats.closed}/{item.qaStats.total} 完成</span>
           </div>
           <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
-            <div
-              className="h-full bg-teal-500 rounded-full transition-all"
-              style={{ width: `${Math.round(item.qaStats.closed / item.qaStats.total * 100)}%` }}
-            />
+            <div className="h-full bg-teal-500 rounded-full transition-all" style={{ width: `${Math.round(item.qaStats.closed / item.qaStats.total * 100)}%` }} />
           </div>
         </div>
       )}
@@ -92,13 +142,8 @@ export const RoadmapCard: React.FC<RoadmapCardProps> = ({
                   onClick={() => onNavigateToQAItem?.(qa.id)}
                   className="w-full flex items-center gap-1.5 text-left text-[11px] text-gray-600 hover:text-blue-600 transition-colors group"
                 >
-                  {done
-                    ? <CheckCircle size={11} className="text-green-500 shrink-0" />
-                    : <Circle size={11} className="text-gray-300 shrink-0" />
-                  }
-                  <span className="truncate group-hover:underline">
-                    {qa.id} {qa.title || qa.description.substring(0, 30)}
-                  </span>
+                  {done ? <CheckCircle size={11} className="text-green-500 shrink-0" /> : <Circle size={11} className="text-gray-300 shrink-0" />}
+                  <span className="truncate group-hover:underline">{qa.id} {qa.title || qa.description.substring(0, 30)}</span>
                 </button>
               );
             })}
@@ -128,11 +173,7 @@ export const RoadmapCard: React.FC<RoadmapCardProps> = ({
       {item.assignees.length > 0 && (
         <div className="flex items-center gap-1 pt-0.5">
           {item.assignees.map(name => (
-            <div
-              key={name}
-              className={`w-5 h-5 rounded-full flex items-center justify-center text-[9px] text-white font-bold shrink-0 ${getAvatarColor(name)}`}
-              title={name}
-            >
+            <div key={name} className={`w-5 h-5 rounded-full flex items-center justify-center text-[9px] text-white font-bold shrink-0 ${getAvatarColor(name)}`} title={name}>
               {name.charAt(0)}
             </div>
           ))}

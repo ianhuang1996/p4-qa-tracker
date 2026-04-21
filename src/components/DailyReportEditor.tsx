@@ -10,9 +10,12 @@ import { useAppContext } from '../contexts/AppContext';
 import { getTodayStr, toDateStr, formatTimestamp } from '../utils/qaUtils';
 import { STATUS, isResolved, isActiveRelease } from '../constants';
 import { generateDailyReport } from '../services/geminiService';
+import { ConfirmDialog } from './ConfirmDialog';
+import { useConfirm } from '../hooks/useConfirm';
 
 export const DailyReportEditor: React.FC = () => {
   const { user, isAuthReady } = useAppContext();
+  const { confirm, dialogProps } = useConfirm();
   const today = getTodayStr();
   const { report, recentReports, isLoading: reportLoading, saveReport } = useDailyReport(user, today);
   const { todos } = useTodos(user, today, 'day');
@@ -52,7 +55,10 @@ export const DailyReportEditor: React.FC = () => {
   const handleGenerate = async () => {
     if (!user) return;
     const hasExisting = completed.trim() || inProgress.trim() || risks.trim();
-    if (hasExisting && !window.confirm('目前已有內容，AI 生成將覆蓋現有內容。確定要繼續嗎？')) return;
+    if (hasExisting) {
+      const ok = await confirm('目前已有內容，AI 生成將覆蓋現有內容。確定要繼續嗎？', { title: 'AI 生成', variant: 'warning', confirmLabel: '覆蓋並生成' });
+      if (!ok) return;
+    }
     setIsGenerating(true);
     try {
       const completedTodos = todos.filter(t => t.completed).map(t => t.text);
@@ -135,6 +141,7 @@ export const DailyReportEditor: React.FC = () => {
   if (!user) return null;
 
   return (
+    <><ConfirmDialog {...dialogProps} />
     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
       {/* Header */}
       <div className="p-5 border-b border-gray-100 space-y-3">
@@ -253,5 +260,6 @@ export const DailyReportEditor: React.FC = () => {
         </div>
       )}
     </div>
+    </>
   );
 };

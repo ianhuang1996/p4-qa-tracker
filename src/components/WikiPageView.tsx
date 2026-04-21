@@ -4,6 +4,8 @@ import { useAppContext } from '../contexts/AppContext';
 import { useWikiPages } from '../hooks/useWikiPages';
 import { WikiPage, WikiCategory } from '../types';
 import { EmptyState } from './EmptyState';
+import { ConfirmDialog } from './ConfirmDialog';
+import { useConfirm } from '../hooks/useConfirm';
 import { BTN } from '../constants';
 import { formatTimestamp, getAvatarColor } from '../utils/qaUtils';
 import ReactMarkdown from 'react-markdown';
@@ -20,6 +22,7 @@ const CATEGORIES: { value: WikiCategory; label: string }[] = [
 export const WikiPageView: React.FC = () => {
   const { user, pendingWikiId, clearPendingWikiId } = useAppContext();
   const { pages, isLoading, error: wikiError, addPage, updatePage, deletePage } = useWikiPages(user);
+  const { confirm, dialogProps } = useConfirm();
 
   const [selectedPageId, setSelectedPageId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -107,6 +110,7 @@ export const WikiPageView: React.FC = () => {
   if (!user) return null;
 
   return (
+    <><ConfirmDialog {...dialogProps} />
     <div className="flex flex-col lg:flex-row gap-6 max-w-6xl mx-auto" style={{ minHeight: 'calc(100vh - 200px)' }}>
       {/* Left: Page list — on mobile shows as top bar when no page selected */}
       <div className={`lg:w-72 lg:shrink-0 space-y-4 ${selectedPageId ? 'hidden lg:block' : ''}`}>
@@ -265,7 +269,7 @@ export const WikiPageView: React.FC = () => {
                       <Edit2 size={16} />
                     </button>
                     <button
-                      onClick={() => { if (confirm('確定要刪除此頁面嗎？')) { deletePage(selectedPage.id); setSelectedPageId(null); } }}
+                      onClick={async () => { const ok = await confirm('確定要刪除此頁面嗎？', { title: '刪除頁面', confirmLabel: '刪除' }); if (ok) { deletePage(selectedPage.id); setSelectedPageId(null); } }}
                       className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg"
                       aria-label="刪除"
                     >
@@ -389,5 +393,6 @@ export const WikiPageView: React.FC = () => {
         </>
       )}
     </div>
+    </>
   );
 };

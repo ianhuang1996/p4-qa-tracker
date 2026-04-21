@@ -135,7 +135,7 @@ export const RoadmapTimeline: React.FC<RoadmapTimelineProps> = ({ items, canEdit
   return (
     <DndContext sensors={sensors} onDragStart={handleDragStart} onDragOver={handleDragOver} onDragEnd={handleDragEnd}>
       <div className="overflow-x-auto">
-        <div style={{ minWidth: `${100 + columns.length * 160}px` }}>
+        <div style={{ minWidth: `${100 + columns.length * 220}px` }}>
           <div className="grid gap-2 md:gap-3 mb-3" style={{ gridTemplateColumns: `100px repeat(${columns.length}, 1fr)` }}>
             <div />
             {months.map(m => (
@@ -166,17 +166,17 @@ export const RoadmapTimeline: React.FC<RoadmapTimelineProps> = ({ items, canEdit
                     if (isDerived) {
                       const derived = activeItems.filter(i => i.track === 'bug_fix' && (col ? i.targetMonth === col : !i.targetMonth));
                       return (
-                        <div key={col ?? 'none'} className={`rounded-xl border-2 p-2.5 min-h-[100px] space-y-2 ${col === null ? 'border-gray-200 bg-gray-50/50' : `${ts.border} bg-gray-50/30`}`}>
+                        <div key={col ?? 'none'} className={`rounded-xl border-2 p-2.5 min-h-[60px] space-y-2 ${col === null ? 'border-gray-200 bg-gray-50/50' : `${ts.border} bg-gray-50/30`}`}>
                           {derived.length === 0
                             ? <div className="h-full flex items-center justify-center"><span className="text-[10px] text-gray-300">—</span></div>
-                            : derived.map(item => <RoadmapCard key={item.id} item={item} canEdit={canEdit} onEdit={onEdit} onDelete={onDelete} />)
+                            : derived.map(item => <RoadmapCard key={item.id} item={item} canEdit={canEdit} compact onEdit={onEdit} onDelete={onDelete} />)
                           }
                         </div>
                       );
                     }
 
                     return (
-                      <DroppableCell key={col ?? 'none'} id={key} className={`rounded-xl border-2 p-2.5 min-h-[100px] space-y-2 ${col === null ? 'border-gray-200 bg-gray-50/50' : `${ts.border} bg-gray-50/30`}`}>
+                      <DroppableCell key={col ?? 'none'} id={key} className={`rounded-xl border-2 p-2.5 min-h-[60px] space-y-2 ${col === null ? 'border-gray-200 bg-gray-50/50' : `${ts.border} bg-gray-50/30`}`}>
                         <SortableContext items={ids} strategy={verticalListSortingStrategy}>
                           {ids.length === 0
                             ? <div className="h-full flex items-center justify-center"><span className="text-[10px] text-gray-300">—</span></div>
@@ -185,7 +185,7 @@ export const RoadmapTimeline: React.FC<RoadmapTimelineProps> = ({ items, canEdit
                               if (!item) return null;
                               return (
                                 <SortableCard key={id} id={id} disabled={!!item.isDerived || !canEdit}>
-                                  <RoadmapCard item={item} canEdit={canEdit} onEdit={onEdit} onDelete={onDelete} />
+                                  <RoadmapCard item={item} canEdit={canEdit} compact onEdit={onEdit} onDelete={onDelete} />
                                 </SortableCard>
                               );
                             })
@@ -211,7 +211,7 @@ export const RoadmapTimeline: React.FC<RoadmapTimelineProps> = ({ items, canEdit
       <DragOverlay>
         {activeItem && (
           <div className="opacity-90 shadow-xl rotate-2 scale-105">
-            <RoadmapCard item={activeItem} canEdit={false} onEdit={() => {}} onDelete={() => {}} />
+            <RoadmapCard item={activeItem} canEdit={false} compact onEdit={() => {}} onDelete={() => {}} />
           </div>
         )}
       </DragOverlay>

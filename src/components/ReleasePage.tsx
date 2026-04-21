@@ -30,6 +30,8 @@ import { formatTimestamp, getAvatarColor, getTodayStr } from '../utils/qaUtils';
 import { parseReleaseNotes, NoteSection } from '../utils/releaseUtils';
 import { useUserTiers, getAvatarRing } from '../hooks/useAchievements';
 import { EmptyState } from './EmptyState';
+import { ConfirmDialog } from './ConfirmDialog';
+import { useConfirm } from '../hooks/useConfirm';
 import { generateReleaseNotes } from '../services/geminiService';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -151,6 +153,7 @@ const SortableReleaseCard: React.FC<{ release: Release; itemCount: number; onCli
 // ─── Main Component ─────────────────────────────────────────────
 export const ReleasePage: React.FC = () => {
   const { user, isAuthReady, isAdmin, setCurrentPage } = useAppContext();
+  const { confirm, dialogProps } = useConfirm();
   const {
     releases, isLoading, error: releasesError, addRelease, updateRelease, deleteRelease,
     toggleChecklist, linkItems, unlinkItem, executeRelease, updateReleaseSortOrders,
@@ -268,12 +271,15 @@ export const ReleasePage: React.FC = () => {
 
   if (!user) return null;
 
+  const confirmDialogEl = <ConfirmDialog {...dialogProps} />;
+
   // ── Detail View ─────────────────────────────────────────────────
   if (selectedRelease) {
     const checklistDone = selectedRelease.checklist.filter(c => c.checked).length;
     const checklistTotal = selectedRelease.checklist.length;
 
     return (
+      <>{confirmDialogEl}
       <div className="max-w-4xl mx-auto">
         {/* Breadcrumb */}
         <nav className="flex items-center gap-2 text-xs text-gray-400 mb-6">
@@ -300,14 +306,14 @@ export const ReleasePage: React.FC = () => {
             <h2 className="text-xl sm:text-2xl font-black text-gray-900 flex items-center gap-3 flex-wrap">
               <Package size={24} className="text-blue-600 shrink-0" />
               {selectedRelease.status !== RELEASE_STATUS.RELEASED ? (
-                <span className="relative group/edit">
+                <span className="relative group/edit pr-5">
                   <input
                     type="text"
                     value={selectedRelease.version}
                     onChange={(e) => updateRelease(selectedRelease.id, { version: e.target.value })}
                     className="bg-transparent border-b border-dashed border-gray-300 hover:border-blue-400 focus:border-blue-500 outline-none text-2xl font-black w-32 transition-colors"
                   />
-                  <Edit2 size={12} className="absolute -right-4 top-1/2 -translate-y-1/2 text-gray-300 group-hover/edit:text-blue-400 transition-colors" />
+                  <Edit2 size={12} className="absolute right-0 top-1/2 -translate-y-1/2 text-gray-300 group-hover/edit:text-blue-400 transition-colors" />
                 </span>
               ) : selectedRelease.version}
               <span className={`px-3 py-1 text-xs font-bold rounded-lg border ${RELEASE_STATUS_COLORS[selectedRelease.status]}`}>
@@ -339,8 +345,12 @@ export const ReleasePage: React.FC = () => {
             )}
             {isActiveRelease(selectedRelease.status) && isAdmin && (
               <button
-                onClick={() => {
-                  if (confirm(`確定要發布 ${selectedRelease.version} 嗎？所有關聯的 QA 項目將被標為已關閉。`)) {
+                onClick={async () => {
+                  const ok = await confirm(
+                    `確定要發布 ${selectedRelease.version} 嗎？\n所有關聯的 QA 項目將被標為已關閉。`,
+                    { title: '正式發布', variant: 'warning', confirmLabel: '確認發布' }
+                  );
+                  if (ok) {
                     executeRelease(selectedRelease);
                     copyReleaseContent(selectedRelease, linkedItems);
                   }
@@ -604,7 +614,7 @@ export const ReleasePage: React.FC = () => {
               )}
               {selectedRelease.status !== RELEASE_STATUS.RELEASED && (
                 <button
-                  onClick={() => { if (confirm('確定要刪除此版本嗎？')) deleteRelease(selectedRelease.id).then(() => setSelectedReleaseId(null)); }}
+                  onClick={async () => { const ok = await confirm('確定要刪除此版本嗎？', { title: '刪除版本', confirmLabel: '刪除' }); if (ok) deleteRelease(selectedRelease.id).then(() => setSelectedReleaseId(null)); }}
                   className="w-full mt-2 text-xs text-red-500 hover:text-red-600 font-bold flex items-center justify-center gap-1 py-2"
                 >
                   <Trash2 size={12} /> 刪除版本
@@ -649,11 +659,13 @@ export const ReleasePage: React.FC = () => {
           </>
         )}
       </div>
+      </>
     );
   }
 
   // ── List View ────────────────────────────────────────────────────
   return (
+    <>{confirmDialogEl}
     <div className="max-w-4xl mx-auto">
       <div className="flex items-center justify-between mb-8">
         <div />
@@ -869,5 +881,6 @@ export const ReleasePage: React.FC = () => {
         </>
       )}
     </div>
+    </>
   );
 };

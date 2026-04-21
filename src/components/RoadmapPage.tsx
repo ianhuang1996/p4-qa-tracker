@@ -11,6 +11,8 @@ import { ROADMAP_TRACKS } from '../constants/roadmapConstants';
 import { RoadmapBoard } from './RoadmapBoard';
 import { RoadmapTimeline } from './RoadmapTimeline';
 import { RoadmapItemModal } from './RoadmapItemModal';
+import { ConfirmDialog } from './ConfirmDialog';
+import { useConfirm } from '../hooks/useConfirm';
 
 type RoadmapView = 'board' | 'timeline';
 
@@ -21,6 +23,7 @@ export const RoadmapPage: React.FC = () => {
   const { data: qaItems } = useAugmentedQAItems(user, isAuthReady);
 
   const canEdit = !!(user?.email && ADMIN_EMAILS.includes(user.email));
+  const { confirm, dialogProps } = useConfirm();
 
   const [view, setView] = useState<RoadmapView>('board');
   const [trackFilter, setTrackFilter] = useState<RoadmapTrack | 'all'>('all');
@@ -75,7 +78,8 @@ export const RoadmapPage: React.FC = () => {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('確定要刪除這個項目嗎？')) return;
+    const ok = await confirm('確定要刪除這個項目嗎？', { title: '刪除確認', confirmLabel: '刪除' });
+    if (!ok) return;
     await deleteItem(id);
   };
 
@@ -212,6 +216,8 @@ export const RoadmapPage: React.FC = () => {
       )}
 
       {/* Modal */}
+      <ConfirmDialog {...dialogProps} />
+
       {modalOpen && (
         <RoadmapItemModal
           item={editingItem}
