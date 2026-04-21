@@ -226,7 +226,7 @@ export interface Notification {
   fromUserName: string;
   itemId: string;
   itemTitle: string;
-  type: 'status_change' | 'assignment' | 'comment';
+  type: 'status_change' | 'assignment' | 'comment' | 'team_notify';
   oldValue?: string;
   newValue?: string;
   isRead: boolean;

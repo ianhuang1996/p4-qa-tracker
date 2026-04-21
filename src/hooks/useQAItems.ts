@@ -5,8 +5,8 @@ import { User as FirebaseUser } from 'firebase/auth';
 import { toast } from 'sonner';
 import { QAItem, OperationType } from '../types';
 import { createNotification, getUserIdByName } from '../services/notificationService';
+import { getUserPetBuff, awardCoins } from '../services/coinService';
 import { handleFirestoreError } from '../utils/firestoreUtils';
-import { awardCoins } from '../services/coinService';
 import { STATUS } from '../constants';
 import { QAItemSchema } from '../utils/schemas';
 import { useQAComments } from './useQAComments';
@@ -97,6 +97,15 @@ export function useQAItems(user: FirebaseUser | null, isAuthReady: boolean) {
         if (priority === 'P0') awardCoins(user.uid, 'fix_p0', oldItem.id).catch(console.error);
         else if (priority === 'P1') awardCoins(user.uid, 'fix_p1', oldItem.id).catch(console.error);
         else if (priority === 'P2' || priority === 'P3') awardCoins(user.uid, 'fix_p2_p3', oldItem.id).catch(console.error);
+
+        // Phoenix bonus: extra +30 coins if coming from returned status and user has blaze pet
+        if (oldItem.currentFlow === STATUS.returned) {
+          getUserPetBuff(user.uid).then(buff => {
+            if (buff === 'phoenix_bonus') {
+              awardCoins(user.uid, 'phoenix_bonus', oldItem.id).catch(console.error);
+            }
+          }).catch(console.error);
+        }
       }
       // PM retest result
       if (updates.retestResult === 'passed') {

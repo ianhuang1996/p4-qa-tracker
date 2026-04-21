@@ -3,7 +3,10 @@ import { Plus, Download, ArrowUpDown, Eye, EyeOff } from 'lucide-react';
 import { toast } from 'sonner';
 import { AnimatePresence } from 'motion/react';
 import { QAItem, AugmentedQAItem, ViewMode } from '../types';
-import { PRIORITY_ORDER, BTN, STATUS, RELEASE_STATUS, isActiveRelease } from '../constants';
+import { usePet } from '../hooks/usePet';
+import { PET_DEFS } from '../constants/petConstants';
+import { sendTeamNotify } from '../services/notificationService';
+import { PRIORITY_ORDER, BTN, STATUS, RELEASE_STATUS, isActiveRelease, EMAIL_TO_MEMBER } from '../constants';
 import { useAugmentedQAItems } from '../hooks/useAugmentedQAItems';
 import { useReleases } from '../hooks/useReleases';
 import { getTodayStr } from '../utils/qaUtils';
@@ -36,6 +39,9 @@ interface QAPageProps {
 
 export const QAPage: React.FC<QAPageProps> = () => {
   const { user, isAuthReady, canSort, setCurrentPage, pendingItemId } = useAppContext();
+  // Resolve the canonical system name (e.g. 'Summer', 'Popo') from login email.
+  // Google displayName may not match — never use it for assignee comparisons.
+  const currentMemberName = (user?.email && EMAIL_TO_MEMBER[user.email]) || user?.displayName || '';
 
   const {
     data, augmentedData, isLoading, updateItem, addItem, deleteItem,
@@ -43,6 +49,8 @@ export const QAPage: React.FC<QAPageProps> = () => {
   } = useAugmentedQAItems(user, isAuthReady);
 
   const { releases, linkItems, unlinkItem, unlinkItems, moveItemToRelease } = useReleases(user);
+  const { pet } = usePet(user);
+  const currentUserPetBuff = pet ? (PET_DEFS[pet.typeId]?.buff ?? null) : null;
   const activeRelease = useMemo(() => releases.find(r => isActiveRelease(r.status)) || null, [releases]);
   const unreleasedReleases = useMemo(() => releases.filter(r => isActiveRelease(r.status)), [releases]);
   // Map: itemId → version string (for badge display)
@@ -188,7 +196,7 @@ export const QAPage: React.FC<QAPageProps> = () => {
     const criticalBugs = augmentedData.filter(i => (i.priority === 'P0' || i.priority === 'P1') && i.currentFlow !== STATUS.closed && i.currentFlow !== STATUS.fixed).length;
     const readyForTest = augmentedData.filter(i => i.currentFlow === STATUS.readyToTest).length;
     const myPending = augmentedData.filter(i =>
-      i.assignee === user?.displayName &&
+      i.assignee === currentMemberName &&
       i.currentFlow !== STATUS.closed && i.currentFlow !== STATUS.fixed
     ).length;
     return { totalActive, criticalBugs, readyForTest, myPending };
@@ -219,7 +227,7 @@ export const QAPage: React.FC<QAPageProps> = () => {
     const uniqueId = `Q_NEW_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
     const newItem = {
       id: uniqueId, title: '', priority: '-', date: getTodayStr(), module: '其他',
-      tester: user?.displayName || 'Ian', description: '## 現況\n\n\n## 預期結果\n\n', imageLink: '', imageLinks: [],
+      tester: currentMemberName || 'Ian', description: '## 現況\n\n\n## 預期結果\n\n', imageLink: '', imageLinks: [],
       videoLink: '', videoLinks: [], currentFlow: STATUS.pending, assignee: 'Unassigned', answer: '',
       version: selectedVersion !== 'all' ? selectedVersion : '', attachmentUrl: '', attachmentName: '', attachments: []
     };
@@ -336,6 +344,13 @@ export const QAPage: React.FC<QAPageProps> = () => {
     updateItem(item.id, { currentFlow: status }, item);
   }, [updateItem]);
 
+  const handleTeamNotify = useCallback(async (item: AugmentedQAItem) => {
+    if (!user) return;
+    const result = await sendTeamNotify(user, item);
+    if (result.success) toast.success('📣 已通知全隊！');
+    else toast.error(result.reason || '發送失敗');
+  }, [user]);
+
   if (!user) return null;
 
   return (
@@ -394,7 +409,7 @@ export const QAPage: React.FC<QAPageProps> = () => {
           selectedVersion={selectedVersion} setSelectedVersion={setSelectedVersion}
           versions={versions} viewMode={viewMode} setViewMode={setViewMode}
           dateRange={dateRange} setDateRange={setDateRange}
-          currentUserName={user?.displayName || ''}
+          currentUserName={currentMemberName}
         />
       </div>
 
@@ -408,7 +423,8 @@ export const QAPage: React.FC<QAPageProps> = () => {
             }, item)}
             onAssigneeChange={(item, assignee) => updateItem(item.id, { assignee }, item)}
             selectedIds={selectedIds} setSelectedIds={setSelectedIds} sortConfig={sortConfig} onSort={handleSort}
-            itemReleaseMap={itemReleaseMap} />
+            itemReleaseMap={itemReleaseMap}
+            currentUserPetBuff={currentUserPetBuff} onTeamNotify={handleTeamNotify} />
         ) : (
           <QAItemKanban items={filteredData} onItemClick={handleKanbanItemClick} onStatusChange={handleKanbanStatusChange} />
         )}

@@ -1,9 +1,9 @@
 import React from 'react';
-import { Video, CheckCircle, XCircle, ArrowUp, ArrowDown, ArrowUpDown, MessageSquare, FileText, Rocket } from 'lucide-react';
+import { Video, CheckCircle, XCircle, ArrowUp, ArrowDown, ArrowUpDown, MessageSquare, FileText, Rocket, Megaphone } from 'lucide-react';
 import { getOverdueBadge } from '../utils/badgeUtils';
 import { EmptyState } from './EmptyState';
-import { AugmentedQAItem } from '../types';
-import { PRIORITY_COLORS, STATUS_COLORS, RDS, STATUS } from '../constants';
+import { AugmentedQAItem, PetBuffType } from '../types';
+import { PRIORITY_COLORS, STATUS_COLORS, RDS, STATUS, EMAIL_TO_MEMBER } from '../constants';
 import { getDirectImageUrl, getAvatarColor } from '../utils/qaUtils';
 import { useUserTiers, getAvatarRing } from '../hooks/useAchievements';
 import { useAppContext } from '../contexts/AppContext';
@@ -25,10 +25,13 @@ interface QAItemTableProps {
   sortConfig: { key: string; direction: 'asc' | 'desc' } | null;
   onSort: (key: string) => void;
   itemReleaseMap?: Record<string, string>;
+  currentUserPetBuff: PetBuffType | null;
+  onTeamNotify?: (item: AugmentedQAItem) => void;
 }
 
 export const QAItemTable = React.memo(function QAItemTable({
-  items, onItemClick, onStatusChange, onAssigneeChange, selectedIds, setSelectedIds, sortConfig, onSort, itemReleaseMap = {}
+  items, onItemClick, onStatusChange, onAssigneeChange, selectedIds, setSelectedIds, sortConfig, onSort, itemReleaseMap = {},
+  currentUserPetBuff, onTeamNotify,
 }: QAItemTableProps) {
   const [openAssigneeId, setOpenAssigneeId] = React.useState<string | null>(null);
   const [retestDialog, setRetestDialog] = React.useState<{ item: AugmentedQAItem; status: string } | null>(null);
@@ -42,7 +45,7 @@ export const QAItemTable = React.memo(function QAItemTable({
       retestResult: retestDialog.status === STATUS.fixed ? 'passed' : 'failed',
       retestNote: retestNote.trim(),
       retestDate: Date.now(),
-      retestBy: user.displayName || '',
+      retestBy: (user.email && EMAIL_TO_MEMBER[user.email]) || user.displayName || '',
     };
     onStatusChange(retestDialog.item, retestDialog.status, retest);
     setRetestDialog(null);
@@ -228,6 +231,16 @@ export const QAItemTable = React.memo(function QAItemTable({
                 </td>
                 <td className="px-4 py-2 whitespace-nowrap text-right text-sm font-medium">
                   <div className="flex items-center justify-end gap-1">
+                    {currentUserPetBuff === 'team_notify' && onTeamNotify && (
+                      <button
+                        onClick={(e) => { e.stopPropagation(); onTeamNotify(item); }}
+                        className="p-1.5 bg-amber-100 text-amber-600 rounded-lg hover:bg-amber-200"
+                        title="📣 全隊通知（每天限 1 次）"
+                        aria-label="發送全隊通知"
+                      >
+                        <Megaphone size={14} />
+                      </button>
+                    )}
                     {(item.currentFlow === STATUS.inProgress || item.currentFlow === STATUS.returned) && (
                       <button
                         onClick={(e) => { e.stopPropagation(); onStatusChange(item, STATUS.readyToTest); }}

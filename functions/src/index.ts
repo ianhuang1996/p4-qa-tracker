@@ -1,6 +1,15 @@
 import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
 
+const MEMBER_TO_EMAIL: Record<string, string> = {
+  'Ian':   'ian@osensetech.com',
+  'Sienna':'sienna@osensetech.com',
+  'Summer':'summer@osensetech.com',
+  'Neo':   'neo@osensetech.com',
+  '后玲':  'astor@osensetech.com',
+  'Popo':  'popo@osensetech.com',
+};
+
 admin.initializeApp();
 const db = admin.firestore();
 
@@ -57,8 +66,10 @@ export const onQAItemUpdated = functions.firestore
 
       // Assignment Notification
       if (newValue.assignee !== previousValue.assignee) {
-        // Find user by displayName
-        const usersSnapshot = await db.collection("users").where("displayName", "==", newValue.assignee).get();
+        const assigneeEmail = MEMBER_TO_EMAIL[newValue.assignee];
+        const usersSnapshot = assigneeEmail
+          ? await db.collection("users").where("email", "==", assigneeEmail).get()
+          : { empty: true, docs: [] };
         if (!usersSnapshot.empty) {
           const recipientUid = usersSnapshot.docs[0].id;
           await db.collection("notifications").add({

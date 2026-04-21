@@ -158,6 +158,11 @@ export const EMAIL_TO_MEMBER: Record<string, string> = {
   'popo@osensetech.com':      'Popo',
 };
 
+/** Reverse of EMAIL_TO_MEMBER — maps display name → login email */
+export const MEMBER_TO_EMAIL: Record<string, string> = Object.fromEntries(
+  Object.entries(EMAIL_TO_MEMBER).map(([email, name]) => [name, email])
+);
+
 export const SORT_EDITOR_EMAILS: string[] = [
   'ian@osensetech.com',
   'sienna@osensetech.com',

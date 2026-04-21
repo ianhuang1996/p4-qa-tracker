@@ -1,8 +1,8 @@
 import { db } from '../firebase';
 import { doc, setDoc, addDoc, collection, increment, getDoc, updateDoc, runTransaction, query, where, getDocs } from 'firebase/firestore';
 import { User as FirebaseUser } from 'firebase/auth';
-import { CoinReason, Pet, PetRarity } from '../types';
-import { COIN_REWARDS, getLevel, getStage, PETS_BY_RARITY, getEggPrice, FEED_COST } from '../constants/petConstants';
+import { CoinReason, Pet, PetRarity, PetBuffType } from '../types';
+import { COIN_REWARDS, getLevel, getStage, PETS_BY_RARITY, getEggPrice, FEED_COST, PET_DEFS } from '../constants/petConstants';
 import { RELEASE_STATUS } from '../constants';
 
 // ─── Internal: fire-and-forget transaction log ───────────────────
@@ -145,4 +145,16 @@ export async function awardHistoryCoins(user: FirebaseUser): Promise<number> {
   }
 
   return total;
+}
+
+// ─── Get Pet Buff ─────────────────────────────────────────────────
+export async function getUserPetBuff(userId: string): Promise<PetBuffType | null> {
+  try {
+    const snap = await getDoc(doc(db, 'users', userId));
+    const pet = snap.data()?.pet as Pet | undefined;
+    if (!pet) return null;
+    return PET_DEFS[pet.typeId]?.buff ?? null;
+  } catch {
+    return null;
+  }
 }

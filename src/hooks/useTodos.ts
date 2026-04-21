@@ -7,6 +7,7 @@ import { TodoItem, OperationType } from '../types';
 import { toDateStr } from '../utils/qaUtils';
 import { handleFirestoreError } from '../utils/firestoreUtils';
 import { awardCoins } from '../services/coinService';
+import { EMAIL_TO_MEMBER } from '../constants';
 
 export type DateMode = 'day' | 'week';
 
@@ -115,7 +116,8 @@ export function useTodos(user: FirebaseUser | null, date: string, dateMode: Date
       }, { merge: true });
       // Award todo_clear if ALL of current user's todos are now done
       if (completed) {
-        const myTodos = todos.filter(t => t.assignee === (user.displayName || ''));
+        const myName = (user.email && EMAIL_TO_MEMBER[user.email]) || user.displayName || '';
+        const myTodos = todos.filter(t => t.assignee === myName);
         const allDoneAfter = myTodos.every(t => t.id === todoId || t.completed);
         if (allDoneAfter && myTodos.length > 0) {
           awardCoins(user.uid, 'todo_clear').catch(console.error);

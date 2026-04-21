@@ -7,6 +7,7 @@ import { useQAItems } from './hooks/useQAItems';
 import { useTodos } from './hooks/useTodos';
 import { useMeetingNotes } from './hooks/useMeetingNotes';
 import { getTodayStr } from './utils/qaUtils';
+import { EMAIL_TO_MEMBER } from './constants';
 import { Sidebar } from './components/Sidebar';
 import { NotificationCenter } from './components/NotificationCenter';
 import { OverviewPage } from './components/OverviewPage';
@@ -87,7 +88,8 @@ function AppLayout() {
 
   const sidebarBadges = useMemo(() => {
     const qaActive = qaData.filter(i => i.currentFlow !== '已關閉' && i.currentFlow !== '已修復').length;
-    const todoPending = todos.filter(t => !t.completed && t.assignee === (user?.displayName || '')).length;
+    const myName = (user?.email && EMAIL_TO_MEMBER[user.email]) || user?.displayName || '';
+    const todoPending = todos.filter(t => !t.completed && t.assignee === myName).length;
     const meetingsPending = meetings.reduce((sum, m) =>
       sum + m.actionItems.filter(ai => !ai.done && !ai.linkedTodoId).length, 0);
     return { qa: qaActive || undefined, todo: todoPending || undefined, meetings: meetingsPending || undefined };

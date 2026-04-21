@@ -5,8 +5,9 @@ import { User as FirebaseUser } from 'firebase/auth';
 import { toast } from 'sonner';
 import { Release, ChecklistItem, OperationType } from '../types';
 import { handleFirestoreError } from '../utils/firestoreUtils';
-import { awardCoins } from '../services/coinService';
+import { awardCoins, getUserPetBuff } from '../services/coinService';
 import { STATUS, RELEASE_STATUS } from '../constants';
+import confetti from 'canvas-confetti';
 
 const DEFAULT_CHECKLIST: ChecklistItem[] = [
   { id: '1', label: 'UAT 測試完成', checked: false },
@@ -166,6 +167,13 @@ export function useReleases(user: FirebaseUser | null) {
         toast.success(`${release.version} 已正式發布！`);
       }
       awardCoins(user.uid, 'release_publish', release.version).catch(console.error);
+      getUserPetBuff(user.uid).then(buff => {
+        if (buff === 'release_confetti') {
+          confetti({ particleCount: 250, spread: 140, origin: { y: 0.55 } });
+          setTimeout(() => confetti({ particleCount: 150, spread: 100, origin: { x: 0.2, y: 0.6 } }), 300);
+          setTimeout(() => confetti({ particleCount: 150, spread: 100, origin: { x: 0.8, y: 0.6 } }), 500);
+        }
+      }).catch(console.error);
     } catch (error) {
       toast.error('發布失敗');
       handleFirestoreError(error, OperationType.WRITE, `releases/${release.id}`);
