@@ -19,7 +19,7 @@ export const summarizeDiscussion = async (item: QAItem, comments: QAComment[]) =
 
   try {
     const response = await ai.models.generateContent({
-      model: "gemini-3-flash-preview",
+      model: "gemini-2.5-flash-lite",
       contents: prompt,
     });
     return response.text || "無法生成摘要。";
@@ -72,7 +72,7 @@ ${itemList}
 
   try {
     const response = await ai.models.generateContent({
-      model: "gemini-3-flash-preview",
+      model: "gemini-2.5-flash-lite",
       contents: prompt,
     });
     return response.text || "無法生成 Release Note。";
@@ -115,7 +115,7 @@ ${notes.trim() || '（無紀錄內容）'}
 
   try {
     const response = await ai.models.generateContent({
-      model: 'gemini-2.0-flash',
+      model: 'gemini-2.5-flash-lite',
       contents: prompt,
       config: { responseMimeType: 'application/json' },
     });
@@ -202,7 +202,7 @@ ${sections.join('\n\n')}
 
   try {
     const response = await ai.models.generateContent({
-      model: "gemini-3-flash-preview",
+      model: "gemini-2.5-flash-lite",
       contents: prompt,
     });
     const text = response.text || '';
