@@ -35,6 +35,7 @@ import { useConfirm } from '../hooks/useConfirm';
 import { generateReleaseNotes } from '../services/geminiService';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import remarkBreaks from 'remark-breaks';
 
 
 const MODULE_COLORS = [
@@ -521,7 +522,7 @@ export const ReleasePage: React.FC = () => {
                 </div>
               ) : selectedRelease.releaseNotes ? (
                 <div className="prose prose-sm max-w-none text-gray-700">
-                  <ReactMarkdown remarkPlugins={[remarkGfm]}>{selectedRelease.releaseNotes}</ReactMarkdown>
+                  <ReactMarkdown remarkPlugins={[remarkGfm, remarkBreaks]}>{selectedRelease.releaseNotes}</ReactMarkdown>
                 </div>
               ) : (
                 <p className="text-sm text-gray-400">尚未撰寫 Release Notes</p>
