@@ -6,59 +6,67 @@ import { toast } from 'sonner';
 import { RoadmapItem, RoadmapStatus, Release, QAItem } from '../types';
 import { EMAIL_TO_MEMBER, STATUS, RELEASE_STATUS, DEFAULT_DISPLAY_NAME } from '../constants';
 
-const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
-
-function releaseToRoadmapStatus(r: Release): RoadmapStatus {
-  if (r.status === RELEASE_STATUS.UAT) return 'now';
-  if (r.status === RELEASE_STATUS.RELEASED) return 'completed';
-  if (r.status === RELEASE_STATUS.PLANNING) {
-    // 排程日期在 7 天內 → now，否則 → next
-    if (r.scheduledDate) {
-      const scheduled = new Date(r.scheduledDate + 'T00:00:00').getTime();
-      if (scheduled - Date.now() <= SEVEN_DAYS_MS) return 'now';
-    }
-    return 'next';
-  }
-  return 'later';
-}
-
 function parseVersion(v: string): number[] {
   return v.replace(/^v/i, '').split('.').map(n => parseInt(n, 10) || 0);
 }
 
+function compareVersion(a: string, b: string): number {
+  const va = parseVersion(a);
+  const vb = parseVersion(b);
+  for (let i = 0; i < Math.max(va.length, vb.length); i++) {
+    const diff = (va[i] ?? 0) - (vb[i] ?? 0);
+    if (diff !== 0) return diff;
+  }
+  return 0;
+}
+
 export function deriveBugFixItems(releases: Release[], qaItems: QAItem[]): RoadmapItem[] {
-  return releases
-    .filter(r => r.status !== RELEASE_STATUS.CANCELLED)
+  const nonCancelled = releases.filter(r => r.status !== RELEASE_STATUS.CANCELLED);
+
+  // 未發布：UAT 優先 → PLANNING 按 scheduledDate 由近到遠 → 版本號小者優先
+  const active = nonCancelled
+    .filter(r => r.status === RELEASE_STATUS.UAT || r.status === RELEASE_STATUS.PLANNING)
     .sort((a, b) => {
-      const va = parseVersion(a.version);
-      const vb = parseVersion(b.version);
-      for (let i = 0; i < Math.max(va.length, vb.length); i++) {
-        const diff = (vb[i] ?? 0) - (va[i] ?? 0); // desc: newest first
-        if (diff !== 0) return diff;
-      }
-      return 0;
-    })
-    .map(r => {
-      const linked = qaItems.filter(q => r.linkedItemIds.includes(q.id));
-      const open   = linked.filter(q => q.currentFlow !== STATUS.closed && q.currentFlow !== STATUS.fixed).length;
-      const closed = linked.filter(q => q.currentFlow === STATUS.closed || q.currentFlow === STATUS.fixed).length;
-      return {
-        id: `derived_${r.id}`,
-        title: r.version,
-        description: r.title || '',
-        track: 'bug_fix',
-        status: releaseToRoadmapStatus(r),
-        targetMonth: r.scheduledDate ? r.scheduledDate.substring(0, 7) : undefined,  // 'YYYY-MM'
-        assignees: [],
-        createdBy: r.createdBy,
-        createdByName: r.createdByName,
-        createdAt: r.createdAt,
-        linkedReleaseId: r.id,
-        linkedReleaseVersion: r.version,
-        isDerived: true,
-        qaStats: { open, closed, total: linked.length },
-      } satisfies RoadmapItem;
+      if (a.status === RELEASE_STATUS.UAT && b.status !== RELEASE_STATUS.UAT) return -1;
+      if (b.status === RELEASE_STATUS.UAT && a.status !== RELEASE_STATUS.UAT) return 1;
+      const aDate = a.scheduledDate ? new Date(a.scheduledDate).getTime() : Number.MAX_SAFE_INTEGER;
+      const bDate = b.scheduledDate ? new Date(b.scheduledDate).getTime() : Number.MAX_SAFE_INTEGER;
+      if (aDate !== bDate) return aDate - bDate;
+      return compareVersion(a.version, b.version);
     });
+
+  const released = nonCancelled
+    .filter(r => r.status === RELEASE_STATUS.RELEASED)
+    .sort((a, b) => compareVersion(b.version, a.version)); // 新版本在上
+
+  // now / next / later 各取 1；其餘未發布版本不顯示於 Roadmap（版更管理頁仍可見）
+  const slots: { release: Release; status: RoadmapStatus }[] = [];
+  if (active[0]) slots.push({ release: active[0], status: 'now' });
+  if (active[1]) slots.push({ release: active[1], status: 'next' });
+  if (active[2]) slots.push({ release: active[2], status: 'later' });
+  released.forEach(r => slots.push({ release: r, status: 'completed' }));
+
+  return slots.map(({ release: r, status }) => {
+    const linked = qaItems.filter(q => r.linkedItemIds.includes(q.id));
+    const open   = linked.filter(q => q.currentFlow !== STATUS.closed && q.currentFlow !== STATUS.fixed).length;
+    const closed = linked.filter(q => q.currentFlow === STATUS.closed || q.currentFlow === STATUS.fixed).length;
+    return {
+      id: `derived_${r.id}`,
+      title: r.version,
+      description: r.title || '',
+      track: 'bug_fix',
+      status,
+      targetMonth: r.scheduledDate ? r.scheduledDate.substring(0, 7) : undefined,
+      assignees: [],
+      createdBy: r.createdBy,
+      createdByName: r.createdByName,
+      createdAt: r.createdAt,
+      linkedReleaseId: r.id,
+      linkedReleaseVersion: r.version,
+      isDerived: true,
+      qaStats: { open, closed, total: linked.length },
+    } satisfies RoadmapItem;
+  });
 }
 
 export function useRoadmap(user: FirebaseUser | null) {
