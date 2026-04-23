@@ -44,30 +44,40 @@ export const generateReleaseNotes = async (version: string, items: AugmentedQAIt
 項目清單:
 ${itemList}
 
-請嚴格按照以下格式輸出，分為三個區塊：
+請嚴格按照以下「輸出範例」的格式產生。注意：每一個項目之間一定要有一個空行。
 
+輸出範例（這是格式示範，不是內容）：
+---
 🎬 新功能
 
-（如果有新功能項目，每個一行，用「功能名稱：一句話說明」格式。沒有就寫「本次無新功能」）
+功能A：一句話說明
+
+功能B：一句話說明
 
 ⚡ 優化
 
-（如果有優化項目，每個一行，用「功能名稱：一句話說明」格式。沒有就寫「本次無優化項目」）
+優化A：一句話說明
+
+優化B：一句話說明
 
 🐛 修復
 
-（修復項目，每個一行，簡述修正了什麼。不要帶 Q 編號）
+修正了 XXX 的問題
+
+修正了 YYY 的異常
+---
 
 規則：
 - 繁體中文
-- 每個項目獨立一行，前面不要加符號或編號
-- 項目之間用空行分隔
+- 每個項目獨立一段（項目與項目之間必須空一行）
+- 項目前面不要加符號、編號或「-」
+- 區塊之間也空一行
+- 沒有內容的區塊就寫「本次無新功能」/「本次無優化項目」（也要自成一段）
 - 不要太細節，用戶看得懂就好
 - 根據項目內容判斷歸類到新功能、優化還是修復
 - 不要加版本號標題
-- 不要用 Markdown 語法（# ## * -），用純文字
-- 不要加額外的開頭總結
-- 三個區塊之間用空行分隔
+- 不要用 Markdown 語法（# ## * -）
+- 不要加額外的開頭總結或結尾
   `;
 
   try {
@@ -75,11 +85,21 @@ ${itemList}
       model: "gemini-2.5-flash-lite",
       contents: prompt,
     });
-    return response.text || "無法生成 Release Note。";
+    const raw = response.text || "無法生成 Release Note。";
+    return normalizeReleaseNoteFormat(raw);
   } catch (error) {
     console.error("Gemini Release Note Error:", error);
     return "Release Note 生成失敗，請確認 Gemini API Key 設定。";
   }
+};
+
+// 保險：若 AI 沒有依照範例空行，強制把單換行補成雙換行，確保每段分開
+const normalizeReleaseNoteFormat = (text: string): string => {
+  return text
+    .split('\n')
+    .map(line => line.trim())
+    .filter(line => line.length > 0)
+    .join('\n\n');
 };
 
 export interface MeetingSummary {
