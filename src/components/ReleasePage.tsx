@@ -321,8 +321,19 @@ export const ReleasePage: React.FC = () => {
                 {RELEASE_STATUS_LABEL[selectedRelease.status]}
               </span>
             </h2>
-            <div className="flex items-center gap-2 text-sm text-gray-500 mt-1">
-              <span>{selectedRelease.title}</span>
+            <div className="flex items-center gap-2 text-sm text-gray-500 mt-1 flex-wrap">
+              {selectedRelease.status !== RELEASE_STATUS.RELEASED ? (
+                <span className="relative group/edit pr-5">
+                  <input
+                    type="text"
+                    value={selectedRelease.title}
+                    onChange={(e) => updateRelease(selectedRelease.id, { title: e.target.value })}
+                    placeholder="例如 Week 14 Release"
+                    className="bg-transparent border-b border-dashed border-gray-300 hover:border-blue-400 focus:border-blue-500 outline-none text-sm text-gray-500 w-48 transition-colors"
+                  />
+                  <Edit2 size={12} className="absolute right-0 top-1/2 -translate-y-1/2 text-gray-300 group-hover/edit:text-blue-400 transition-colors" />
+                </span>
+              ) : <span>{selectedRelease.title}</span>}
               <span>—</span>
               <span>預計</span>
               {selectedRelease.status !== RELEASE_STATUS.RELEASED ? (
