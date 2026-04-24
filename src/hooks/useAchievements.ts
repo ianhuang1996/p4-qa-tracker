@@ -1,11 +1,10 @@
-import { useMemo, useState, useEffect, useRef } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { User as FirebaseUser } from 'firebase/auth';
 import { db } from '../firebase';
-import { collection, onSnapshot, query, where, orderBy, limit as fbLimit, addDoc, getDocs } from 'firebase/firestore';
+import { collection, onSnapshot, query, where, orderBy, limit as fbLimit } from 'firebase/firestore';
 import { QAItem, AugmentedQAItem, TodoItem, WikiPage, Release, DailyReport, TeamGoalProgress, AchievementLog, MeetingNote } from '../types';
-import { ACHIEVEMENT_DEFS, TEAM_GOAL_DEFS, HOLIDAYS_2026, PMS, RDS, MODULES, RELEASE_STATUS, isResolved, isActive, isActiveRelease, DEFAULT_DISPLAY_NAME } from '../constants';
+import { ACHIEVEMENT_DEFS, TEAM_GOAL_DEFS, HOLIDAYS_2026, PMS, RDS, MODULES, RELEASE_STATUS, isResolved, isActive, isActiveRelease, EMAIL_TO_MEMBER } from '../constants';
 import { augmentQAItems } from '../utils/qaUtils';
-import { toast } from 'sonner';
 
 // ─── Workday helpers ──────────────────────────────────────
 
@@ -258,6 +257,9 @@ export function useAchievements({ user, qaItems, todos, wikiPages, releases, dai
 
   const metrics = useMemo(() => {
     if (!user) return {};
+    // Use canonical member name (Summer/Popo) resolved from email,
+    // NOT raw Google displayName (黃韋翔/黃享鑫) which won't match assignee fields.
+    const canonicalName = (user.email && EMAIL_TO_MEMBER[user.email]) || user.displayName || '';
     return computeMetrics({
       qaItems: augmented,
       rawQAItems: qaItems,
@@ -266,7 +268,7 @@ export function useAchievements({ user, qaItems, todos, wikiPages, releases, dai
       releases,
       dailyReports,
       meetings,
-      userName: user.displayName || '',
+      userName: canonicalName,
       userId: user.uid,
     });
   }, [user, augmented, qaItems, todos, wikiPages, releases, dailyReports, meetings]);
@@ -294,48 +296,8 @@ export function useAchievements({ user, qaItems, todos, wikiPages, releases, dai
     return progress;
   }, [metrics]);
 
-  // ─── Detect new unlocks → save to Firestore + toast ───
-  const loggedIdsRef = useRef<Set<string>>(new Set());
-  const [logsReady, setLogsReady] = useState(false);
-
-  // Load already-logged achievements for this user on mount
-  useEffect(() => {
-    if (!user) return;
-    setLogsReady(false);
-    let mounted = true;
-    const q = query(collection(db, 'achievement_logs'), where('userId', '==', user.uid));
-    getDocs(q).then(snapshot => {
-      if (!mounted) return;
-      snapshot.forEach(d => loggedIdsRef.current.add(d.data().achievementId));
-      setLogsReady(true);
-    }).catch(err => {
-      if (!mounted) return;
-      console.warn('Failed to load achievement logs:', err);
-      setLogsReady(true);
-    });
-    return () => { mounted = false; };
-  }, [user]);
-
-  // Watch for new unlocks (triggers when logsReady flips to true OR unlocked list changes)
-  useEffect(() => {
-    if (!user || !logsReady || unlockedAchievements.length === 0) return;
-
-    unlockedAchievements.forEach(ach => {
-      if (loggedIdsRef.current.has(ach.id)) return;
-      loggedIdsRef.current.add(ach.id);
-
-      // Save to Firestore
-      addDoc(collection(db, 'achievement_logs'), {
-        achievementId: ach.id,
-        userId: user.uid,
-        userName: user.displayName || DEFAULT_DISPLAY_NAME,
-        unlockedAt: Date.now(),
-      }).catch(err => console.error('Failed to log achievement:', err));
-
-      // Toast celebration
-      toast.success(`🎉 解鎖成就「${ach.name}」— ${ach.description}`, { duration: 5000 });
-    });
-  }, [user, logsReady, unlockedAchievements]);
+  // Note: Unlock detection + Firestore write lives in useAchievementWatcher (mounted at App level),
+  // not here — otherwise having useAchievements on both App AND Overview would duplicate writes.
 
   // Team goals
   const teamGoals = useMemo((): TeamGoalProgress[] => {

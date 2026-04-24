@@ -6,6 +6,7 @@ import { useNotifications } from './hooks/useNotifications';
 import { useQAItems } from './hooks/useQAItems';
 import { useTodos } from './hooks/useTodos';
 import { useMeetingNotes } from './hooks/useMeetingNotes';
+import { useAchievementWatcher } from './hooks/useAchievementWatcher';
 import { getTodayStr } from './utils/qaUtils';
 import { EMAIL_TO_MEMBER } from './constants';
 import { Sidebar } from './components/Sidebar';
@@ -86,6 +87,9 @@ function AppLayout() {
   const { todos } = useTodos(user, getTodayStr(), 'day');
   const { meetings } = useMeetingNotes(user);
   const [showNotifications, setShowNotifications] = useState(false);
+
+  // Global achievement watcher — detects unlocks on any page, not only Overview
+  useAchievementWatcher(user, isAuthReady);
 
   const sidebarBadges = useMemo(() => {
     const qaActive = qaData.filter(i => i.currentFlow !== '已關閉' && i.currentFlow !== '已修復').length;
