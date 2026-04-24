@@ -195,6 +195,9 @@ export interface Pet {
   lastFed: number;        // timestamp
   hatchedAt: number;
   eggRarity: PetRarity;
+  cosmeticsOwned?: string[];
+  activeBackground?: string;
+  activeFrame?: string;
 }
 
 export type CoinReason =

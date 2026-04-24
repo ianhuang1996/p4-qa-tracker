@@ -4,8 +4,9 @@ import { doc, onSnapshot } from 'firebase/firestore';
 import { User as FirebaseUser } from 'firebase/auth';
 import { Pet } from '../types';
 import { getHappiness } from '../constants/petConstants';
-import { feedPet, hatchEgg, abandonPet, namePet } from '../services/coinService';
+import { feedPet, hatchEgg, abandonPet, namePet, purchaseCosmetic, equipCosmetic } from '../services/coinService';
 import { toast } from 'sonner';
+import type { CosmeticType } from '../constants/cosmeticsConstants';
 
 export function usePet(user: FirebaseUser | null) {
   const [pet, setPet] = useState<Pet | null>(null);
@@ -54,5 +55,18 @@ export function usePet(user: FirebaseUser | null) {
     }
   };
 
-  return { pet, isLoading, happiness, isHappy, handleFeed, handleHatch, handleAbandon, handleName };
+  const handlePurchaseCosmetic = async (cosmeticId: string, price: number, type: CosmeticType): Promise<boolean> => {
+    if (!user) return false;
+    const ok = await purchaseCosmetic(user, cosmeticId, price, type);
+    if (ok) toast.success('購買成功！已自動裝備');
+    else toast.error('購買失敗（金幣不足或已擁有）');
+    return ok;
+  };
+
+  const handleEquipCosmetic = async (cosmeticId: string | null, type: CosmeticType) => {
+    if (!user) return;
+    await equipCosmetic(user.uid, cosmeticId, type);
+  };
+
+  return { pet, isLoading, happiness, isHappy, handleFeed, handleHatch, handleAbandon, handleName, handlePurchaseCosmetic, handleEquipCosmetic };
 }

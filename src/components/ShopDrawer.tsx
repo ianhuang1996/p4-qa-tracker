@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { X } from 'lucide-react';
+import { X, Check } from 'lucide-react';
 import { User as FirebaseUser } from 'firebase/auth';
 import { toast } from 'sonner';
 import { EGG_DEFS, PETS_BY_RARITY, PET_DEFS, RARITY_LABEL, RARITY_COLOR } from '../constants/petConstants';
+import { COSMETICS_BY_TYPE, CosmeticType, CosmeticDef } from '../constants/cosmeticsConstants';
 import { PetGuide } from './PetGuide';
 import type { Pet, PetRarity } from '../types';
 
@@ -11,10 +12,11 @@ interface ShopDrawerProps {
   coins: number;
   pet: Pet | null;
   onHatch: (rarity: PetRarity) => Promise<Pet | null>;
+  onPurchaseCosmetic: (cosmeticId: string, price: number, type: CosmeticType) => Promise<boolean>;
   onClose: () => void;
 }
 
-export const ShopDrawer: React.FC<ShopDrawerProps> = ({ coins, pet, onHatch, onClose }) => {
+export const ShopDrawer: React.FC<ShopDrawerProps> = ({ coins, pet, onHatch, onPurchaseCosmetic, onClose }) => {
   const [hatchingRarity, setHatchingRarity] = useState<PetRarity | null>(null);
   const [revealed, setRevealed] = useState<{ emoji: string; name: string; rarity: PetRarity } | null>(null);
 
@@ -113,6 +115,28 @@ export const ShopDrawer: React.FC<ShopDrawerProps> = ({ coins, pet, onHatch, onC
             )}
           </section>
 
+          {/* Cosmetics */}
+          {pet && (
+            <>
+              <CosmeticSection
+                title="卡片背景"
+                type="background"
+                items={COSMETICS_BY_TYPE.background}
+                owned={pet.cosmeticsOwned ?? []}
+                coins={coins}
+                onPurchase={onPurchaseCosmetic}
+              />
+              <CosmeticSection
+                title="頭像外框"
+                type="frame"
+                items={COSMETICS_BY_TYPE.frame}
+                owned={pet.cosmeticsOwned ?? []}
+                coins={coins}
+                onPurchase={onPurchaseCosmetic}
+              />
+            </>
+          )}
+
           {/* Guide */}
           <PetGuide />
         </div>
@@ -157,5 +181,68 @@ export const ShopDrawer: React.FC<ShopDrawerProps> = ({ coins, pet, onHatch, onC
         )}
       </div>
     </>
+  );
+};
+
+// ─── Cosmetic Section ────────────────────────────────────────────
+interface CosmeticSectionProps {
+  title: string;
+  type: CosmeticType;
+  items: CosmeticDef[];
+  owned: string[];
+  coins: number;
+  onPurchase: (cosmeticId: string, price: number, type: CosmeticType) => Promise<boolean>;
+}
+
+const CosmeticSection: React.FC<CosmeticSectionProps> = ({ title, type, items, owned, coins, onPurchase }) => {
+  const [buyingId, setBuyingId] = useState<string | null>(null);
+
+  const handleBuy = async (item: CosmeticDef) => {
+    if (buyingId) return;
+    setBuyingId(item.id);
+    try {
+      await onPurchase(item.id, item.price, type);
+    } finally {
+      setBuyingId(null);
+    }
+  };
+
+  return (
+    <section>
+      <h3 className="text-sm font-bold text-gray-700 mb-3">{title}</h3>
+      <div className="grid grid-cols-2 gap-2.5">
+        {items.map(item => {
+          const isOwned = owned.includes(item.id);
+          const canAfford = coins >= item.price;
+          const isBuying = buyingId === item.id;
+          return (
+            <div key={item.id} className="rounded-xl border border-gray-200 p-2.5 flex flex-col gap-2">
+              <div className={`h-12 rounded-lg ${item.swatch}`} />
+              <div className="flex items-center justify-between gap-1">
+                <p className="text-xs font-semibold text-gray-700 truncate">{item.name}</p>
+                {!isOwned && <p className="text-xs font-bold text-yellow-600 shrink-0">🪙{item.price}</p>}
+              </div>
+              {isOwned ? (
+                <span className="text-xs font-bold text-green-600 bg-green-50 border border-green-200 rounded-lg px-2 py-1 flex items-center justify-center gap-1">
+                  <Check size={12} /> 已擁有
+                </span>
+              ) : (
+                <button
+                  onClick={() => handleBuy(item)}
+                  disabled={!canAfford || isBuying}
+                  className={`text-xs font-bold px-2 py-1 rounded-lg transition-all ${
+                    canAfford && !isBuying
+                      ? 'bg-gray-800 text-white hover:bg-gray-700 active:scale-95'
+                      : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                  }`}
+                >
+                  {isBuying ? '購買中…' : canAfford ? '購買' : '不足'}
+                </button>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </section>
   );
 };

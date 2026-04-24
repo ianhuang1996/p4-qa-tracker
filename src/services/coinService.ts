@@ -113,6 +113,50 @@ export async function namePet(userId: string, name: string): Promise<void> {
   await updateDoc(userRef, { 'pet.name': name.trim() });
 }
 
+// ─── Purchase Cosmetic ───────────────────────────────────────────
+// Deducts coins + appends cosmetic id to pet.cosmeticsOwned atomically,
+// and auto-equips the newly bought item.
+export async function purchaseCosmetic(
+  user: FirebaseUser,
+  cosmeticId: string,
+  price: number,
+  type: 'background' | 'frame',
+): Promise<boolean> {
+  const userRef = doc(db, 'users', user.uid);
+  const success = await runTransaction(db, async (tx) => {
+    const snap = await tx.get(userRef);
+    const data = snap.data();
+    const coins = data?.coins ?? 0;
+    const pet = data?.pet as Pet | undefined;
+    if (!pet) return false;
+    if (coins < price) return false;
+    const owned: string[] = pet.cosmeticsOwned ?? [];
+    if (owned.includes(cosmeticId)) return false;
+
+    const activeField = type === 'background' ? 'pet.activeBackground' : 'pet.activeFrame';
+    tx.update(userRef, {
+      coins: increment(-price),
+      'pet.cosmeticsOwned': [...owned, cosmeticId],
+      [activeField]: cosmeticId,
+    });
+    return true;
+  });
+  if (success) logTx(user.uid, -price, 'purchase_cosmetic', cosmeticId);
+  return success;
+}
+
+// ─── Equip Cosmetic ──────────────────────────────────────────────
+// Passing null unequips the current item of that type.
+export async function equipCosmetic(
+  userId: string,
+  cosmeticId: string | null,
+  type: 'background' | 'frame',
+): Promise<void> {
+  const userRef = doc(db, 'users', userId);
+  const field = type === 'background' ? 'pet.activeBackground' : 'pet.activeFrame';
+  await updateDoc(userRef, { [field]: cosmeticId ?? null });
+}
+
 // ─── One-time Launch Bonus ───────────────────────────────────────
 export async function applyLaunchBonus(userId: string): Promise<void> {
   const userRef = doc(db, 'users', userId);

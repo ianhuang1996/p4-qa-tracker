@@ -7,6 +7,7 @@ import {
   PET_DEFS, STAGE_LABEL, RARITY_LABEL, RARITY_COLOR, FEED_COST,
   getXpToNextLevel, ENCOURAGEMENTS, REASON_LABEL,
 } from '../constants/petConstants';
+import { COSMETICS_BY_TYPE, getCosmetic, CosmeticType } from '../constants/cosmeticsConstants';
 import { ShopDrawer } from './ShopDrawer';
 
 interface PetPageProps {
@@ -14,7 +15,7 @@ interface PetPageProps {
 }
 
 export const PetPage: React.FC<PetPageProps> = ({ user }) => {
-  const { pet, isLoading, happiness, isHappy, handleFeed, handleAbandon, handleName, handleHatch } = usePet(user);
+  const { pet, isLoading, happiness, isHappy, handleFeed, handleAbandon, handleName, handleHatch, handlePurchaseCosmetic, handleEquipCosmetic } = usePet(user);
   const { coins, transactions } = useCoins(user);
   const [nameInput, setNameInput] = useState('');
   const [namingMode, setNamingMode] = useState(false);
@@ -81,11 +82,16 @@ export const PetPage: React.FC<PetPageProps> = ({ user }) => {
       )}
 
       {/* Pet card */}
-      {pet && def && (
-        <div className="bg-white rounded-3xl border border-gray-100 shadow-sm p-6 flex flex-col items-center gap-4">
+      {pet && def && (() => {
+        const activeBg = pet.activeBackground ? getCosmetic(pet.activeBackground) : null;
+        const activeFrame = pet.activeFrame ? getCosmetic(pet.activeFrame) : null;
+        return (
+        <div className={`rounded-3xl border border-gray-100 shadow-sm p-6 flex flex-col items-center gap-4 ${activeBg?.className ?? 'bg-white'}`}>
           {/* Emoji + stage badge */}
           <div className="relative">
-            <span className="text-8xl leading-none select-none">{def.emoji}</span>
+            <span className={`inline-flex items-center justify-center w-28 h-28 rounded-full select-none ${activeFrame?.className ?? ''}`}>
+              <span className="text-8xl leading-none">{def.emoji}</span>
+            </span>
             <span className={`absolute -bottom-1 -right-2 text-[10px] font-bold px-1.5 py-0.5 rounded-full border ${RARITY_COLOR[pet.eggRarity]}`}>
               {stageLabel}
             </span>
@@ -194,6 +200,17 @@ export const PetPage: React.FC<PetPageProps> = ({ user }) => {
             </div>
           )}
         </div>
+        );
+      })()}
+
+      {/* Cosmetic equip panel — only shown if user owns at least one cosmetic */}
+      {pet && (pet.cosmeticsOwned?.length ?? 0) > 0 && (
+        <CosmeticEquipPanel
+          owned={pet.cosmeticsOwned ?? []}
+          activeBackground={pet.activeBackground}
+          activeFrame={pet.activeFrame}
+          onEquip={handleEquipCosmetic}
+        />
       )}
 
       {/* Encouragement */}
@@ -242,6 +259,7 @@ export const PetPage: React.FC<PetPageProps> = ({ user }) => {
           coins={coins}
           pet={pet}
           onHatch={handleHatch}
+          onPurchaseCosmetic={handlePurchaseCosmetic}
           onClose={() => setShowShop(false)}
         />
       )}
@@ -277,6 +295,64 @@ export const PetPage: React.FC<PetPageProps> = ({ user }) => {
           </div>
         </div>
       )}
+    </div>
+  );
+};
+
+// ─── Cosmetic Equip Panel ────────────────────────────────────────
+interface CosmeticEquipPanelProps {
+  owned: string[];
+  activeBackground?: string;
+  activeFrame?: string;
+  onEquip: (cosmeticId: string | null, type: CosmeticType) => Promise<void>;
+}
+
+const CosmeticEquipPanel: React.FC<CosmeticEquipPanelProps> = ({ owned, activeBackground, activeFrame, onEquip }) => {
+  const ownedBackgrounds = COSMETICS_BY_TYPE.background.filter(c => owned.includes(c.id));
+  const ownedFrames = COSMETICS_BY_TYPE.frame.filter(c => owned.includes(c.id));
+
+  const renderRow = (
+    type: CosmeticType,
+    label: string,
+    items: ReturnType<typeof COSMETICS_BY_TYPE.background.filter>,
+    active?: string,
+  ) => {
+    if (items.length === 0) return null;
+    return (
+      <div>
+        <p className="text-xs font-semibold text-gray-600 mb-2">{label}</p>
+        <div className="flex flex-wrap gap-2">
+          <button
+            onClick={() => onEquip(null, type)}
+            className={`w-10 h-10 rounded-lg border-2 flex items-center justify-center text-xs text-gray-500 transition-all ${
+              !active ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-gray-400'
+            }`}
+            title="不使用"
+          >
+            無
+          </button>
+          {items.map(item => (
+            <button
+              key={item.id}
+              onClick={() => onEquip(item.id, type)}
+              className={`w-10 h-10 rounded-lg border-2 overflow-hidden transition-all ${
+                active === item.id ? 'border-blue-500 scale-110' : 'border-gray-200 hover:border-gray-400'
+              }`}
+              title={item.name}
+            >
+              <div className={`w-full h-full ${item.swatch}`} />
+            </button>
+          ))}
+        </div>
+      </div>
+    );
+  };
+
+  return (
+    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 space-y-3">
+      <h3 className="text-sm font-bold text-gray-700">🎨 裝飾</h3>
+      {renderRow('background', '背景', ownedBackgrounds, activeBackground)}
+      {renderRow('frame', '外框', ownedFrames, activeFrame)}
     </div>
   );
 };

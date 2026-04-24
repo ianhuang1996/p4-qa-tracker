@@ -155,6 +155,7 @@ export const REASON_LABEL: Record<string, string> = {
   hatch_rare_egg:      '孵化稀有蛋',
   hatch_legendary_egg: '孵化傳說蛋',
   feed_pet:            '餵食寵物',
+  purchase_cosmetic:   '購買裝飾品',
 };
 
 // ─── Encouragement Messages (for Bugsy buff) ────────────────────
