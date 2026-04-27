@@ -418,7 +418,7 @@ export const QAPage: React.FC<QAPageProps> = () => {
           <QAItemTable items={filteredData} onItemClick={(item) => setSelectedItemId(item.id)}
             onStatusChange={(item, status, retest) => updateItem(item.id, {
               currentFlow: status,
-              ...(retest ? { retestResult: retest.retestResult, retestNote: retest.retestNote, retestDate: retest.retestDate, retestBy: retest.retestBy } : {}),
+              ...(retest ? { retestResult: retest.retestResult, retestNote: retest.retestNote, retestDate: retest.retestDate, retestBy: retest.retestBy, retestEnvironment: retest.retestEnvironment } : {}),
               ...(status === STATUS.fixed ? { fixedAt: Date.now() } : {}),
             }, item)}
             onAssigneeChange={(item, assignee) => updateItem(item.id, { assignee }, item)}
@@ -486,6 +486,23 @@ export const QAPage: React.FC<QAPageProps> = () => {
             onUnlinkFromRelease={(releaseId) => {
               if (isAdding) { setPendingReleaseId(''); return; }
               unlinkItem(releaseId, selectedItem.id);
+            }}
+            existingItems={data}
+            onJumpToSimilar={(id) => {
+              setIsAdding(false);
+              setIsEditing(false);
+              setEditForm(null);
+              setPendingReleaseId('');
+              setSelectedItemId(id);
+            }}
+            onMarkAsDuplicate={async (targetId) => {
+              await updateItem(selectedItem.id, {
+                duplicateOfId: targetId,
+                currentFlow: STATUS.closed,
+              }, selectedItem);
+              await addComment(selectedItem.id, `已標記為 ${targetId} 的重複項目`);
+              toast.success(`已標記為 ${targetId} 的重複`);
+              setSelectedItemId(targetId);
             }}
           />
         )}

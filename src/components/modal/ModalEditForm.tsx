@@ -1,7 +1,7 @@
-import React from 'react';
-import { X, Video, UploadCloud, Loader2, FileText, Check } from 'lucide-react';
+import React, { useMemo } from 'react';
+import { X, Video, UploadCloud, Loader2, FileText, Check, AlertTriangle, ArrowRight } from 'lucide-react';
 import { QAItem, ReleaseLinksProps } from '../../types';
-import { QA_FLOWS, RDS, MODULES } from '../../constants';
+import { QA_FLOWS, RDS, MODULES, STATUS } from '../../constants';
 import { getDirectImageUrl } from '../../utils/qaUtils';
 
 interface ModalEditFormProps extends ReleaseLinksProps {
@@ -18,14 +18,49 @@ interface ModalEditFormProps extends ReleaseLinksProps {
   isInActiveRelease?: boolean;
   onToggleRelease?: (add: boolean) => void;
   itemId?: string;
+  /** Existing items used for duplicate detection while creating a new bug. */
+  existingItems?: QAItem[];
+  /** True when this form is creating a new item (enables duplicate detection). */
+  isCreating?: boolean;
+  /** Called when user picks one of the similar items — usually closes the create form and navigates. */
+  onJumpToSimilar?: (itemId: string) => void;
 }
 
 export const ModalEditForm: React.FC<ModalEditFormProps> = ({
   editForm, setEditForm, isUploading, onImageUpload, onFileUpload,
   isDragging, onDragOver, onDragLeave, onDrop,
   activeReleaseVersion, isInActiveRelease, onToggleRelease,
-  unreleasedReleases = [], itemId, onLinkToRelease, onUnlinkFromRelease
+  unreleasedReleases = [], itemId, onLinkToRelease, onUnlinkFromRelease,
+  existingItems, isCreating, onJumpToSimilar,
 }) => {
+  // Find similar items (same module, fuzzy title match) only while creating a new item.
+  const similarItems = useMemo(() => {
+    if (!isCreating || !existingItems || !editForm) return [];
+    const title = (editForm.title || '').trim();
+    if (title.length < 3) return [];
+    const tLower = title.toLowerCase();
+    const tWords = tLower.split(/\s+/).filter(w => w.length >= 2);
+    const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
+    const cutoff = Date.now() - THIRTY_DAYS_MS;
+    return existingItems
+      .filter(it => {
+        if (it.id === editForm.id) return false;
+        if (it.currentFlow === STATUS.closed) return false;
+        if (editForm.module && it.module !== editForm.module) return false;
+        const itTitle = (it.title || '').toLowerCase();
+        if (!itTitle) return false;
+        // direct substring OR any 2+ char word in common
+        if (itTitle.includes(tLower) || tLower.includes(itTitle)) return true;
+        if (tWords.some(w => itTitle.includes(w))) return true;
+        return false;
+      })
+      .filter(it => new Date(it.date + 'T00:00:00').getTime() >= cutoff)
+      .sort((a, b) =>
+        new Date(b.date + 'T00:00:00').getTime() - new Date(a.date + 'T00:00:00').getTime()
+      )
+      .slice(0, 3);
+  }, [isCreating, existingItems, editForm]);
+
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -42,6 +77,30 @@ export const ModalEditForm: React.FC<ModalEditFormProps> = ({
           />
           {editForm !== null && !editForm?.title?.trim() && (
             <p className="text-xs text-red-500">標題為必填</p>
+          )}
+          {similarItems.length > 0 && (
+            <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 mt-2">
+              <div className="flex items-center gap-1.5 mb-2">
+                <AlertTriangle size={14} className="text-amber-600" />
+                <span className="text-xs font-bold text-amber-800">可能重複（{similarItems.length}）</span>
+              </div>
+              <div className="space-y-1.5">
+                {similarItems.map(sim => (
+                  <button
+                    key={sim.id}
+                    type="button"
+                    onClick={() => onJumpToSimilar?.(sim.id)}
+                    className="w-full text-left bg-white border border-amber-200 hover:border-amber-400 hover:bg-amber-50 rounded-lg px-2.5 py-1.5 flex items-center gap-2 transition-colors group"
+                  >
+                    <span className="text-[10px] font-bold text-gray-400 shrink-0">{sim.id}</span>
+                    <span className="text-xs text-gray-700 truncate flex-1">{sim.title || '(無標題)'}</span>
+                    <span className="text-[10px] text-gray-400 shrink-0">{sim.currentFlow}</span>
+                    <ArrowRight size={12} className="text-amber-500 opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
+                  </button>
+                ))}
+              </div>
+              <p className="text-[10px] text-amber-700 mt-1.5">點擊跳轉至既有項目，或繼續建立新項目</p>
+            </div>
           )}
         </div>
         <div className="space-y-2">

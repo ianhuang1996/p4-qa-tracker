@@ -50,5 +50,7 @@ export const QAItemSchema = z.object({
   retestNote: z.string().optional(),
   retestDate: z.number().optional(),
   retestBy: z.string().optional(),
+  retestEnvironment: z.enum(['dev', 'uat', 'prod']).optional(),
+  duplicateOfId: z.string().optional(),
   linkedReleaseVersion: z.string().optional(),
 });

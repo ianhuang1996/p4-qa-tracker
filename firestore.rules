@@ -80,7 +80,9 @@ service cloud.firestore {
              (!('retestResult' in data) || (data.retestResult is string || data.retestResult == null)) &&
              (!('retestNote' in data) || (data.retestNote is string || data.retestNote == null)) &&
              (!('retestDate' in data) || (data.retestDate is number || data.retestDate == null)) &&
-             (!('retestBy' in data) || (data.retestBy is string || data.retestBy == null));
+             (!('retestBy' in data) || (data.retestBy is string || data.retestBy == null)) &&
+             (!('retestEnvironment' in data) || (data.retestEnvironment is string || data.retestEnvironment == null)) &&
+             (!('duplicateOfId' in data) || (data.duplicateOfId is string || data.duplicateOfId == null));
     }
 
     function isValidNotification(data) {

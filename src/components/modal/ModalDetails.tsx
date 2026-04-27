@@ -4,7 +4,7 @@ import {
   LayoutGrid, Play, FileText, ClipboardCheck
 } from 'lucide-react';
 import { AugmentedQAItem } from '../../types';
-import { QA_FLOWS, PRIORITY_COLORS } from '../../constants';
+import { QA_FLOWS, PRIORITY_COLORS, TEST_ENV_LABEL, TEST_ENV_BADGE } from '../../constants';
 import { getDirectImageUrl, getVideoEmbedUrl, isDirectVideo, formatTimestamp } from '../../utils/qaUtils';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -206,10 +206,17 @@ export const ModalDetails: React.FC<ModalDetailsProps> = ({
               <ClipboardCheck size={16} /> 複測結果
             </h3>
             <div className={`p-4 rounded-2xl border ${item.retestResult === 'passed' ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}`}>
-              <div className="flex items-center justify-between mb-2">
-                <span className={`text-xs font-bold ${item.retestResult === 'passed' ? 'text-green-700' : 'text-red-700'}`}>
-                  {item.retestResult === 'passed' ? '✓ 通過' : '✗ 不通過'}
-                </span>
+              <div className="flex items-center justify-between mb-2 flex-wrap gap-2">
+                <div className="flex items-center gap-2">
+                  <span className={`text-xs font-bold ${item.retestResult === 'passed' ? 'text-green-700' : 'text-red-700'}`}>
+                    {item.retestResult === 'passed' ? '✓ 通過' : '✗ 不通過'}
+                  </span>
+                  {item.retestEnvironment && (
+                    <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded border ${TEST_ENV_BADGE[item.retestEnvironment]}`}>
+                      {TEST_ENV_LABEL[item.retestEnvironment]}
+                    </span>
+                  )}
+                </div>
                 <span className="text-[10px] text-gray-400">
                   {item.retestBy} · {item.retestDate ? formatTimestamp(item.retestDate) : ''}
                 </span>

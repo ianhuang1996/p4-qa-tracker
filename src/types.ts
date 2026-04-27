@@ -37,7 +37,12 @@ export interface QAItem {
   retestNote?: string;
   retestDate?: number;
   retestBy?: string;
+  retestEnvironment?: 'dev' | 'uat' | 'prod';
+  /** Set when this item was confirmed as a duplicate of another (target item id). */
+  duplicateOfId?: string;
 }
+
+export type TestEnvironment = 'dev' | 'uat' | 'prod';
 
 export interface QAComment {
   id: string;

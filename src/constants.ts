@@ -113,6 +113,18 @@ export type StatusValue = typeof STATUS[keyof typeof STATUS];
 
 export const QA_FLOWS: StatusValue[] = [STATUS.pending, STATUS.inProgress, STATUS.readyToTest, STATUS.fixed, STATUS.returned, STATUS.closed];
 
+/** Test environment labels — used in retest dialog & detail view */
+export const TEST_ENV_LABEL: Record<'dev' | 'uat' | 'prod', string> = {
+  dev:  'Dev 開發環境',
+  uat:  'UAT 測試環境',
+  prod: '正式環境',
+};
+export const TEST_ENV_BADGE: Record<'dev' | 'uat' | 'prod', string> = {
+  dev:  'bg-slate-100 text-slate-700 border-slate-200',
+  uat:  'bg-orange-100 text-orange-700 border-orange-200',
+  prod: 'bg-red-100 text-red-700 border-red-200',
+};
+
 /** Release status constants — avoid 'planning'/'uat'/etc. magic strings */
 export const RELEASE_STATUS = {
   PLANNING:  'planning',

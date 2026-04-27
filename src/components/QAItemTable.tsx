@@ -3,7 +3,8 @@ import { Video, CheckCircle, XCircle, ArrowUp, ArrowDown, ArrowUpDown, MessageSq
 import { getOverdueBadge } from '../utils/badgeUtils';
 import { EmptyState } from './EmptyState';
 import { AugmentedQAItem, PetBuffType } from '../types';
-import { PRIORITY_COLORS, STATUS_COLORS, RDS, STATUS, EMAIL_TO_MEMBER } from '../constants';
+import { PRIORITY_COLORS, STATUS_COLORS, RDS, STATUS, EMAIL_TO_MEMBER, TEST_ENV_LABEL } from '../constants';
+import type { TestEnvironment } from '../types';
 import { getDirectImageUrl, getAvatarColor } from '../utils/qaUtils';
 import { useUserTiers, getAvatarRing } from '../hooks/useAchievements';
 import { useAppContext } from '../contexts/AppContext';
@@ -13,6 +14,7 @@ interface RetestData {
   retestNote: string;
   retestDate: number;
   retestBy: string;
+  retestEnvironment: TestEnvironment;
 }
 
 interface QAItemTableProps {
@@ -36,6 +38,7 @@ export const QAItemTable = React.memo(function QAItemTable({
   const [openAssigneeId, setOpenAssigneeId] = React.useState<string | null>(null);
   const [retestDialog, setRetestDialog] = React.useState<{ item: AugmentedQAItem; status: string } | null>(null);
   const [retestNote, setRetestNote] = React.useState('');
+  const [retestEnv, setRetestEnv] = React.useState<TestEnvironment>('dev');
   const { user } = useAppContext();
   const { tierByUserName } = useUserTiers(user);
 
@@ -46,10 +49,12 @@ export const QAItemTable = React.memo(function QAItemTable({
       retestNote: retestNote.trim(),
       retestDate: Date.now(),
       retestBy: (user.email && EMAIL_TO_MEMBER[user.email]) || user.displayName || '',
+      retestEnvironment: retestEnv,
     };
     onStatusChange(retestDialog.item, retestDialog.status, retest);
     setRetestDialog(null);
     setRetestNote('');
+    setRetestEnv('dev');
   };
 
   const toggleSelectAll = () => {
@@ -302,15 +307,36 @@ export const QAItemTable = React.memo(function QAItemTable({
                 </h3>
                 <p className="text-xs text-gray-400 mt-1">{retestDialog.item.id} — {retestDialog.item.displayTitle}</p>
               </div>
-              <div className="p-5">
-                <label className="text-xs font-bold text-gray-700 mb-2 block">複測說明</label>
-                <textarea
-                  value={retestNote}
-                  onChange={(e) => setRetestNote(e.target.value)}
-                  className="w-full p-3 border border-gray-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-500 min-h-[80px] resize-y"
-                  placeholder={retestDialog.status === STATUS.fixed ? '驗證環境、測試步驟...' : '退回原因、殘留問題...'}
-                  autoFocus
-                />
+              <div className="p-5 space-y-4">
+                <div>
+                  <label className="text-xs font-bold text-gray-700 mb-2 block">測試環境</label>
+                  <div className="grid grid-cols-3 gap-2">
+                    {(['dev', 'uat', 'prod'] as TestEnvironment[]).map(env => (
+                      <button
+                        key={env}
+                        type="button"
+                        onClick={() => setRetestEnv(env)}
+                        className={`px-3 py-2 rounded-xl text-xs font-bold border transition-all ${
+                          retestEnv === env
+                            ? 'bg-blue-600 text-white border-blue-600'
+                            : 'bg-white text-gray-600 border-gray-200 hover:border-blue-400'
+                        }`}
+                      >
+                        {TEST_ENV_LABEL[env]}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-gray-700 mb-2 block">複測說明</label>
+                  <textarea
+                    value={retestNote}
+                    onChange={(e) => setRetestNote(e.target.value)}
+                    className="w-full p-3 border border-gray-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-500 min-h-[80px] resize-y"
+                    placeholder={retestDialog.status === STATUS.fixed ? '驗證步驟、結果...' : '退回原因、殘留問題...'}
+                    autoFocus
+                  />
+                </div>
               </div>
               <div className="flex justify-end gap-2 p-5 pt-0">
                 <button

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { X, Edit2, Trash2, Save, Info, AlertTriangle, MessageSquare, History } from 'lucide-react';
+import { X, Edit2, Trash2, Save, Info, AlertTriangle, MessageSquare, History, Copy } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { QAItem, QAComment, AugmentedQAItem, HistoryEntry, ReleaseLinksProps } from '../types';
 import { STATUS_COLORS, BTN } from '../constants';
@@ -36,6 +36,12 @@ interface QAItemModalProps extends ReleaseLinksProps {
   activeReleaseVersion?: string;
   isInActiveRelease?: boolean;
   onToggleRelease?: (add: boolean) => void;
+  /** All existing QA items — used for duplicate detection during creation. */
+  existingItems?: QAItem[];
+  /** Called when user clicks a similar item suggestion in the create form. */
+  onJumpToSimilar?: (itemId: string) => void;
+  /** Called when user marks the current item as a duplicate of another. */
+  onMarkAsDuplicate?: (targetId: string) => void;
 }
 
 export const QAItemModal: React.FC<QAItemModalProps> = ({
@@ -44,10 +50,13 @@ export const QAItemModal: React.FC<QAItemModalProps> = ({
   onQuickStatusUpdate, onCommentSubmit, onCommentDelete,
   user, isUploading, onImageUpload, onFileUpload,
   activeReleaseVersion, isInActiveRelease, onToggleRelease,
-  unreleasedReleases = [], onLinkToRelease, onUnlinkFromRelease
+  unreleasedReleases = [], onLinkToRelease, onUnlinkFromRelease,
+  existingItems, onJumpToSimilar, onMarkAsDuplicate,
 }) => {
   const [activeTab, setActiveTab] = useState<'details' | 'comments' | 'history'>('details');
   const [history, setHistory] = useState<HistoryEntry[]>([]);
+  const [showDupPicker, setShowDupPicker] = useState(false);
+  const [dupSearch, setDupSearch] = useState('');
   const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
   const [lightboxVideo, setLightboxVideo] = useState<{ url: string, isDirect: boolean } | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -149,6 +158,16 @@ export const QAItemModal: React.FC<QAItemModalProps> = ({
             )}
           </div>
           <div className="flex items-center gap-2">
+            {!isEditing && !isAdding && onMarkAsDuplicate && !item.duplicateOfId && (
+              <button
+                onClick={() => setShowDupPicker(true)}
+                className="p-2 text-gray-500 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors"
+                title="標記為重複項目"
+                aria-label="標記為重複項目"
+              >
+                <Copy size={20} />
+              </button>
+            )}
             {!isEditing && (
               <button
                 onClick={onEdit}
@@ -168,6 +187,68 @@ export const QAItemModal: React.FC<QAItemModalProps> = ({
             </button>
           </div>
         </div>
+
+        {/* Duplicate-of banner (this item is a duplicate of another) */}
+        {item.duplicateOfId && (
+          <div className="px-4 py-2 bg-amber-50 border-b border-amber-200 flex items-center gap-2">
+            <Copy size={14} className="text-amber-600 shrink-0" />
+            <span className="text-xs text-amber-800">
+              此項目已被標記為 <strong>{item.duplicateOfId}</strong> 的重複項目
+            </span>
+          </div>
+        )}
+
+        {/* Duplicate picker overlay */}
+        {showDupPicker && existingItems && (
+          <>
+            <div className="fixed inset-0 z-50 bg-black/50" onClick={() => { setShowDupPicker(false); setDupSearch(''); }} />
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
+              <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[80vh] flex flex-col pointer-events-auto" onClick={(e) => e.stopPropagation()}>
+                <div className="p-4 border-b border-gray-100">
+                  <h3 className="text-sm font-bold text-gray-900 flex items-center gap-2">
+                    <Copy size={16} className="text-amber-500" /> 標記為重複項目
+                  </h3>
+                  <p className="text-xs text-gray-500 mt-1">選擇此項目重複的主件，{item.id} 會被關閉並導向主件</p>
+                </div>
+                <div className="p-4">
+                  <input
+                    type="text"
+                    value={dupSearch}
+                    onChange={(e) => setDupSearch(e.target.value)}
+                    placeholder="輸入編號或標題搜尋…"
+                    className="w-full p-2.5 border border-gray-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-500"
+                    autoFocus
+                  />
+                </div>
+                <div className="flex-1 overflow-y-auto px-4 pb-4 space-y-1.5">
+                  {existingItems
+                    .filter(it => it.id !== item.id && !it.duplicateOfId && (
+                      !dupSearch ||
+                      it.id.toLowerCase().includes(dupSearch.toLowerCase()) ||
+                      (it.title || '').toLowerCase().includes(dupSearch.toLowerCase())
+                    ))
+                    .slice(0, 30)
+                    .map(it => (
+                      <button
+                        key={it.id}
+                        type="button"
+                        onClick={() => {
+                          onMarkAsDuplicate?.(it.id);
+                          setShowDupPicker(false);
+                          setDupSearch('');
+                        }}
+                        className="w-full text-left bg-white border border-gray-200 hover:border-amber-400 hover:bg-amber-50 rounded-lg px-3 py-2 flex items-center gap-2 transition-colors"
+                      >
+                        <span className="text-[10px] font-bold text-gray-400 shrink-0">{it.id}</span>
+                        <span className="text-xs text-gray-700 truncate flex-1">{it.title || '(無標題)'}</span>
+                        <span className="text-[10px] text-gray-400 shrink-0">{it.module}</span>
+                      </button>
+                    ))}
+                </div>
+              </div>
+            </div>
+          </>
+        )}
 
         {/* Tabs */}
         {!isAdding && !isEditing && (
@@ -213,6 +294,9 @@ export const QAItemModal: React.FC<QAItemModalProps> = ({
               itemId={item.id}
               onLinkToRelease={onLinkToRelease}
               onUnlinkFromRelease={onUnlinkFromRelease}
+              isCreating={isAdding}
+              existingItems={existingItems}
+              onJumpToSimilar={onJumpToSimilar}
             />
           ) : activeTab === 'details' ? (
             <ModalDetails
