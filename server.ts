@@ -139,8 +139,19 @@ const upload = multer({
 
 // ─── Middleware: helmet, CORS, JSON, rate limit ──────────────────
 app.use(helmet({
-  // Vite dev injects inline scripts; keep CSP off in dev to avoid breaking HMR.
-  contentSecurityPolicy: isProd ? undefined : false,
+  // Configure CSP explicitly — helmet's default blocks our external image hosts
+  // (ImgBB i.ibb.co), Firebase auth iframe, and Google Identity popup endpoints.
+  contentSecurityPolicy: isProd ? {
+    useDefaults: true,
+    directives: {
+      'img-src': ["'self'", 'data:', 'blob:', 'https:'],            // images from anywhere over https (ImgBB, Firebase Storage, Google avatars)
+      'media-src': ["'self'", 'data:', 'blob:', 'https:'],
+      'connect-src': ["'self'", 'https://*.googleapis.com', 'https://*.google.com', 'https://api.imgbb.com', 'https://generativelanguage.googleapis.com'],
+      'frame-src': ["'self'", 'https://*.firebaseapp.com', 'https://accounts.google.com'],
+      'script-src': ["'self'", "'unsafe-inline'"],                  // Vite-built bundles include some inline; allowed only for 'self'
+      'style-src': ["'self'", "'unsafe-inline'"],
+    },
+  } : false,                                                         // dev: HMR needs everything inline
   // We serve uploaded images via <img>, must allow same-origin embed.
   crossOriginResourcePolicy: { policy: 'cross-origin' },
   // Default helmet sets COOP=same-origin which BLOCKS Firebase Auth popup
