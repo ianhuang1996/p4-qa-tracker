@@ -1,9 +1,11 @@
-import React, { useState, useEffect } from 'react';
-import { X } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { X, ImagePlus, Loader2, Trash2 } from 'lucide-react';
+import { toast } from 'sonner';
 import { Decision, DecisionTag, RoadmapItem } from '../types';
 import { DECISION_TAGS, DECISION_TAG_STYLES, DECISION_MAKERS } from '../constants/decisionConstants';
 import { getTodayStr } from '../utils/qaUtils';
 import { Z } from '../styles/tokens';
+import { authedFetch } from '../services/apiClient';
 
 interface DecisionModalProps {
   decision?: Decision | null;
@@ -28,6 +30,7 @@ const emptyForm = (): FormData => ({
   supersedesId: undefined,
   linkedRoadmapItemIds: [],
   meetingNoteId: undefined,
+  evidenceImages: [],
 });
 
 export const DecisionModal: React.FC<DecisionModalProps> = ({
@@ -36,6 +39,8 @@ export const DecisionModal: React.FC<DecisionModalProps> = ({
   onSave, onClose,
 }) => {
   const [form, setForm] = useState<FormData>(emptyForm);
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (decision) {
@@ -44,6 +49,7 @@ export const DecisionModal: React.FC<DecisionModalProps> = ({
         ...rest,
         tags: rest.tags ?? [],
         linkedRoadmapItemIds: rest.linkedRoadmapItemIds ?? [],
+        evidenceImages: rest.evidenceImages ?? [],
       });
     } else {
       setForm({
@@ -53,6 +59,39 @@ export const DecisionModal: React.FC<DecisionModalProps> = ({
       });
     }
   }, [decision, prefilledMeetingNoteId, prefilledContext]);
+
+  const handleImageUpload = async (files: FileList | null) => {
+    if (!files || files.length === 0) return;
+    setIsUploading(true);
+    const toastId = toast.loading(`上傳 ${files.length} 張圖片中…`);
+    const newUrls: string[] = [];
+    try {
+      for (const file of Array.from(files)) {
+        const fd = new FormData();
+        fd.append('image', file);
+        const res = await authedFetch('/api/imgbb/upload', { method: 'POST', body: fd });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok || !data.success) {
+          toast.error(`上傳失敗: ${data.error || `HTTP ${res.status}`}`, { id: toastId });
+          return;
+        }
+        newUrls.push(data.url);
+      }
+      setForm(prev => ({ ...prev, evidenceImages: [...(prev.evidenceImages ?? []), ...newUrls] }));
+      toast.success(`上傳成功（${newUrls.length} 張）`, { id: toastId });
+    } catch (err) {
+      toast.error(`上傳失敗: ${err instanceof Error ? err.message : '網路錯誤'}`, { id: toastId });
+    } finally {
+      setIsUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
+
+  const removeImage = (url: string) =>
+    setForm(prev => ({
+      ...prev,
+      evidenceImages: (prev.evidenceImages ?? []).filter(u => u !== url),
+    }));
 
   const toggleTag = (tag: DecisionTag) =>
     setForm(prev => ({
@@ -81,6 +120,7 @@ export const DecisionModal: React.FC<DecisionModalProps> = ({
       meetingNoteId: form.meetingNoteId || undefined,
       tags: (form.tags?.length ?? 0) > 0 ? form.tags : undefined,
       linkedRoadmapItemIds: (form.linkedRoadmapItemIds?.length ?? 0) > 0 ? form.linkedRoadmapItemIds : undefined,
+      evidenceImages: (form.evidenceImages?.length ?? 0) > 0 ? form.evidenceImages : undefined,
     });
   };
 
@@ -194,6 +234,48 @@ export const DecisionModal: React.FC<DecisionModalProps> = ({
               onChange={e => setForm(prev => ({ ...prev, rationale: e.target.value }))}
               placeholder="為什麼這樣決定？老闆原話或推理邏輯皆可"
             />
+          </div>
+
+          {/* Evidence images */}
+          <div>
+            <label className={LABEL}>證據截圖（選填）</label>
+            <div className="space-y-2">
+              {(form.evidenceImages ?? []).length > 0 && (
+                <div className="grid grid-cols-3 gap-2">
+                  {(form.evidenceImages ?? []).map(url => (
+                    <div key={url} className="relative group rounded-lg overflow-hidden border border-gray-200">
+                      <img src={url} alt="證據" className="w-full h-24 object-cover" />
+                      <button
+                        type="button"
+                        onClick={() => removeImage(url)}
+                        className="absolute top-1 right-1 p-1 rounded bg-black/60 text-white opacity-0 group-hover:opacity-100 transition-opacity"
+                        title="移除"
+                      >
+                        <Trash2 size={12} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                multiple
+                onChange={e => handleImageUpload(e.target.files)}
+                className="hidden"
+              />
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isUploading}
+                className="w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg border border-dashed border-gray-300 hover:border-blue-400 hover:bg-blue-50 text-xs font-bold text-gray-600 hover:text-blue-700 transition-colors disabled:opacity-60"
+              >
+                {isUploading ? <Loader2 size={14} className="animate-spin" /> : <ImagePlus size={14} />}
+                {isUploading ? '上傳中…' : '上傳圖片（可多張）'}
+              </button>
+              <p className="text-[10px] text-gray-400">用於佐證老闆原話、會議截圖、客戶反饋等</p>
+            </div>
           </div>
 
           {/* Tags */}

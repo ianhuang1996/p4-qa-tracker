@@ -7,6 +7,7 @@ import { MeetingNote, MeetingActionItem, OperationType } from '../types';
 import { handleFirestoreError } from '../utils/firestoreUtils';
 import { getTodayStr } from '../utils/qaUtils';
 import { awardCoins } from '../services/coinService';
+import { logAudit } from '../services/auditService';
 import { DEFAULT_DISPLAY_NAME } from '../constants';
 
 function genId(): string {
@@ -71,7 +72,9 @@ export function useMeetingNotes(user: FirebaseUser | null) {
   const deleteMeeting = async (meetingId: string) => {
     if (!user) return;
     try {
+      const meeting = meetings.find(m => m.id === meetingId);
       await deleteDoc(doc(db, 'meeting_notes', meetingId));
+      logAudit({ action: 'delete_meeting_note', target: meetingId, targetLabel: meeting?.title });
       toast.success('已刪除');
     } catch (error) {
       toast.error('刪除失敗');

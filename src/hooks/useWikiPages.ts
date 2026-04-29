@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 import { WikiPage, WikiCategory, OperationType } from '../types';
 import { handleFirestoreError } from '../utils/firestoreUtils';
 import { awardCoins } from '../services/coinService';
+import { logAudit } from '../services/auditService';
 import { DEFAULT_DISPLAY_NAME } from '../constants';
 import { useFirestoreCollection } from './useFirestoreCollection';
 
@@ -66,7 +67,9 @@ export function useWikiPages(user: FirebaseUser | null) {
   const deletePage = async (pageId: string) => {
     if (!user) return;
     try {
+      const page = pages.find(p => p.id === pageId);
       await deleteDoc(doc(db, COLLECTION, pageId));
+      logAudit({ action: 'delete_wiki_page', target: pageId, targetLabel: page?.title });
       toast.success('頁面已刪除');
     } catch (error) {
       toast.error('刪除失敗');

@@ -336,6 +336,26 @@ const DecisionDetail: React.FC<{
         <Section title="原因 / 理由" content={decision.rationale} />
       )}
 
+      {/* Evidence images */}
+      {(decision.evidenceImages ?? []).length > 0 && (
+        <div>
+          <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1.5">證據截圖</p>
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+            {(decision.evidenceImages ?? []).map(url => (
+              <a
+                key={url}
+                href={url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block rounded-lg overflow-hidden border border-gray-200 hover:border-blue-400 transition-colors"
+              >
+                <img src={url} alt="證據" className="w-full h-32 object-cover" loading="lazy" />
+              </a>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Linked roadmap */}
       {linkedRoadmap.length > 0 && (
         <div>

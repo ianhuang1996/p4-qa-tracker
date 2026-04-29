@@ -29,17 +29,18 @@ export const getUserIdByName = (name: string): Promise<string | null> => {
 };
 
 export const sendSlackNotification = async (
-  email: string,
+  recipientEmail: string,
   message: string,
   itemId: string,
   itemTitle: string,
   type: string
 ): Promise<void> => {
   try {
-    await fetch('/api/slack/notify', {
+    const { authedFetch } = await import('./apiClient');
+    await authedFetch('/api/slack/notify', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, message, itemId, itemTitle, type }),
+      body: JSON.stringify({ recipientEmail, message, itemId, itemTitle, type }),
     });
   } catch (error) {
     // Slack is best-effort, don't block the main flow

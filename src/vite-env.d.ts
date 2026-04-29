@@ -1,8 +1,7 @@
 /// <reference types="vite/client" />
 
 interface ImportMetaEnv {
-  readonly VITE_IMGBB_API_KEY: string
-  // more env variables...
+  // VITE_* keys removed: AI + ImgBB are now server-proxied to keep secrets off-bundle.
 }
 
 interface ImportMeta {

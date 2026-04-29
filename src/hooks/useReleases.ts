@@ -6,6 +6,7 @@ import { toast } from 'sonner';
 import { Release, ChecklistItem, OperationType } from '../types';
 import { handleFirestoreError } from '../utils/firestoreUtils';
 import { awardCoins, getUserPetBuff } from '../services/coinService';
+import { logAudit } from '../services/auditService';
 import { STATUS, RELEASE_STATUS, DEFAULT_DISPLAY_NAME } from '../constants';
 import confetti from 'canvas-confetti';
 
@@ -78,7 +79,9 @@ export function useReleases(user: FirebaseUser | null) {
   const deleteRelease = async (releaseId: string) => {
     if (!user) return;
     try {
+      const release = releases.find(r => r.id === releaseId);
       await deleteDoc(doc(db, 'releases', releaseId));
+      logAudit({ action: 'delete_release', target: releaseId, targetLabel: release?.version });
       toast.success('版本已刪除');
     } catch (error) {
       toast.error('刪除失敗');

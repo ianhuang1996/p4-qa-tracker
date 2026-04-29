@@ -111,6 +111,7 @@ export interface Decision {
   linkedRoadmapItemIds?: string[];
   tags?: DecisionTag[];
   meetingNoteId?: string;          // 從會議記錄建立時的來源
+  evidenceImages?: string[];       // 截圖證據（老闆原話、會議紀錄截圖等）
   createdBy: string;
   createdByName: string;
   createdAt: number;

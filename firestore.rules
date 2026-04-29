@@ -2,36 +2,10 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    // ===============================================================
-    // Assumed Data Model
-    // ===============================================================
-    //
-    // Collection: qa_items
-    // Document ID: [auto-generated]
-    // Fields:
-    //   - id: string (required)
-    //   - title: string (optional)
-    //   - priority: string (optional)
-    //   - date: string (required)
-    //   - module: string (required)
-    //   - tester: string (required)
-    //   - description: string (required)
-    //   - imageLink: string (required)
-    //   - currentFlow: string (required)
-    //   - assignee: string (required)
-    //   - fixVersion: string (optional)
-    //   - answer: string (required)
-    //   - retestDescription: string (optional)
-    //   - retestDate: string (optional)
-    //   - createdAt: number (optional)
-    //   - authorUID: string (optional)
-    //   - fixedAt: number (optional)
-    //   - version: string (optional)
-    //   - comments: list (optional)
-    //
-    // ===============================================================
-    
-    // Helper Functions
+
+    // ───────────────────────────────────────────────────────────────
+    // Helpers
+    // ───────────────────────────────────────────────────────────────
     function isAuthenticated() {
       return request.auth != null;
     }
@@ -40,12 +14,34 @@ service cloud.firestore {
       return isAuthenticated() && request.auth.uid == userId;
     }
 
+    // Admin = role==admin in their user doc, OR email in hardcoded fallback list
+    // (must stay in sync with src/constants.ts ADMIN_EMAILS).
     function isAdmin() {
-      return isAuthenticated() &&
-        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
-          (request.auth.token.email == "ian@osensetech.com" && request.auth.token.email_verified == true));
+      return isAuthenticated() && (
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
+        (
+          request.auth.token.email_verified == true &&
+          request.auth.token.email in [
+            'ian@osensetech.com',
+            'sienna@osensetech.com'
+          ]
+        )
+      );
     }
 
+    // True when the *existing* doc is owned by the caller (resource.data already exists).
+    function isResourceOwner(field) {
+      return isAuthenticated() && resource.data[field] == request.auth.uid;
+    }
+
+    // True when the *new* doc claims its owner field == the caller.
+    function isNewOwner(field) {
+      return isAuthenticated() && request.resource.data[field] == request.auth.uid;
+    }
+
+    // ───────────────────────────────────────────────────────────────
+    // qa_items — collaborative; delete restricted to author/admin
+    // ───────────────────────────────────────────────────────────────
     function isValidQAItem(data) {
       return data.keys().hasAll(['id', 'date', 'module', 'tester', 'description', 'imageLink', 'currentFlow', 'assignee', 'answer']) &&
              data.id is string && data.id.size() < 100 &&
@@ -56,140 +52,192 @@ service cloud.firestore {
              data.imageLink is string && data.imageLink.size() < 1000 &&
              data.currentFlow is string && data.currentFlow.size() < 100 &&
              data.assignee is string && data.assignee.size() < 100 &&
-             data.answer is string && data.answer.size() < 10000 &&
-             (!('title' in data) || (data.title is string && data.title.size() < 500)) &&
-             (!('priority' in data) || (data.priority is string && data.priority.size() < 50)) &&
-             (!('fixVersion' in data) || (data.fixVersion is string && data.fixVersion.size() < 100)) &&
-             (!('createdAt' in data) || data.createdAt is number) &&
-             (!('authorUID' in data) || (data.authorUID is string && data.authorUID.size() < 100)) &&
-             (!('fixedAt' in data) || (data.fixedAt is number || data.fixedAt == null)) &&
-             (!('version' in data) || (data.version is string && data.version.size() < 100)) &&
-             (!('comments' in data) || (data.comments is list && data.comments.size() < 100)) &&
-             (!('imageLinks' in data) || data.imageLinks is list) &&
-             (!('videoLink' in data) || (data.videoLink is string || data.videoLink == null)) &&
-             (!('videoLinks' in data) || data.videoLinks is list) &&
-             (!('attachmentUrl' in data) || (data.attachmentUrl is string || data.attachmentUrl == null)) &&
-             (!('attachmentName' in data) || (data.attachmentName is string || data.attachmentName == null)) &&
-             (!('attachments' in data) || data.attachments is list) &&
-             (!('isNextRelease' in data) || data.isNextRelease is bool) &&
-             (!('releaseNote' in data) || (data.releaseNote is string || data.releaseNote == null)) &&
-             (!('sortOrder' in data) || (data.sortOrder is number || data.sortOrder == null)) &&
-             (!('rdFix' in data) || (data.rdFix is string || data.rdFix == null)) &&
-             (!('testMethod' in data) || (data.testMethod is string || data.testMethod == null)) &&
-             (!('commentCount' in data) || (data.commentCount is number || data.commentCount == null)) &&
-             (!('retestResult' in data) || (data.retestResult is string || data.retestResult == null)) &&
-             (!('retestNote' in data) || (data.retestNote is string || data.retestNote == null)) &&
-             (!('retestDate' in data) || (data.retestDate is number || data.retestDate == null)) &&
-             (!('retestBy' in data) || (data.retestBy is string || data.retestBy == null)) &&
-             (!('retestEnvironment' in data) || (data.retestEnvironment is string || data.retestEnvironment == null)) &&
-             (!('duplicateOfId' in data) || (data.duplicateOfId is string || data.duplicateOfId == null));
-    }
-
-    function isValidNotification(data) {
-      return data.keys().hasAll(['id', 'userId', 'fromUserId', 'fromUserName', 'itemId', 'itemTitle', 'type', 'isRead', 'createdAt']) &&
-             data.id is string && data.id.size() < 100 &&
-             data.userId is string && data.userId.size() < 100 &&
-             data.fromUserId is string && data.fromUserId.size() < 100 &&
-             data.fromUserName is string && data.fromUserName.size() < 100 &&
-             data.itemId is string && data.itemId.size() < 100 &&
-             data.itemTitle is string && data.itemTitle.size() < 500 &&
-             data.type in ['status_change', 'assignment', 'comment'] &&
-             data.isRead is bool &&
-             data.createdAt is number;
-    }
-
-    function isValidUser(data) {
-      return data.keys().hasAll(['uid', 'displayName']) &&
-             data.uid is string && data.uid.size() < 100 &&
-             data.displayName is string && data.displayName.size() < 100 &&
-             (!('email' in data) || (data.email is string || data.email == null)) &&
-             (!('photoURL' in data) || (data.photoURL is string || data.photoURL == null)) &&
-             (!('lastLogin' in data) || data.lastLogin is number) &&
-             (!('role' in data) || data.role in ['admin', 'user']);
+             data.answer is string && data.answer.size() < 10000;
     }
 
     match /qa_items/{itemId} {
       allow read: if isAuthenticated();
       allow create: if isAuthenticated() && isValidQAItem(request.resource.data);
+      // Team members can update (status changes, retest, etc).
       allow update: if isAuthenticated();
-      allow delete: if isAuthenticated();
+      // Delete locked to original author or admin.
+      allow delete: if isAuthenticated() && (
+        !('authorUID' in resource.data) ||
+        resource.data.authorUID == request.auth.uid ||
+        isAdmin()
+      );
 
       match /history/{historyId} {
         allow read: if isAuthenticated();
         allow create: if isAuthenticated();
+        // History is append-only audit; no update/delete unless admin.
+        allow update, delete: if isAdmin();
       }
 
       match /comments/{commentId} {
         allow read: if isAuthenticated();
-        allow create: if isAuthenticated() && 
+        // Caller must claim themselves as the author (prevents impersonation).
+        allow create: if isAuthenticated() &&
           request.resource.data.keys().hasAll(['userId', 'userName', 'text', 'createdAt']) &&
-          request.resource.data.userId is string && request.resource.data.userId.size() < 100 &&
+          request.resource.data.userId == request.auth.uid &&
           request.resource.data.userName is string && request.resource.data.userName.size() < 100 &&
           request.resource.data.text is string && request.resource.data.text.size() < 5000 &&
           request.resource.data.createdAt is number;
-        allow update: if isAuthenticated() && 
+        // Edit/delete only by the comment author or admin.
+        allow update: if isAuthenticated() &&
+          resource.data.userId == request.auth.uid &&
           request.resource.data.text is string && request.resource.data.text.size() < 5000;
-        allow delete: if isAuthenticated();
+        allow delete: if isAuthenticated() && (
+          resource.data.userId == request.auth.uid || isAdmin()
+        );
       }
     }
 
+    // ───────────────────────────────────────────────────────────────
+    // notifications — strict per-recipient
+    // ───────────────────────────────────────────────────────────────
     match /notifications/{notificationId} {
-      allow read, write: if isAuthenticated();
+      // Only the recipient can read/update/delete their own notifications.
+      allow read, update, delete: if isResourceOwner('userId');
+      // Sender can create a notification for someone else, but the sender
+      // identity in the doc must match the caller (no impersonation).
+      allow create: if isAuthenticated() &&
+        request.resource.data.fromUserId == request.auth.uid &&
+        request.resource.data.userId is string;
     }
 
+    // ───────────────────────────────────────────────────────────────
+    // users — only owner or admin can write
+    // ───────────────────────────────────────────────────────────────
     match /users/{userId} {
-      allow read, write: if isAuthenticated();
+      // Users need to read each other's profile (name, photo, tier) for UI.
+      allow read: if isAuthenticated();
+      allow create, update: if isOwner(userId) || isAdmin();
+      allow delete: if isAdmin();
 
       match /coinTransactions/{txId} {
-        allow read: if isOwner(userId);
+        // Coin history is private to the owner.
+        allow read: if isOwner(userId) || isAdmin();
         allow create: if isOwner(userId);
+        // Tx are immutable once written.
+        allow update, delete: if isAdmin();
       }
     }
 
+    // ───────────────────────────────────────────────────────────────
+    // daily_reports — owner-bound
+    // ───────────────────────────────────────────────────────────────
     match /daily_reports/{reportId} {
       allow read: if isAuthenticated();
-      allow create, update: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
-      allow delete: if isAuthenticated();
+      allow create: if isAuthenticated() && isNewOwner('userId');
+      allow update: if isAuthenticated() &&
+        isResourceOwner('userId') &&
+        request.resource.data.userId == resource.data.userId;
+      allow delete: if isResourceOwner('userId') || isAdmin();
     }
 
+    // ───────────────────────────────────────────────────────────────
+    // wiki_pages — collaborative; delete locked
+    // ───────────────────────────────────────────────────────────────
     match /wiki_pages/{pageId} {
       allow read: if isAuthenticated();
-      allow create, update, delete: if isAuthenticated();
+      allow create, update: if isAuthenticated();
+      allow delete: if isAuthenticated() && (
+        !('createdBy' in resource.data) ||
+        resource.data.createdBy == request.auth.uid ||
+        isAdmin()
+      );
     }
 
+    // ───────────────────────────────────────────────────────────────
+    // releases — collaborative; delete locked
+    // ───────────────────────────────────────────────────────────────
     match /releases/{releaseId} {
       allow read: if isAuthenticated();
-      allow create, update, delete: if isAuthenticated();
+      allow create, update: if isAuthenticated();
+      allow delete: if isAuthenticated() && (
+        !('createdBy' in resource.data) ||
+        resource.data.createdBy == request.auth.uid ||
+        isAdmin()
+      );
     }
 
+    // ───────────────────────────────────────────────────────────────
+    // todos — already had owner check on delete
+    // ───────────────────────────────────────────────────────────────
     match /todos/{todoId} {
       allow read: if isAuthenticated();
       allow create: if isAuthenticated();
-      // Any team member can update (toggle complete, edit assigned tasks)
       allow update: if isAuthenticated();
-      // Only creator or admin can delete
       allow delete: if isAuthenticated() &&
         (resource.data.creatorId == request.auth.uid || isAdmin());
     }
 
+    // ───────────────────────────────────────────────────────────────
+    // achievement_logs — write-once per (userId, achievementId)
+    // ───────────────────────────────────────────────────────────────
     match /achievement_logs/{logId} {
       allow read: if isAuthenticated();
-      allow create: if isAuthenticated();
+      // Caller can only create achievement logs for themselves.
+      allow create: if isAuthenticated() && isNewOwner('userId');
+      // Achievements are immutable.
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
     }
 
+    // ───────────────────────────────────────────────────────────────
+    // meeting_notes — collaborative; delete locked
+    // ───────────────────────────────────────────────────────────────
     match /meeting_notes/{meetingId} {
       allow read: if isAuthenticated();
-      allow create, update, delete: if isAuthenticated();
+      allow create, update: if isAuthenticated();
+      allow delete: if isAuthenticated() && (
+        !('createdBy' in resource.data) ||
+        resource.data.createdBy == request.auth.uid ||
+        isAdmin()
+      );
     }
 
+    // ───────────────────────────────────────────────────────────────
+    // roadmap_items — collaborative; delete locked
+    // ───────────────────────────────────────────────────────────────
     match /roadmap_items/{itemId} {
       allow read: if isAuthenticated();
-      allow create, update, delete: if isAuthenticated();
+      allow create, update: if isAuthenticated();
+      allow delete: if isAuthenticated() && (
+        !('createdBy' in resource.data) ||
+        resource.data.createdBy == request.auth.uid ||
+        isAdmin()
+      );
     }
 
+    // ───────────────────────────────────────────────────────────────
+    // decisions — collaborative; delete locked
+    // ───────────────────────────────────────────────────────────────
     match /decisions/{decisionId} {
       allow read: if isAuthenticated();
-      allow create, update, delete: if isAuthenticated();
+      allow create, update: if isAuthenticated();
+      allow delete: if isAuthenticated() && (
+        !('createdBy' in resource.data) ||
+        resource.data.createdBy == request.auth.uid ||
+        isAdmin()
+      );
+    }
+
+    // ───────────────────────────────────────────────────────────────
+    // audit_logs — append-only; entries are tamper-evident via userId pinning
+    // ───────────────────────────────────────────────────────────────
+    match /audit_logs/{logId} {
+      allow read: if isAdmin();
+      // Clients can append entries about their own actions only.
+      // Once written, entries are immutable to all clients.
+      allow create: if isAuthenticated() &&
+        request.resource.data.userId == request.auth.uid &&
+        request.resource.data.keys().hasAll(['userId', 'action', 'createdAt']) &&
+        request.resource.data.action is string &&
+        request.resource.data.action.size() < 200 &&
+        request.resource.data.createdAt is number;
+      allow update, delete: if isAdmin();
     }
   }
 }

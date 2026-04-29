@@ -5,6 +5,7 @@ import { User as FirebaseUser } from 'firebase/auth';
 import { toast } from 'sonner';
 import { Decision } from '../types';
 import { EMAIL_TO_MEMBER, DEFAULT_DISPLAY_NAME } from '../constants';
+import { logAudit } from '../services/auditService';
 
 export function useDecisions(user: FirebaseUser | null) {
   const [decisions, setDecisions] = useState<Decision[]>([]);
@@ -87,6 +88,7 @@ export function useDecisions(user: FirebaseUser | null) {
         }
       }
       await batch.commit();
+      logAudit({ action: 'delete_decision', target: id, targetLabel: target?.title });
       toast.success('已刪除');
     } catch (error) {
       console.error('deleteDecision failed:', error);

@@ -274,7 +274,7 @@ export const ACHIEVEMENT_DEFS: AchievementDef[] = [
 ];
 
 export const FEATURE_FLAGS = {
-  AI_FEATURES: !!import.meta.env.VITE_GEMINI_API_KEY,
+  AI_FEATURES: true,
 } as const;
 
 export const TEAM_GOAL_DEFS: TeamGoalDef[] = [

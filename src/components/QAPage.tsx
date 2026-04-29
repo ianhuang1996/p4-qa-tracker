@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { Plus, Download, ArrowUpDown, Eye, EyeOff } from 'lucide-react';
 import { toast } from 'sonner';
+import { authedFetch } from '../services/apiClient';
 import { AnimatePresence } from 'motion/react';
 import { QAItem, AugmentedQAItem, ViewMode } from '../types';
 import { usePet } from '../hooks/usePet';
@@ -274,24 +275,22 @@ export const QAPage: React.FC<QAPageProps> = () => {
   };
 
   const handleImageUpload = async (file: File) => {
-    const apiKey = import.meta.env.VITE_IMGBB_API_KEY;
-    if (!apiKey) { toast.error('未設定 ImgBB API Key'); return; }
     setIsUploading(true);
     const toastId = toast.loading('圖片上傳中...');
     try {
       const formData = new FormData();
       formData.append('image', file);
-      const response = await fetch(`https://api.imgbb.com/1/upload?key=${apiKey}`, { method: 'POST', body: formData });
-      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+      const response = await authedFetch('/api/imgbb/upload', { method: 'POST', body: formData });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const resData = await response.json();
       if (resData.success) {
         setEditForm(prev => {
           if (!prev) return null;
-          return { ...prev, imageLinks: [...(prev.imageLinks || []), resData.data.url] };
+          return { ...prev, imageLinks: [...(prev.imageLinks || []), resData.url] };
         });
         toast.success('圖片上傳成功！', { id: toastId });
       } else {
-        toast.error(`上傳失敗: ${resData.error?.message || '未知錯誤'}`, { id: toastId });
+        toast.error(`上傳失敗: ${resData.error || '未知錯誤'}`, { id: toastId });
       }
     } catch (error) {
       toast.error(`上傳失敗: ${error instanceof Error ? error.message : '網路錯誤'}`, { id: toastId });
@@ -304,18 +303,18 @@ export const QAPage: React.FC<QAPageProps> = () => {
     try {
       const formData = new FormData();
       formData.append('file', file);
-      const response = await fetch('/api/upload', { method: 'POST', body: formData });
-      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-      const resData = await response.json();
-      if (resData.success) {
-        setEditForm(prev => {
-          if (!prev) return null;
-          return { ...prev, attachments: [...(prev.attachments || []), { name: resData.name, url: resData.url }] };
-        });
-        toast.success('附件上傳成功！', { id: toastId });
-      } else {
-        toast.error(`上傳失敗: ${resData.error || '未知錯誤'}`, { id: toastId });
+      const response = await authedFetch('/api/upload', { method: 'POST', body: formData });
+      const resData = await response.json().catch(() => ({}));
+      if (!response.ok || !resData.success) {
+        const detail = resData.error || `HTTP ${response.status}`;
+        toast.error(`上傳失敗: ${detail}`, { id: toastId });
+        return;
       }
+      setEditForm(prev => {
+        if (!prev) return null;
+        return { ...prev, attachments: [...(prev.attachments || []), { name: resData.name, url: resData.url }] };
+      });
+      toast.success('附件上傳成功！', { id: toastId });
     } catch (error) {
       toast.error(`上傳失敗: ${error instanceof Error ? error.message : '網路錯誤'}`, { id: toastId });
     } finally { setIsUploading(false); }

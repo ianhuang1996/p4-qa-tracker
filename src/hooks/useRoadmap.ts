@@ -5,6 +5,7 @@ import { User as FirebaseUser } from 'firebase/auth';
 import { toast } from 'sonner';
 import { RoadmapItem, RoadmapStatus, Release, QAItem } from '../types';
 import { EMAIL_TO_MEMBER, STATUS, RELEASE_STATUS, DEFAULT_DISPLAY_NAME } from '../constants';
+import { logAudit } from '../services/auditService';
 
 function parseVersion(v: string): number[] {
   return v.replace(/^v/i, '').split('.').map(n => parseInt(n, 10) || 0);
@@ -112,7 +113,9 @@ export function useRoadmap(user: FirebaseUser | null) {
 
   const deleteItem = async (id: string) => {
     try {
+      const found = items.find(it => it.id === id);
       await deleteDoc(doc(db, 'roadmap_items', id));
+      logAudit({ action: 'delete_roadmap_item', target: id, targetLabel: found?.title });
       toast.success('已刪除');
     } catch {
       toast.error('刪除失敗');

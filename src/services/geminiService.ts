@@ -1,32 +1,42 @@
-import { GoogleGenAI } from "@google/genai";
 import { QAItem, QAComment, AugmentedQAItem, TodoItem, Release } from "../types";
+import { authedFetch } from "./apiClient";
 
-const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_GEMINI_API_KEY || "" });
+// All Gemini calls now go through the server proxy /api/ai/generate so the
+// API key stays on the server. The client only sends prompts + auth token.
+
+async function generate(prompt: string, json = false): Promise<string> {
+  try {
+    const res = await authedFetch('/api/ai/generate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prompt, json }),
+    });
+    if (!res.ok) {
+      console.error('AI generate failed:', res.status, await res.text().catch(() => ''));
+      return '';
+    }
+    const data = await res.json() as { text?: string };
+    return data.text || '';
+  } catch (err) {
+    console.error('AI generate error:', err);
+    return '';
+  }
+}
 
 export const summarizeDiscussion = async (item: QAItem, comments: QAComment[]) => {
   if (comments.length === 0) return "目前尚無討論。";
-  
+
   const prompt = `
     請摘要以下 QA 項目的討論進度：
     標題：${item.title || "未命名"}
     敘述：${item.description}
-    
+
     討論內容：
     ${comments.map(c => `${c.userName}: ${c.text}`).join('\n')}
-    
+
     請用簡短的條列式總結目前的共識、待處理事項或爭議點。
   `;
-
-  try {
-    const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash-lite",
-      contents: prompt,
-    });
-    return response.text || "無法生成摘要。";
-  } catch (error) {
-    console.error("Gemini Summary Error:", error);
-    return "摘要生成失敗。";
-  }
+  return (await generate(prompt)) || "摘要生成失敗。";
 };
 
 export const generateReleaseNotes = async (version: string, items: AugmentedQAItem[]) => {
@@ -80,17 +90,9 @@ ${itemList}
 - 不要加額外的開頭總結或結尾
   `;
 
-  try {
-    const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash-lite",
-      contents: prompt,
-    });
-    const raw = response.text || "無法生成 Release Note。";
-    return normalizeReleaseNoteFormat(raw);
-  } catch (error) {
-    console.error("Gemini Release Note Error:", error);
-    return "Release Note 生成失敗，請確認 Gemini API Key 設定。";
-  }
+  const raw = await generate(prompt);
+  if (!raw) return "Release Note 生成失敗，請確認 Gemini API Key 設定。";
+  return normalizeReleaseNoteFormat(raw);
 };
 
 // 保險：若 AI 沒有依照範例空行，強制把單換行補成雙換行，確保每段分開
@@ -134,14 +136,10 @@ ${notes.trim() || '（無紀錄內容）'}
 - 若紀錄內容太少，keyPoints 填一條說明即可`;
 
   try {
-    const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash-lite',
-      contents: prompt,
-      config: { responseMimeType: 'application/json' },
-    });
-    return JSON.parse(response.text ?? '{"keyPoints":[],"suggestedActions":[]}') as MeetingSummary;
+    const text = await generate(prompt, true);
+    return JSON.parse(text || '{"keyPoints":[],"suggestedActions":[]}') as MeetingSummary;
   } catch (error) {
-    console.error('Gemini Meeting Summary Error:', error);
+    console.error('Meeting Summary parse Error:', error);
     throw error;
   }
 };
@@ -220,24 +218,14 @@ ${sections.join('\n\n')}
 - 不要在每個區塊開頭重複寫區塊標題
   `;
 
-  try {
-    const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash-lite",
-      contents: prompt,
-    });
-    const text = response.text || '';
-    const parts = text.split('---').map(s => s.trim());
-    return {
-      completed: parts[0] || '今日無完成項目',
-      inProgress: parts[1] || '無進行中項目',
-      risks: parts[2] || '目前無重大風險',
-    };
-  } catch (error) {
-    console.error("Gemini Daily Report Error:", error);
-    return {
-      completed: '報告生成失敗，請手動填寫',
-      inProgress: '',
-      risks: '',
-    };
+  const text = await generate(prompt);
+  if (!text) {
+    return { completed: '報告生成失敗，請手動填寫', inProgress: '', risks: '' };
   }
+  const parts = text.split('---').map(s => s.trim());
+  return {
+    completed: parts[0] || '今日無完成項目',
+    inProgress: parts[1] || '無進行中項目',
+    risks: parts[2] || '目前無重大風險',
+  };
 };

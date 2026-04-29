@@ -7,6 +7,7 @@ import { QAItem, OperationType } from '../types';
 import { createNotification, getUserIdByName } from '../services/notificationService';
 import { getUserPetBuff, awardCoins } from '../services/coinService';
 import { handleFirestoreError } from '../utils/firestoreUtils';
+import { logAudit } from '../services/auditService';
 import { STATUS, DEFAULT_DISPLAY_NAME } from '../constants';
 import { QAItemSchema } from '../utils/schemas';
 import { useQAComments } from './useQAComments';
@@ -191,7 +192,9 @@ export function useQAItems(user: FirebaseUser | null, isAuthReady: boolean) {
     if (!user) return;
     const path = `qa_items/${itemId}`;
     try {
+      const item = data.find(i => i.id === itemId);
       await deleteDoc(doc(db, 'qa_items', itemId));
+      logAudit({ action: 'delete_qa_item', target: itemId, targetLabel: item?.title });
       toast.success('刪除成功');
     } catch (error) {
       toast.error('刪除失敗');
