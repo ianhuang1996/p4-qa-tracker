@@ -238,7 +238,7 @@ export const DecisionModal: React.FC<DecisionModalProps> = ({
 
           {/* Evidence images */}
           <div>
-            <label className={LABEL}>證據截圖（選填）</label>
+            <label className={LABEL}>補充附件（選填）</label>
             <div className="space-y-2">
               {(form.evidenceImages ?? []).length > 0 && (
                 <div className="grid grid-cols-3 gap-2">
@@ -274,7 +274,7 @@ export const DecisionModal: React.FC<DecisionModalProps> = ({
                 {isUploading ? <Loader2 size={14} className="animate-spin" /> : <ImagePlus size={14} />}
                 {isUploading ? '上傳中…' : '上傳圖片（可多張）'}
               </button>
-              <p className="text-[10px] text-gray-400">用於佐證老闆原話、會議截圖、客戶反饋等</p>
+              <p className="text-[10px] text-gray-400">老闆原話、會議截圖、客戶反饋等</p>
             </div>
           </div>
 

@@ -1,5 +1,5 @@
-import React, { useState, useMemo } from 'react';
-import { Plus, Search, Pencil, Trash2, ArrowRight, ArrowLeft, Calendar, User as UserIcon } from 'lucide-react';
+import React, { useState, useMemo, useEffect } from 'react';
+import { Plus, Search, Pencil, Trash2, ArrowRight, ArrowLeft, Calendar, User as UserIcon, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { toast } from 'sonner';
 import { Decision, DecisionStatus, DecisionTag } from '../types';
 import { useDecisions } from '../hooks/useDecisions';
@@ -338,22 +338,7 @@ const DecisionDetail: React.FC<{
 
       {/* Evidence images */}
       {(decision.evidenceImages ?? []).length > 0 && (
-        <div>
-          <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1.5">證據截圖</p>
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-            {(decision.evidenceImages ?? []).map(url => (
-              <a
-                key={url}
-                href={url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="block rounded-lg overflow-hidden border border-gray-200 hover:border-blue-400 transition-colors"
-              >
-                <img src={url} alt="證據" className="w-full h-32 object-cover" loading="lazy" />
-              </a>
-            ))}
-          </div>
-        </div>
+        <EvidenceImages images={decision.evidenceImages ?? []} />
       )}
 
       {/* Linked roadmap */}
@@ -415,3 +400,82 @@ const Section: React.FC<{ title: string; content: string; highlight?: boolean }>
     </div>
   </div>
 );
+
+// ── Evidence images with lightbox ─────────────────────────────────
+const EvidenceImages: React.FC<{ images: string[] }> = ({ images }) => {
+  const [index, setIndex] = useState<number | null>(null);
+  const open = index !== null;
+
+  useEffect(() => {
+    if (!open) return;
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setIndex(null);
+      else if (e.key === 'ArrowLeft') setIndex(i => i === null ? null : (i - 1 + images.length) % images.length);
+      else if (e.key === 'ArrowRight') setIndex(i => i === null ? null : (i + 1) % images.length);
+    };
+    document.addEventListener('keydown', handleKey);
+    return () => document.removeEventListener('keydown', handleKey);
+  }, [open, images.length]);
+
+  return (
+    <div>
+      <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1.5">補充附件</p>
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+        {images.map((url, i) => (
+          <button
+            key={url}
+            type="button"
+            onClick={() => setIndex(i)}
+            className="block rounded-lg overflow-hidden border border-gray-200 hover:border-blue-400 transition-colors group"
+          >
+            <img src={url} alt="補充附件" className="w-full h-32 object-cover group-hover:scale-105 transition-transform" loading="lazy" />
+          </button>
+        ))}
+      </div>
+
+      {open && (
+        <div
+          className="fixed inset-0 z-[100] bg-black/95 flex items-center justify-center p-4 cursor-zoom-out"
+          onClick={() => setIndex(null)}
+        >
+          <button
+            onClick={(e) => { e.stopPropagation(); setIndex(null); }}
+            className="absolute top-4 right-4 p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors"
+            title="關閉 (Esc)"
+            aria-label="關閉"
+          >
+            <X size={20} />
+          </button>
+          {images.length > 1 && (
+            <>
+              <button
+                onClick={(e) => { e.stopPropagation(); setIndex((index - 1 + images.length) % images.length); }}
+                className="absolute left-4 top-1/2 -translate-y-1/2 p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors"
+                aria-label="上一張"
+              >
+                <ChevronLeft size={24} />
+              </button>
+              <button
+                onClick={(e) => { e.stopPropagation(); setIndex((index + 1) % images.length); }}
+                className="absolute right-4 top-1/2 -translate-y-1/2 p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors"
+                aria-label="下一張"
+              >
+                <ChevronRight size={24} />
+              </button>
+              <span className="absolute bottom-4 left-1/2 -translate-x-1/2 text-white/70 text-xs font-bold tabular-nums">
+                {index + 1} / {images.length}
+              </span>
+            </>
+          )}
+          <img
+            src={images[index]}
+            alt="補充附件預覽"
+            onClick={(e) => e.stopPropagation()}
+            className="max-w-full max-h-full object-contain shadow-2xl cursor-default"
+            referrerPolicy="no-referrer"
+          />
+        </div>
+      )}
+    </div>
+  );
+};
