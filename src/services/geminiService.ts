@@ -42,9 +42,26 @@ export const summarizeDiscussion = async (item: QAItem, comments: QAComment[]) =
 export const generateReleaseNotes = async (version: string, items: AugmentedQAItem[]) => {
   if (items.length === 0) return "此版本沒有關聯的項目。";
 
-  const itemList = items.map(i =>
-    `- [${i.priority}] ${i.id}: ${i.displayTitle}（模組: ${i.module}, 負責人: ${i.assignee}）`
-  ).join('\n');
+  // Include each item's description / RD fix notes / answer so AI can write
+  // accurate user-facing notes instead of guessing from the title alone.
+  // Trim long fields to keep prompt within reasonable size.
+  const trim = (s: string | undefined, n: number) => {
+    const t = (s ?? '').trim();
+    return t.length > n ? t.slice(0, n) + '…' : t;
+  };
+  const itemList = items.map(i => {
+    const lines = [
+      `## [${i.priority}] ${i.id} — ${i.displayTitle}`,
+      `模組: ${i.module}　負責人: ${i.assignee}`,
+    ];
+    const desc = trim(i.description, 400);
+    if (desc) lines.push(`現象/敘述: ${desc}`);
+    const fix = trim(i.rdFix || i.answer, 400);
+    if (fix) lines.push(`修正內容: ${fix}`);
+    const retest = trim(i.retestNote, 200);
+    if (retest && i.retestResult === 'passed') lines.push(`複測說明: ${retest}`);
+    return lines.join('\n');
+  }).join('\n\n');
 
   const prompt = `
 你是一位軟體產品的 PM，請根據以下 QA 項目清單，產生一份對外的版更通知。
@@ -79,12 +96,14 @@ ${itemList}
 
 規則：
 - 繁體中文
+- 仔細閱讀每個項目的「現象/敘述」與「修正內容」，根據實際內容寫一句白話摘要，**不要只抄標題**
+- 用戶面語言：把內部術語（component / API / endpoint）翻成用戶看得懂的詞
 - 每個項目獨立一段（項目與項目之間必須空一行）
 - 項目前面不要加符號、編號或「-」
 - 區塊之間也空一行
 - 沒有內容的區塊就寫「本次無新功能」/「本次無優化項目」（也要自成一段）
-- 不要太細節，用戶看得懂就好
-- 根據項目內容判斷歸類到新功能、優化還是修復
+- 不要太細節，用戶看得懂就好（一句話 15-30 字最佳）
+- 根據項目內容（不是只看標題）判斷歸類到新功能、優化還是修復
 - 不要加版本號標題
 - 不要用 Markdown 語法（# ## * -）
 - 不要加額外的開頭總結或結尾
